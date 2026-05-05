@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANASHRAW.AI — WinGo Predictor v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#000;--sur:#050f05;--bdr:#0f2b0f;--dim:#003a0f;
+  --g:#00ff41;--g2:#00c832;--g3:#007a1e;
+  --r:#ff0040;--y:#ffe000;--c:#00ffea;--v:#bf7fff;
+  --txt:#b8ffb8;--mut:#3a6b3a;
+  --glow:0 0 10px #00ff41,0 0 22px #00ff4166;
+  --glsm:0 0 6px #00ff41,0 0 12px #00ff4133;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--g);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999;}
+#mc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.055;pointer-events:none;}
+.w{position:relative;z-index:2;max-width:1020px;margin:0 auto;padding:0 12px 80px;}
+.cr{position:fixed;width:34px;height:34px;pointer-events:none;z-index:5;opacity:.3;}
+.cr.tl{top:7px;left:7px;border-top:1px solid var(--g);border-left:1px solid var(--g);}
+.cr.tr{top:7px;right:7px;border-top:1px solid var(--g);border-right:1px solid var(--g);}
+.cr.bl{bottom:7px;left:7px;border-bottom:1px solid var(--g);border-left:1px solid var(--g);}
+.cr.br{bottom:7px;right:7px;border-bottom:1px solid var(--g);border-right:1px solid var(--g);}
+
+/* KEY LOCK OVERLAY */
+#keyOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:10000;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  padding:20px;
+}
+.key-box{
+  background:var(--sur);border:1px solid var(--g3);border-radius:6px;
+  padding:30px 24px;max-width:380px;width:100%;text-align:center;
+}
+.key-logo{font-family:'Orbitron',monospace;font-size:clamp(16px,4vw,22px);font-weight:900;color:var(--g);text-shadow:var(--glow);margin-bottom:4px;}
+.key-logo .ai{color:var(--c);}
+.key-sub{font-size:9px;color:var(--mut);letter-spacing:.25em;margin-bottom:24px;}
+.key-icon{font-size:40px;margin-bottom:14px;}
+.key-msg{font-size:11px;color:var(--txt);letter-spacing:.1em;margin-bottom:18px;line-height:1.7;}
+.key-input{
+  width:100%;padding:12px 14px;background:#000;border:1px solid var(--g3);
+  border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;
+  font-size:13px;letter-spacing:.2em;text-align:center;
+  outline:none;margin-bottom:12px;text-transform:uppercase;
+}
+.key-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
+.key-input::placeholder{color:var(--mut);font-size:10px;}
+.key-btn{
+  width:100%;padding:12px;background:transparent;border:1px solid var(--g);
+  border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;
+  font-size:11px;font-weight:700;letter-spacing:.2em;cursor:pointer;
+  text-transform:uppercase;transition:all .2s;
+}
+.key-btn:hover{background:var(--dim);box-shadow:var(--glow);}
+.key-err{color:var(--r);font-size:10px;margin-top:10px;letter-spacing:.1em;min-height:16px;}
+.key-info{font-size:8px;color:var(--mut);margin-top:14px;letter-spacing:.1em;line-height:1.8;}
+
+/* HEADER */
+header{padding:15px 0 0;border-bottom:1px solid var(--bdr);}
+.htop{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;padding-bottom:8px;}
+.btitle{font-family:'Orbitron',monospace;font-size:clamp(14px,3.5vw,25px);font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.1em;line-height:1.1;}
+.btitle .ai{color:var(--c);text-shadow:0 0 10px var(--c);}
+.btitle .ver{font-size:clamp(8px,1.4vw,11px);color:var(--y);text-shadow:0 0 8px var(--y);}
+.bsub{font-size:8px;color:var(--mut);letter-spacing:.24em;margin-top:3px;}
+.bauth{font-family:'VT323',monospace;font-size:14px;color:var(--g3);letter-spacing:.2em;margin-top:2px;}
+.clkm{font-family:'Orbitron',monospace;font-size:clamp(17px,4vw,28px);font-weight:700;color:var(--g);text-shadow:var(--glow);line-height:1;text-align:right;}
+.clkd{font-size:8px;color:var(--mut);letter-spacing:.15em;margin-top:2px;text-align:right;}
+.sbar{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);flex-wrap:wrap;gap:2px;}
+.si{display:flex;align-items:center;gap:4px;padding:2px 8px 2px 4px;font-size:8px;letter-spacing:.07em;color:var(--mut);border-right:1px solid var(--bdr);}
+.si:last-child{border-right:none;}
+.sv{color:var(--g);font-weight:700;}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dg{background:var(--g);box-shadow:var(--glsm);animation:bl 1.4s infinite;}
+.dy{background:var(--y);box-shadow:0 0 5px var(--y);animation:bl 2s infinite;}
+.dc{background:var(--c);box-shadow:0 0 5px var(--c);}
+.dr{background:var(--r);box-shadow:0 0 5px var(--r);}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.12}}
+.cdw{display:flex;align-items:center;gap:10px;padding:6px 0 5px;border-bottom:1px solid var(--bdr);}
+.cdl{font-size:8px;color:var(--mut);letter-spacing:.16em;white-space:nowrap;flex-shrink:0;}
+.cdo{flex:1;height:5px;background:var(--dim);border-radius:3px;overflow:hidden;}
+.cdi{height:100%;background:linear-gradient(90deg,var(--g3),var(--g));box-shadow:0 0 8px var(--g);border-radius:3px;transition:width .5s linear;}
+.cdt{font-family:'Orbitron',monospace;font-size:12px;color:var(--g);text-shadow:var(--glsm);flex-shrink:0;min-width:30px;text-align:right;}
+.pollbar{display:flex;align-items:center;gap:8px;padding:3px 0 4px;border-bottom:1px solid var(--bdr);}
+.plbl2{font-size:7px;color:var(--mut);letter-spacing:.16em;white-space:nowrap;flex-shrink:0;}
+.pdo{flex:1;height:3px;background:var(--dim);border-radius:2px;overflow:hidden;}
+.pdi{height:100%;background:linear-gradient(90deg,var(--g3),var(--c));border-radius:2px;width:0%;transition:width .08s linear;}
+.pdt{font-size:7px;color:var(--mut);flex-shrink:0;min-width:28px;text-align:right;}
+.storebadge{display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(0,255,65,.03);border-bottom:1px solid var(--bdr);font-size:8px;color:var(--mut);letter-spacing:.1em;flex-wrap:wrap;}
+.storebadge .sv2{color:var(--g);font-weight:700;}
+
+/* KEY STATUS BAR */
+.keybar{display:flex;align-items:center;gap:8px;padding:4px 10px;background:rgba(0,255,234,.03);border-bottom:1px solid var(--bdr);font-size:8px;color:var(--mut);flex-wrap:wrap;}
+.keybar .sv2{color:var(--c);font-weight:700;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+@media(max-width:640px){.grid{grid-template-columns:1fr;}}
+.full{grid-column:1/-1;}
+.tb{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;overflow:hidden;position:relative;}
+.tbar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--dim);border-bottom:1px solid var(--bdr);}
+.td{width:7px;height:7px;border-radius:50%;}
+.tdr{background:var(--r);}.tdy{background:var(--y);}.tdg{background:var(--g);}
+.ttl{font-size:8px;color:var(--mut);letter-spacing:.2em;flex:1;}
+.tbd{padding:10px;}
+
+/* FEED */
+.feed{height:265px;overflow-y:auto;background:#000;border:1px solid var(--bdr);border-radius:3px;padding:6px 8px;font-size:10px;line-height:1.75;}
+.feed::-webkit-scrollbar{width:3px;}.feed::-webkit-scrollbar-track{background:var(--dim);}.feed::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
+.fr{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #050f05;}
+.fi{color:var(--dim);min-width:20px;text-align:right;flex-shrink:0;font-size:9px;}
+.fp{color:var(--mut);font-size:8px;flex-shrink:0;}
+.badge{padding:2px 7px;border-radius:2px;font-size:8px;font-weight:bold;letter-spacing:.08em;display:inline-block;}
+.br2{background:rgba(255,0,64,.15);border:1px solid var(--r);color:var(--r);}
+.bg2{background:rgba(0,255,65,.10);border:1px solid var(--g);color:var(--g);}
+.bv{background:rgba(191,127,255,.15);border:1px solid var(--v);color:var(--v);}
+.bbig{background:rgba(0,255,234,.09);border:1px solid var(--c);color:var(--c);}
+.bsml{background:rgba(255,224,0,.09);border:1px solid var(--y);color:var(--y);}
+.bwin{display:inline-block;background:rgba(0,255,65,.18);border:1px solid var(--g);color:var(--g);padding:3px 9px;border-radius:2px;font-weight:bold;font-size:9px;}
+.bloss{display:inline-block;background:rgba(255,0,64,.18);border:1px solid var(--r);color:var(--r);padding:3px 9px;border-radius:2px;font-weight:bold;font-size:9px;}
+.bpend{color:var(--y);font-size:8px;font-weight:bold;}
+
+/* PREDICTION LOCKED */
+.pred-locked{
+  background:#000;border:1px solid var(--g3);border-radius:4px;padding:30px 20px;
+  text-align:center;position:relative;overflow:hidden;
+}
+.pred-locked::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,255,65,.04),transparent 65%);pointer-events:none;}
+.lock-icon{font-size:36px;margin-bottom:10px;}
+.lock-title{font-family:'Orbitron',monospace;font-size:14px;color:var(--y);text-shadow:0 0 8px var(--y);letter-spacing:.15em;margin-bottom:8px;}
+.lock-sub{font-size:9px;color:var(--mut);letter-spacing:.1em;line-height:1.8;margin-bottom:18px;}
+.lock-input{
+  width:100%;padding:10px 12px;background:#000;border:1px solid var(--g3);
+  border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;
+  font-size:12px;letter-spacing:.2em;text-align:center;outline:none;
+  margin-bottom:10px;text-transform:uppercase;
+}
+.lock-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
+.lock-input::placeholder{color:var(--mut);font-size:9px;}
+.lock-btn{
+  width:100%;padding:10px;background:transparent;border:1px solid var(--g);
+  border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;
+  font-size:10px;font-weight:700;letter-spacing:.2em;cursor:pointer;
+  text-transform:uppercase;transition:all .2s;
+}
+.lock-btn:hover{background:var(--dim);box-shadow:var(--glow);}
+.lock-err{color:var(--r);font-size:9px;margin-top:8px;letter-spacing:.1em;min-height:14px;}
+
+/* PREDICT CARD */
+.pc{background:#000;border:1px solid var(--g3);border-radius:4px;padding:12px;position:relative;overflow:hidden;}
+.pc::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,255,65,.04),transparent 65%);pointer-events:none;}
+.plbl{font-size:8px;color:var(--mut);letter-spacing:.26em;text-transform:uppercase;margin-bottom:3px;}
+.pnum{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(46px,8vw,70px);line-height:1;letter-spacing:.05em;}
+.pbadges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;}
+.preason{margin-top:7px;font-size:8px;color:var(--mut);line-height:1.7;border-top:1px solid var(--bdr);padding-top:6px;}
+.conf3{display:flex;flex-direction:column;gap:7px;margin-top:10px;padding:10px;background:rgba(0,0,0,.5);border:1px solid var(--bdr);border-radius:3px;}
+.conf3-hdr{font-size:7px;color:var(--mut);letter-spacing:.22em;margin-bottom:2px;text-transform:uppercase;}
+.conf3-row{display:grid;grid-template-columns:70px 1fr 38px 70px;align-items:center;gap:6px;}
+.conf3-lbl{font-size:8px;letter-spacing:.05em;white-space:nowrap;}
+.conf3-bo{height:6px;background:var(--dim);border-radius:3px;overflow:hidden;}
+.conf3-bi{height:100%;border-radius:3px;transition:width 1.1s ease;}
+.bar-num{background:linear-gradient(90deg,#005a15,#00ff41);box-shadow:0 0 6px #00ff4166;}
+.bar-col{background:linear-gradient(90deg,#5500aa,#bf7fff);box-shadow:0 0 6px #bf7fff66;}
+.bar-bs{background:linear-gradient(90deg,#005060,#00ffea);box-shadow:0 0 6px #00ffea66;}
+.conf3-pct{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;text-align:right;}
+.conf3-corr{font-size:8px;text-align:right;white-space:nowrap;letter-spacing:.04em;}
+.alts{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;}
+.achip{padding:3px 7px;background:var(--dim);border:1px solid var(--bdr);border-radius:2px;font-size:9px;color:var(--mut);}
+.achip b{color:var(--txt);}
+.panalysis{margin-top:8px;padding:7px 9px;background:rgba(0,255,65,.02);border:1px solid var(--bdr);border-radius:3px;font-size:8px;color:var(--g3);line-height:2;}
+.panalysis .ahl{color:var(--c);}
+.panalysis .aval{color:var(--txt);}
+
+/* STATS */
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:8px;}
+.cat3grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px;}
+@media(max-width:520px){.sgrid{grid-template-columns:repeat(2,1fr);}.cat3grid{grid-template-columns:1fr;}}
+.sc{background:#000;border:1px solid var(--bdr);border-radius:3px;padding:7px 9px;text-align:center;}
+.sc-lbl{font-size:6px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase;margin-bottom:3px;}
+.sc-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;line-height:1.2;}
+.sc-sub{font-size:7px;color:var(--mut);margin-top:3px;letter-spacing:.08em;}
+.sc-border-num{border-top:2px solid var(--g3);}
+.sc-border-col{border-top:2px solid #7700b3;}
+.sc-border-bs{border-top:2px solid #006a6a;}
+
+/* HISTORY */
+.htw{overflow-x:auto;}
+.htbl{width:100%;border-collapse:collapse;font-size:8px;}
+.htbl th{padding:5px 5px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;}
+.htbl td{padding:4px 5px;border-bottom:1px solid var(--bdr);color:var(--txt);white-space:nowrap;vertical-align:middle;}
+.htbl tr:hover td{background:rgba(0,255,65,.02);}
+
+/* BUTTONS */
+.btn{background:transparent;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:8px;font-weight:700;letter-spacing:.16em;cursor:pointer;padding:6px 10px;text-transform:uppercase;transition:all .2s;}
+.btn:hover{border-color:var(--g);box-shadow:var(--glsm);color:#fff;}
+.btn:active{transform:scale(.97);}
+.frow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center;}
+.istrip{margin-top:9px;padding:7px 9px;background:#000;border:1px solid var(--bdr);border-radius:3px;font-size:8px;color:var(--g3);line-height:2.1;}
+.istrip .hl{color:var(--g);}
+.chk{font-size:11px;}
+@keyframes savedFlash{0%{opacity:1;color:var(--g)}50%{opacity:.3}100%{opacity:1;color:var(--mut)}}
+.flash{animation:savedFlash .6s ease;}
+</style>
+</head>
+<body>
+<canvas id="mc"></canvas>
+<div class="cr tl"></div><div class="cr tr"></div>
+<div class="cr bl"></div><div class="cr br"></div>
+
+<!-- KEY OVERLAY (shown on first load) -->
+<div id="keyOverlay">
+  <div class="key-box">
+    <div class="key-logo">ANASHRAW<span class="ai">.AI</span></div>
+    <div class="key-sub">WINGO PREDICTOR v6 // SECURE ACCESS</div>
+    <div class="key-icon">🔐</div>
+    <div class="key-msg">
+      Live feed is running.<br>
+      Enter your key to unlock<br>
+      <strong style="color:var(--y)">predictions & history</strong>
+    </div>
+    <input class="key-input" id="keyInput" placeholder="ANASH-XXXX-XXXX" maxlength="14" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')verifyKey()"/>
+    <button class="key-btn" onclick="verifyKey()">🔓 UNLOCK PREDICTIONS</button>
+    <div class="key-err" id="keyErr"></div>
+    <div class="key-info">
+      🟢 Live feed visible to all<br>
+      🔑 Key required for predictions<br>
+      Contact admin for access key
+    </div>
+  </div>
+</div>
+
+<div class="w">
+<header>
+  <div class="htop">
+    <div>
+      <div class="btitle">ANASHRAW<span class="ai">.AI</span>&nbsp;<span class="ver">◈ WINGO PREDICTOR v6</span></div>
+      <div class="bsub">FIREBASE ENGINE // WINGO 1MIN // 2s POLL // 500 BUFFER</div>
+      <div class="bauth">[ BY ANASHRAW DIXIT ]</div>
+    </div>
+    <div>
+      <div class="clkm" id="clkm">00:00:00</div>
+      <div class="clkd" id="clkd">---</div>
+    </div>
+  </div>
+  <div class="sbar">
+    <div class="si"><div class="dot dg"></div>SYS<span class="sv">&nbsp;ON</span></div>
+    <div class="si"><div class="dot dg"></div>AI<span class="sv" id="aiStat">&nbsp;READY</span></div>
+    <div class="si"><div class="dot dy"></div>API<span class="sv" id="apiStat">&nbsp;IDLE</span></div>
+    <div class="si"><div class="dot dc"></div>FB<span class="sv" id="fbStat">&nbsp;CONN</span></div>
+    <div class="si"><div class="dot dg"></div>BUF<span class="sv" id="bufStat">&nbsp;0/500</span></div>
+    <div class="si"><div class="dot dg" id="autoDot"></div>AUTO<span class="sv" id="autoStat">&nbsp;ON</span></div>
+    <div class="si">NUM%<span class="sv" id="accNum">&nbsp;--</span></div>
+    <div class="si">COL%<span class="sv" id="accCol">&nbsp;--</span></div>
+    <div class="si">B/S%<span class="sv" id="accBS">&nbsp;--</span></div>
+    <div class="si">ANY%<span class="sv" id="accAny">&nbsp;--</span></div>
+    <div class="si">PRD<span class="sv" id="periodStat">&nbsp;--</span></div>
+  </div>
+
+  <!-- KEY STATUS -->
+  <div class="keybar">
+    <div class="dot dc"></div>
+    KEY: <span id="keyStatus" class="sv2">NOT VERIFIED</span>&nbsp;·&nbsp;
+    USER: <span id="keyUser" class="sv2">GUEST</span>&nbsp;·&nbsp;
+    EXPIRES: <span id="keyExpiry" class="sv2">--</span>&nbsp;·&nbsp;
+    <button class="btn" onclick="logoutKey()" style="border-color:var(--r);color:var(--r);font-size:7px;padding:2px 7px">LOGOUT</button>
+  </div>
+
+  <!-- FIREBASE STATUS -->
+  <div class="storebadge">
+    <div class="dot dc"></div>
+    FIREBASE&nbsp;·&nbsp;
+    RESULTS: <span id="fbResultCount" class="sv2">0</span>/500&nbsp;·&nbsp;
+    LAST SAVE: <span id="fbSaveTime" style="color:var(--y)">--:--:--</span>&nbsp;·&nbsp;
+    SOURCE: <span id="fbSource" class="sv2">--</span>
+  </div>
+
+  <div class="cdw">
+    <div class="cdl">NEXT PRED IN</div>
+    <div class="cdo"><div class="cdi" id="cdBar" style="width:100%"></div></div>
+    <div class="cdt" id="cdTimer">--</div>
+  </div>
+  <div class="pollbar">
+    <div class="plbl2">POLL 2s</div>
+    <div class="pdo"><div class="pdi" id="pollBar"></div></div>
+    <div class="pdt" id="pollLbl">IDLE</div>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- LIVE FEED — always visible -->
+  <div>
+    <div class="tb">
+      <div class="tbar">
+        <div class="td tdr"></div><div class="td tdy"></div><div class="td tdg"></div>
+        <div class="ttl">LIVE FEED — LAST 500 RESULTS</div>
+        <span style="font-size:7px;color:var(--mut)" id="syncLbl">NEVER</span>
+      </div>
+      <div style="padding:0"><div class="feed" id="feed">
+        <div style="color:var(--mut);padding:6px 0">// Loading from Firebase...</div>
+      </div></div>
+      <div class="tbd">
+        <div class="frow">
+          <button class="btn" onclick="fetchNow()">⟳ FETCH NOW</button>
+          <button class="btn" id="autoBtn" onclick="toggleAuto()" style="border-color:var(--c);color:var(--c)">⏸ PAUSE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREDICTION — locked until key entered -->
+  <div>
+    <div class="tb">
+      <div class="tbar">
+        <div class="td tdr"></div><div class="td tdy"></div><div class="td tdg"></div>
+        <div class="ttl">PATTERN PREDICTION — NEXT RESULT</div>
+      </div>
+      <div class="tbd">
+
+        <!-- LOCKED STATE -->
+        <div class="pred-locked" id="predLocked">
+          <div class="lock-icon">🔒</div>
+          <div class="lock-title">ENTER KEY TO SEE PREDICTIONS</div>
+          <div class="lock-sub">
+            Live feed is running in background.<br>
+            Enter your access key to unlock<br>
+            predictions & accuracy history.
+          </div>
+          <input class="lock-input" id="lockInput" placeholder="ANASH-XXXX-XXXX" maxlength="14" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')verifyKeyInline()"/>
+          <button class="lock-btn" onclick="verifyKeyInline()">🔓 UNLOCK</button>
+          <div class="lock-err" id="lockErr"></div>
+        </div>
+
+        <!-- UNLOCKED STATE -->
+        <div id="predUnlocked" style="display:none">
+          <div class="pc">
+            <div class="plbl" id="plbl">AWAITING DATA...</div>
+            <div class="pnum" id="pnum" style="color:var(--g);text-shadow:var(--glow)">--</div>
+            <div class="pbadges" id="pbadges"></div>
+            <div class="conf3" id="conf3Box" style="display:none">
+              <div class="conf3-hdr">▸ prediction confidence per category</div>
+              <div class="conf3-row">
+                <div class="conf3-lbl" style="color:var(--g)">● NUMBER</div>
+                <div class="conf3-bo"><div class="conf3-bi bar-num" id="barNum" style="width:0%"></div></div>
+                <div class="conf3-pct" id="pctNum" style="color:var(--g)">0%</div>
+                <div class="conf3-corr" id="corrNum" style="color:var(--mut)">--</div>
+              </div>
+              <div class="conf3-row">
+                <div class="conf3-lbl" style="color:var(--v)">● COLOR</div>
+                <div class="conf3-bo"><div class="conf3-bi bar-col" id="barCol" style="width:0%"></div></div>
+                <div class="conf3-pct" id="pctCol" style="color:var(--v)">0%</div>
+                <div class="conf3-corr" id="corrCol" style="color:var(--mut)">--</div>
+              </div>
+              <div class="conf3-row">
+                <div class="conf3-lbl" style="color:var(--c)">● BIG/SMALL</div>
+                <div class="conf3-bo"><div class="conf3-bi bar-bs" id="barBS" style="width:0%"></div></div>
+                <div class="conf3-pct" id="pctBS" style="color:var(--c)">0%</div>
+                <div class="conf3-corr" id="corrBS" style="color:var(--mut)">--</div>
+              </div>
+            </div>
+            <div class="alts" id="alts"></div>
+            <div class="preason" id="preason">// Loading Firebase data...</div>
+          </div>
+          <div class="panalysis" id="panalysis" style="display:none">
+            <span class="ahl">HOT: </span><span id="aHot" class="aval">--</span>&nbsp;
+            <span class="ahl">COLD: </span><span id="aCold" class="aval">--</span><br>
+            <span class="ahl">STREAK: </span><span id="aStreak" class="aval">--</span>&nbsp;
+            <span class="ahl">COL-RUN: </span><span id="aColorRun" class="aval">--</span><br>
+            <span class="ahl">B/S: </span><span id="aBSRatio" class="aval">--</span>
+          </div>
+          <div class="istrip">
+            ⬡ <span class="hl">ANY 1 hit</span> (num/color/B-S) = ✅ WIN<br>
+            ⬡ Data from <span class="hl">Firebase</span> — 500 results stored 24/7<br>
+            ⬡ Predicts only on <span class="hl">new period</span> detection<br>
+            ⬡ Poll: <span class="hl">every 2s</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS — locked -->
+  <div class="full" id="statsSection" style="display:none">
+    <div class="sgrid">
+      <div class="sc"><div class="sc-lbl">TOTAL PRED</div><div class="sc-val" id="stT" style="color:var(--g)">0</div></div>
+      <div class="sc"><div class="sc-lbl">ANY WIN ✅</div><div class="sc-val" id="stW" style="color:var(--g)">0</div></div>
+      <div class="sc"><div class="sc-lbl">ALL MISS ❌</div><div class="sc-val" id="stL" style="color:var(--r)">0</div></div>
+      <div class="sc"><div class="sc-lbl">OVERALL %</div><div class="sc-val" id="stA" style="color:var(--c)">--%</div></div>
+    </div>
+    <div class="cat3grid">
+      <div class="sc sc-border-num"><div class="sc-lbl">NUMBER EXACT ✅</div><div class="sc-val" id="stNumW" style="color:var(--g)">0</div><div class="sc-sub" id="stNumA">--% acc</div></div>
+      <div class="sc sc-border-col"><div class="sc-lbl">COLOR HIT ✅</div><div class="sc-val" id="stColW" style="color:var(--v)">0</div><div class="sc-sub" id="stColA">--% acc</div></div>
+      <div class="sc sc-border-bs"><div class="sc-lbl">BIG/SMALL HIT ✅</div><div class="sc-val" id="stBSW" style="color:var(--c)">0</div><div class="sc-sub" id="stBSA">--% acc</div></div>
+    </div>
+  </div>
+
+  <!-- HISTORY TABLE — locked -->
+  <div class="full" id="histSection" style="display:none">
+    <div class="tb">
+      <div class="tbar">
+        <div class="td tdr"></div><div class="td tdy"></div><div class="td tdg"></div>
+        <div class="ttl" id="histTtl">PREDICTION HISTORY (0)</div>
+        <button class="btn" onclick="clearHist()" style="border-color:var(--r);color:var(--r);font-size:7px">CLEAR HIST</button>
+      </div>
+      <div style="padding:0">
+        <div class="htw">
+          <table class="htbl">
+            <thead><tr>
+              <th>#</th><th>TIME</th><th>PERIOD</th>
+              <th>PRED №</th><th>PRED COL</th><th>PRED B/S</th>
+              <th style="color:var(--g)">NUM%</th>
+              <th style="color:var(--v)">COL%</th>
+              <th style="color:var(--c)">B/S%</th>
+              <th>ACT №</th><th>ACT COL</th><th>ACT B/S</th>
+              <th style="color:var(--g)">№</th>
+              <th style="color:var(--v)">COL</th>
+              <th style="color:var(--c)">B/S</th>
+              <th>RESULT</th>
+            </tr></thead>
+            <tbody id="histBody">
+              <tr><td colspan="16" style="text-align:center;padding:18px;color:var(--mut)">// Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end grid -->
+</div><!-- end wrapper -->
+
+<script>
+// ── FIREBASE CONFIG ──────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ",
+  authDomain: "anashrawwingokey.firebaseapp.com",
+  projectId: "anashrawwingokey",
+  storageBucket: "anashrawwingokey.firebasestorage.app",
+  messagingSenderId: "515715007863",
+  appId: "1:515715007863:web:bdebab42892be2d1bc0d72"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── MATRIX ──────────────────────────────────────────
+const mc=document.getElementById('mc'),ctx=mc.getContext('2d');
+function rsz(){mc.width=window.innerWidth;mc.height=window.innerHeight;}rsz();window.addEventListener('resize',rsz);
+const CH='アイウエオ0123456789ABCDEF<>[]{}';
+let dr=Array(Math.floor(window.innerWidth/14)).fill(1);
+setInterval(()=>{
+  ctx.fillStyle='rgba(0,0,0,0.04)';ctx.fillRect(0,0,mc.width,mc.height);
+  ctx.font='14px Share Tech Mono';
+  const cols=Math.floor(mc.width/14);while(dr.length<cols)dr.push(1);
+  for(let i=0;i<cols;i++){
+    ctx.fillStyle=dr[i]*14<80?'#00ff41':'#003a0f';
+    ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*14,dr[i]*14);
+    if(dr[i]*14>mc.height&&Math.random()>.975)dr[i]=0;dr[i]++;
+  }
+},50);
+
+// ── CLOCK ────────────────────────────────────────────
+setInterval(()=>{
+  const n=new Date(),p=x=>String(x).padStart(2,'0');
+  document.getElementById('clkm').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  const D=['SUN','MON','TUE','WED','THU','FRI','SAT'],M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('clkd').textContent=`${D[n.getDay()]} ${p(n.getDate())} ${M[n.getMonth()]} ${n.getFullYear()}`;
+},1000);
+
+// ── CONSTANTS ────────────────────────────────────────
+const DIRECT_API='https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?ts=';
+const MAX_BUF=500;
+const MAX_PREDS=200;
+const LS_PREDS='wingo_preds_v6';
+const LS_KEY='wingo_key_v6';
+
+// ── STATE ────────────────────────────────────────────
+let buf=[];
+let preds=[];
+let lastPeriod='';
+let pending=null;
+let autoOn=true;
+let cdSec=0;
+let isFetching=false;
+let tickCount=0;
+let isKeyVerified=false;
+let currentKey='';
+let kickListener=null;
+
+// ── KEY SYSTEM ───────────────────────────────────────
+async function verifyKey(){
+  const input=document.getElementById('keyInput');
+  const key=input.value.trim().toUpperCase();
+  const errEl=document.getElementById('keyErr');
+  if(!key){errEl.textContent='⚠ Please enter your key';return;}
+  errEl.textContent='Verifying...';
+  const result=await checkKeyInFirebase(key);
+  if(result.ok){
+    errEl.textContent='';
+    document.getElementById('keyOverlay').style.display='none';
+    unlockPredictions(key,result.data);
+  }else{
+    errEl.textContent='❌ '+result.msg;
+  }
+}
+
+async function verifyKeyInline(){
+  const input=document.getElementById('lockInput');
+  const key=input.value.trim().toUpperCase();
+  const errEl=document.getElementById('lockErr');
+  if(!key){errEl.textContent='⚠ Please enter your key';return;}
+  errEl.textContent='Verifying...';
+  const result=await checkKeyInFirebase(key);
+  if(result.ok){
+    errEl.textContent='';
+    document.getElementById('keyOverlay').style.display='none';
+    unlockPredictions(key,result.data);
+  }else{
+    errEl.textContent='❌ '+result.msg;
+  }
+}
+
+async function checkKeyInFirebase(key){
+  try{
+    const snap=await db.collection('keys').where('key','==',key).limit(1).get();
+    if(snap.empty)return{ok:false,msg:'Invalid key'};
+    const data=snap.docs[0].data();
+    if(data.status==='blocked')return{ok:false,msg:'Key is blocked'};
+    if(data.status==='expired')return{ok:false,msg:'Key has expired'};
+    const now=new Date();
+    if(data.expiresAt && data.expiresAt.toDate && data.expiresAt.toDate()<now){
+      // Auto-mark expired in DB
+      await snap.docs[0].ref.update({status:'expired'});
+      return{ok:false,msg:'Key has expired'};
+    }
+    // Update session
+    await snap.docs[0].ref.update({lastUsed:firebase.firestore.FieldValue.serverTimestamp(),onlineStatus:'online'});
+    return{ok:true,data:{...data,docId:snap.docs[0].id}};
+  }catch(e){
+    return{ok:false,msg:'Firebase error: '+e.message};
+  }
+}
+
+function unlockPredictions(key,data){
+  isKeyVerified=true;
+  currentKey=key;
+  // Save key to localStorage
+  localStorage.setItem(LS_KEY,key);
+  // Update UI
+  document.getElementById('keyStatus').textContent='VERIFIED ✓';
+  document.getElementById('keyUser').textContent=data.label||key.slice(-4);
+  // Expiry display
+  if(data.expiresAt){
+    const exp=data.expiresAt.toDate?data.expiresAt.toDate():new Date(data.expiresAt);
+    document.getElementById('keyExpiry').textContent=exp.toLocaleDateString();
+  }else{
+    document.getElementById('keyExpiry').textContent='LIFETIME';
+  }
+  // Show prediction sections
+  document.getElementById('predLocked').style.display='none';
+  document.getElementById('predUnlocked').style.display='block';
+  document.getElementById('statsSection').style.display='block';
+  document.getElementById('histSection').style.display='block';
+  // Load saved predictions
+  loadPreds();
+  if(buf.length>=10)doPredict();
+  // Listen for kick
+  listenForKick(data.docId);
+}
+
+function listenForKick(docId){
+  if(kickListener)kickListener();
+  kickListener=db.collection('keys').doc(docId).onSnapshot(snap=>{
+    if(!snap.exists)return;
+    const d=snap.data();
+    if(d.kickedAt && (!window._lastKick || d.kickedAt.toMillis()>window._lastKick)){
+      window._lastKick=d.kickedAt.toMillis();
+      alert('⚠️ You have been kicked by admin. Please re-enter your key.');
+      logoutKey();
+    }
+    if(d.status==='blocked'){
+      alert('🚫 Your key has been blocked by admin.');
+      logoutKey();
+    }
+  });
+}
+
+function logoutKey(){
+  isKeyVerified=false;currentKey='';
+  localStorage.removeItem(LS_KEY);
+  if(kickListener)kickListener();
+  document.getElementById('keyStatus').textContent='NOT VERIFIED';
+  document.getElementById('keyUser').textContent='GUEST';
+  document.getElementById('keyExpiry').textContent='--';
+  document.getElementById('predLocked').style.display='block';
+  document.getElementById('predUnlocked').style.display='none';
+  document.getElementById('statsSection').style.display='none';
+  document.getElementById('histSection').style.display='none';
+  document.getElementById('lockInput').value='';
+  document.getElementById('lockErr').textContent='';
+  document.getElementById('keyOverlay').style.display='flex';
+  document.getElementById('keyInput').value='';
+  document.getElementById('keyErr').textContent='';
+}
+
+// ── HELPERS ──────────────────────────────────────────
+function ts(){const n=new Date(),p=x=>String(x).padStart(2,'0');return`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
+function sp(p){return String(p).slice(-6);}
+function colorOf(n){if(n===0||n===5)return'violet';if([1,3,7,9].includes(n))return'green';return'red';}
+function sizeOf(n){return n>=5?'BIG':'SMALL';}
+function numCss(n){const c=colorOf(n);return c==='violet'?'var(--v)':c==='green'?'var(--g)':'var(--r)';}
+function colorMatch(a,b){
+  const sa=String(a).toLowerCase(),sb=String(b).toLowerCase();
+  for(const k of['violet','green','red']){if(sa.includes(k)&&sb.includes(k))return true;}
+  return false;
+}
+function colorBadge(col){
+  const s=String(col).toLowerCase();
+  const e=s.includes('violet')?'🟣':s.includes('green')?'🟢':'🔴';
+  const l=s.includes('violet')?'VIOLET':s.includes('green')?'GREEN':'RED';
+  const c=s.includes('violet')?'bv':s.includes('green')?'bg2':'br2';
+  return`<span class="badge ${c}">${e} ${l}</span>`;
+}
+function sizeBadge(bs){const b=String(bs).toUpperCase()==='BIG';return`<span class="badge ${b?'bbig':'bsml'}">${b?'BIG':'SMALL'}</span>`;}
+
+// ── PREDICTION HISTORY LOCAL ──────────────────────────
+function savePreds(){
+  try{localStorage.setItem(LS_PREDS,JSON.stringify(preds));}catch(e){}
+}
+function loadPreds(){
+  try{
+    const p=localStorage.getItem(LS_PREDS);
+    if(p){preds=JSON.parse(p);updateHistTable();updateStats();}
+    const pend=preds.find(e=>e.anyWin===null);
+    if(pend)pending={id:pend.id,num:pend.predictedNum,color:pend.predictedColor,bs:pend.predictedBS};
+  }catch(e){}
+}
+
+// ── LOAD FROM FIREBASE (startup) ──────────────────────
+async function loadFromFirebase(){
+  document.getElementById('fbStat').textContent=' LOADING';
+  document.getElementById('fbSource').textContent='FIREBASE';
+  try{
+    const snap=await db.collection('results')
+      .orderBy('savedAt','desc')
+      .limit(MAX_BUF)
+      .get();
+    if(!snap.empty){
+      const loaded=[];
+      snap.forEach(doc=>{
+        const d=doc.data();
+        loaded.push({period:d.period,number:d.number,colour:d.colour,bigSmall:d.bigSmall});
+      });
+      buf=loaded; // newest first
+      renderFeed();
+      document.getElementById('bufStat').textContent=` ${buf.length}/500`;
+      document.getElementById('fbResultCount').textContent=buf.length;
+      document.getElementById('fbSaveTime').textContent=ts();
+      document.getElementById('fbStat').textContent=' OK';
+      if(buf[0])lastPeriod=buf[0].period;
+      document.getElementById('periodStat').textContent=' '+sp(lastPeriod);
+      if(isKeyVerified&&buf.length>=10)doPredict();
+      document.getElementById('preason') && (document.getElementById('preason').textContent=`// Loaded ${buf.length} results from Firebase — ready!`);
+    }else{
+      document.getElementById('fbStat').textContent=' EMPTY';
+      document.getElementById('fbSource').textContent='DIRECT API';
+    }
+  }catch(e){
+    document.getElementById('fbStat').textContent=' ERR';
+    document.getElementById('fbSource').textContent='DIRECT API';
+  }
+  // After loading from Firebase, also do a direct poll
+  setTimeout(silentFetch,500);
+}
+
+// ── DIRECT API FETCH (2s poll) ─────────────────────────
+async function silentFetch(){
+  if(isFetching)return;isFetching=true;
+  document.getElementById('apiStat').textContent=' FETCH';
+  document.getElementById('pollLbl').textContent='...';
+  animatePoll();
+
+  const url=DIRECT_API+Date.now();
+  try{
+    let resp;
+    try{resp=await fetch(url,{cache:'no-store'});}
+    catch{resp=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,{cache:'no-store'});}
+    const data=await resp.json();
+
+    let list=[];
+    if(data.data&&Array.isArray(data.data.list))list=data.data.list;
+    else if(data.data&&Array.isArray(data.data))list=data.data;
+    else if(Array.isArray(data))list=data;
+    else if(data.list&&Array.isArray(data.list))list=data.list;
+    else{for(const k of Object.keys(data||{})){if(Array.isArray(data[k])&&data[k].length){list=data[k];break;}if(data[k]&&typeof data[k]==='object'){for(const k2 of Object.keys(data[k]||{})){if(Array.isArray(data[k][k2])&&data[k][k2].length){list=data[k][k2];break;}}if(list.length)break;}}}
+
+    if(!list.length){document.getElementById('apiStat').textContent=' NONE';document.getElementById('pollLbl').textContent='EMPTY';isFetching=false;return;}
+
+    const norm=list.map(item=>{
+      const rawNum=item.openNum??item.number??item.num??item.drawNum??'?';
+      const num=parseInt(rawNum);
+      const period=String(item.issue??item.issueNumber??item.period??item.id??'?');
+      let col=String(item.colour??item.color??item.winColor??'').toLowerCase();
+      if(!col&&!isNaN(num))col=colorOf(num);
+      let bs=String(item.bigSmall??item.size??item.BigSmall??'').toUpperCase();
+      if(!bs&&!isNaN(num))bs=sizeOf(num);
+      return{period,number:num,colour:col,bigSmall:bs};
+    }).filter(x=>!isNaN(x.number)&&x.number>=0&&x.number<=9);
+
+    if(!norm.length){document.getElementById('apiStat').textContent=' PARSE ERR';isFetching=false;return;}
+
+    const newPeriod=norm[0]?.period||'';
+    const isNew=newPeriod&&newPeriod!==lastPeriod;
+
+    // Merge new results into buf
+    const existingPeriods=new Set(buf.map(b=>b.period));
+    const freshOnly=norm.filter(r=>!existingPeriods.has(r.period));
+    if(freshOnly.length>0){
+      buf=[...freshOnly,...buf].slice(0,MAX_BUF);
+    }else if(buf.length===0){
+      buf=norm.slice(0,MAX_BUF);
+    }
+
+    renderFeed();
+    document.getElementById('bufStat').textContent=` ${buf.length}/500`;
+    document.getElementById('apiStat').textContent=' LIVE';
+    document.getElementById('syncLbl').textContent='SYNC:'+ts();
+    document.getElementById('periodStat').textContent=' '+sp(newPeriod);
+    document.getElementById('pollLbl').textContent=isNew?'NEW!':'SAME';
+
+    if(isNew){
+      lastPeriod=newPeriod;
+      const latest=buf[0];
+
+      // Save new result to Firebase
+      saveResultToFirebase(latest);
+
+      // Verify pending prediction
+      if(pending&&isKeyVerified){
+        const winNum=(pending.num===latest.number);
+        const winColor=colorMatch(pending.color,latest.colour);
+        const winBS=(String(pending.bs).toUpperCase()===String(latest.bigSmall).toUpperCase());
+        const anyWin=winNum||winColor||winBS;
+        preds=preds.map(e=>e.id===pending.id
+          ?{...e,actualNum:latest.number,actualColor:latest.colour,actualBS:latest.bigSmall,winNum,winColor,winBS,anyWin}:e);
+        pending=null;
+        updateHistTable();updateStats();savePreds();
+      }
+      cdSec=60;
+      if(buf.length>=10&&isKeyVerified)doPredict();
+    }
+    if(buf.length>=10&&!pending&&preds.length===0&&lastPeriod&&isKeyVerified)doPredict();
+
+  }catch(e){
+    document.getElementById('apiStat').textContent=' ERR';
+    document.getElementById('pollLbl').textContent='FAIL';
+  }
+  isFetching=false;
+}
+
+async function saveResultToFirebase(r){
+  try{
+    await db.collection('results').doc(r.period).set({
+      ...r,
+      savedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('fbResultCount').textContent=buf.length;
+    document.getElementById('fbSaveTime').textContent=ts();
+  }catch(e){}
+}
+
+function fetchNow(){lastPeriod='';silentFetch();}
+
+function animatePoll(){
+  const bar=document.getElementById('pollBar');let w=0;bar.style.width='0%';
+  const iv=setInterval(()=>{w+=8;bar.style.width=Math.min(w,100)+'%';if(w>=100){clearInterval(iv);setTimeout(()=>bar.style.width='0%',300);}},40);
+}
+
+function renderFeed(){
+  const feed=document.getElementById('feed');
+  if(!buf.length){feed.innerHTML='<div style="color:var(--mut)">// No data loaded</div>';return;}
+  feed.innerHTML=buf.map((r,i)=>`
+    <div class="fr">
+      <span class="fi">[${String(i).padStart(2,'0')}]</span>
+      <span class="fp">PRD&nbsp;${sp(r.period)}</span>
+      <span style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:${numCss(r.number)};min-width:14px;text-align:center">${r.number}</span>
+      ${colorBadge(r.colour)}${sizeBadge(r.bigSmall)}
+    </div>`).join('');
+}
+
+// ── ANALYSIS ENGINE ───────────────────────────────────
+function analyzeAndPredict(data){
+  const nums=data.map(d=>d.number),n=nums.length;
+  const freq=Array(10).fill(0);nums.forEach(x=>freq[x]++);
+  const sorted=[...freq.map((f,i)=>({n:i,f}))].sort((a,b)=>b.f-a.f);
+  const hot=sorted.slice(0,3).map(x=>x.n),cold=sorted.slice(-3).map(x=>x.n);
+  let streakNum=nums[n-1],streakLen=1;
+  for(let i=n-2;i>=0;i--){if(nums[i]===streakNum)streakLen++;else break;}
+  const colors=data.map(d=>d.colour);
+  let colorStreakColor=colors[n-1],colorStreakLen=1;
+  for(let i=n-2;i>=0;i--){if(String(colors[i]).toLowerCase()===String(colorStreakColor).toLowerCase())colorStreakLen++;else break;}
+  const last10=nums.slice(-10);
+  const bigCount=last10.filter(x=>x>=5).length;
+  const last5=nums.slice(-5);
+  const missing=[];for(let i=0;i<10;i++){if(!last5.includes(i))missing.push(i);}
+  const scores=Array(10).fill(0);
+  freq.forEach((f,i)=>{scores[i]+=f*2;});
+  if(streakLen>=3)scores[streakNum]-=15;
+  if(streakLen>=2)scores[streakNum]-=8;
+  if(colorStreakLen>=3){const opp=colorStreakColor.includes('green')?'red':'green';for(let i=0;i<10;i++){if(colorOf(i)===opp)scores[i]+=12;}}
+  if(bigCount>=8){for(let i=0;i<5;i++)scores[i]+=10;}
+  if(10-bigCount>=8){for(let i=5;i<10;i++)scores[i]+=10;}
+  missing.forEach(m=>scores[m]+=5);
+  last5.forEach((x,i)=>{scores[x]-=(5-i)*1.5;});
+  const minScore=Math.min(...scores);
+  const adj=scores.map(s=>s-minScore+1);
+  const total=adj.reduce((a,b)=>a+b,0);
+  const probs=adj.map(s=>Math.round((s/total)*100));
+  const best=probs.indexOf(Math.max(...probs));
+  const altsAll=probs.map((p,i)=>({n:i,p})).sort((a,b)=>b.p-a.p);
+  const alts=altsAll.filter(x=>x.n!==best).slice(0,3);
+  const secondBest=altsAll[1].p;
+  const gap=probs[best]-secondBest;
+  const numConf=Math.min(90,Math.max(28,33+gap*2+(n>=200?15:n>=100?10:n>=50?6:0)));
+  let colorConf=44;
+  if(colorStreakLen>=4)colorConf=73;
+  else if(colorStreakLen>=3)colorConf=62;
+  else if(colorStreakLen>=2)colorConf=51;
+  const predColor=colorOf(best);
+  const colFreq={green:0,red:0,violet:0};
+  data.slice(-20).forEach(d=>{const c=String(d.colour).toLowerCase();if(c.includes('green'))colFreq.green++;else if(c.includes('violet'))colFreq.violet++;else colFreq.red++;});
+  const myColCount=colFreq[predColor]||0;
+  if(myColCount<=4)colorConf+=8;else if(myColCount>=12)colorConf-=8;
+  colorConf=Math.min(90,Math.max(28,Math.round(colorConf)));
+  const bsImbalance=Math.abs(bigCount-5);
+  let bsConf=38+bsImbalance*4+(n>=200?12:n>=100?8:n>=50?5:0);
+  bsConf=Math.min(90,Math.max(28,Math.round(bsConf)));
+  const reasons=[];
+  if(streakLen>=2)reasons.push(`${streakNum} appeared ${streakLen}x in a row`);
+  if(colorStreakLen>=3)reasons.push(`${colorStreakColor} streak of ${colorStreakLen}`);
+  if(bigCount>=7)reasons.push(`Big heavy (${bigCount}/10), Small likely`);
+  if(10-bigCount>=7)reasons.push(`Small heavy (${10-bigCount}/10), Big likely`);
+  reasons.push(`Hot: ${hot.join(',')} · №${best} top score (${n} records)`);
+  return{predictedNumber:best,predictedColor:predColor,predictedBigSmall:sizeOf(best),
+    numConf:Math.round(numConf),colorConf,bsConf,
+    alternatives:alts.map(a=>({number:a.n,color:colorOf(a.n),bigSmall:sizeOf(a.n),pct:a.p})),
+    reason:reasons.slice(0,2).join('. ')+'.',hot,cold,streakNum,streakLen,colorStreakColor,colorStreakLen,bigCount};
+}
+
+// ── PREDICT ───────────────────────────────────────────
+function doPredict(){
+  if(buf.length<10||!isKeyVerified)return;
+  document.getElementById('aiStat').textContent=' BUSY';
+  document.getElementById('plbl').textContent='ANALYZING...';
+  const seq=[...buf].reverse();
+  const R=analyzeAndPredict(seq);
+  const{predictedNumber:pn,predictedColor:pc,predictedBigSmall:pbs,
+    numConf,colorConf,bsConf,alternatives:altsArr,reason,
+    hot,cold,streakNum,streakLen,colorStreakColor,colorStreakLen,bigCount}=R;
+  document.getElementById('pnum').textContent=String(pn);
+  document.getElementById('pnum').style.color=numCss(pn);
+  document.getElementById('pnum').style.textShadow=`0 0 20px ${numCss(pn)},0 0 40px ${numCss(pn)}44`;
+  document.getElementById('plbl').textContent=`PREDICTED NEXT (from ${buf.length} records)`;
+  document.getElementById('pbadges').innerHTML=colorBadge(pc)+' '+sizeBadge(pbs);
+  document.getElementById('preason').textContent=reason;
+  document.getElementById('conf3Box').style.display='flex';
+  document.getElementById('barNum').style.width=numConf+'%';
+  document.getElementById('pctNum').textContent=numConf+'%';
+  document.getElementById('barCol').style.width=colorConf+'%';
+  document.getElementById('pctCol').textContent=colorConf+'%';
+  document.getElementById('barBS').style.width=bsConf+'%';
+  document.getElementById('pctBS').textContent=bsConf+'%';
+  updateCorrLabels();
+  const ae=document.getElementById('alts');ae.innerHTML='';
+  altsArr.forEach(a=>{
+    const d=document.createElement('div');d.className='achip';
+    d.innerHTML=`№${a.number} <b>${a.pct}%</b> <span style="font-size:7px;opacity:.6">${String(a.color).charAt(0).toUpperCase()}</span>`;
+    ae.appendChild(d);
+  });
+  document.getElementById('panalysis').style.display='block';
+  document.getElementById('aHot').textContent=hot.join(', ');
+  document.getElementById('aCold').textContent=cold.join(', ');
+  document.getElementById('aStreak').textContent=`${streakNum} x${streakLen}`;
+  document.getElementById('aColorRun').textContent=`${colorStreakColor} x${colorStreakLen}`;
+  document.getElementById('aBSRatio').textContent=`Big ${bigCount}/10 · Small ${10-bigCount}/10`;
+  const entry={id:Date.now(),time:ts(),afterPeriod:buf[0]?.period||'--',
+    predictedNum:pn,predictedColor:pc,predictedBS:pbs,numConf,colorConf,bsConf,
+    actualNum:null,actualColor:null,actualBS:null,winNum:null,winColor:null,winBS:null,anyWin:null};
+  preds.unshift(entry);
+  if(preds.length>MAX_PREDS)preds=preds.slice(0,MAX_PREDS);
+  pending={id:entry.id,num:pn,color:pc,bs:pbs};
+  updateHistTable();updateStats();savePreds();
+  document.getElementById('aiStat').textContent=' READY';
+}
+
+function updateCorrLabels(){
+  const done=preds.filter(e=>e.anyWin!==null),t=done.length;
+  if(!t){['corrNum','corrCol','corrBS'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='--';el.style.color='var(--mut)';}});return;}
+  const wN=done.filter(e=>e.winNum).length;
+  const wC=done.filter(e=>e.winColor).length;
+  const wB=done.filter(e=>e.winBS).length;
+  function setCorr(id,w,total){
+    const pct=Math.round((w/total)*100);
+    const el=document.getElementById(id);if(!el)return;
+    el.textContent=`${w}/${total}·${pct}%`;
+    el.style.color=pct>=50?'var(--g)':pct>=30?'var(--y)':'var(--r)';
+  }
+  setCorr('corrNum',wN,t);setCorr('corrCol',wC,t);setCorr('corrBS',wB,t);
+}
+
+function updateHistTable(){
+  document.getElementById('histTtl').textContent=`PREDICTION HISTORY (${preds.length})`;
+  const tb=document.getElementById('histBody');
+  if(!preds.length){tb.innerHTML='<tr><td colspan="16" style="text-align:center;padding:18px;color:var(--mut)">// No predictions yet...</td></tr>';return;}
+  tb.innerHTML='';
+  preds.forEach((e,i)=>{
+    const tr=document.createElement('tr');
+    const isPend=e.anyWin===null;
+    const chk=(v)=>isPend?`<span class="bpend">⏳</span>`:v?`<span class="chk" style="color:var(--g)">✅</span>`:`<span class="chk" style="color:var(--r)">❌</span>`;
+    const resCell=isPend?`<span class="bpend">⏳</span>`:e.anyWin?`<span class="bwin">✅ WIN</span>`:`<span class="bloss">❌ MISS</span>`;
+    const aN=e.actualNum!==null?`<span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:${numCss(e.actualNum)}">${e.actualNum}</span>`:`<span style="color:var(--mut)">--</span>`;
+    const aC=e.actualColor?colorBadge(e.actualColor):`<span style="color:var(--mut)">--</span>`;
+    const aBS=e.actualBS?sizeBadge(e.actualBS):`<span style="color:var(--mut)">--</span>`;
+    const ncc=e.numConf>=65?'var(--g)':e.numConf>=40?'var(--y)':'var(--r)';
+    const ccc=e.colorConf>=65?'var(--v)':e.colorConf>=40?'var(--y)':'var(--r)';
+    const bcc=e.bsConf>=65?'var(--c)':e.bsConf>=40?'var(--y)':'var(--r)';
+    tr.innerHTML=`
+      <td style="color:var(--mut)">#${i+1}</td>
+      <td style="color:var(--mut);font-size:7px">${e.time}</td>
+      <td style="color:var(--c);font-family:'Orbitron',monospace;font-size:7px">${sp(e.afterPeriod)}</td>
+      <td><span style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:${numCss(e.predictedNum)}">${e.predictedNum}</span></td>
+      <td>${colorBadge(e.predictedColor)}</td>
+      <td>${sizeBadge(e.predictedBS)}</td>
+      <td style="color:${ncc};font-family:'Orbitron',monospace;font-size:9px;font-weight:700">${e.numConf}%</td>
+      <td style="color:${ccc};font-family:'Orbitron',monospace;font-size:9px;font-weight:700">${e.colorConf}%</td>
+      <td style="color:${bcc};font-family:'Orbitron',monospace;font-size:9px;font-weight:700">${e.bsConf}%</td>
+      <td>${aN}</td><td>${aC}</td><td>${aBS}</td>
+      <td style="text-align:center">${chk(e.winNum)}</td>
+      <td style="text-align:center">${chk(e.winColor)}</td>
+      <td style="text-align:center">${chk(e.winBS)}</td>
+      <td>${resCell}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function updateStats(){
+  const done=preds.filter(e=>e.anyWin!==null),t=done.length;
+  const anyW=done.filter(e=>e.anyWin).length,anyL=t-anyW;
+  const anyA=t?Math.round((anyW/t)*100):null;
+  const numW=done.filter(e=>e.winNum).length;
+  const colW=done.filter(e=>e.winColor).length;
+  const bsW=done.filter(e=>e.winBS).length;
+  const numA=t?Math.round((numW/t)*100):null;
+  const colA=t?Math.round((colW/t)*100):null;
+  const bsA=t?Math.round((bsW/t)*100):null;
+  document.getElementById('stT').textContent=preds.length;
+  document.getElementById('stW').textContent=anyW;
+  document.getElementById('stL').textContent=anyL;
+  document.getElementById('stA').textContent=anyA!==null?anyA+'%':'--%';
+  document.getElementById('stNumW').textContent=numW;
+  document.getElementById('stNumA').textContent=numA!==null?`${numA}% accuracy`:'--% acc';
+  document.getElementById('stColW').textContent=colW;
+  document.getElementById('stColA').textContent=colA!==null?`${colA}% accuracy`:'--% acc';
+  document.getElementById('stBSW').textContent=bsW;
+  document.getElementById('stBSA').textContent=bsA!==null?`${bsA}% accuracy`:'--% acc';
+  document.getElementById('accNum').textContent=numA!==null?' '+numA+'%':' --';
+  document.getElementById('accCol').textContent=colA!==null?' '+colA+'%':' --';
+  document.getElementById('accBS').textContent=bsA!==null?' '+bsA+'%':' --';
+  document.getElementById('accAny').textContent=anyA!==null?' '+anyA+'%':' --';
+  updateCorrLabels();
+}
+
+function clearHist(){
+  if(!confirm('Clear prediction history?'))return;
+  preds=[];pending=null;updateHistTable();updateStats();savePreds();
+}
+
+function toggleAuto(){
+  autoOn=!autoOn;
+  const btn=document.getElementById('autoBtn'),dot=document.getElementById('autoDot');
+  if(autoOn){btn.textContent='⏸ PAUSE';btn.style.borderColor='var(--c)';btn.style.color='var(--c)';dot.className='dot dg';document.getElementById('autoStat').textContent=' ON';}
+  else{btn.textContent='▶ RESUME';btn.style.borderColor='var(--y)';btn.style.color='var(--y)';dot.style.cssText='width:6px;height:6px;border-radius:50%;background:var(--y);box-shadow:0 0 5px var(--y);flex-shrink:0;';document.getElementById('autoStat').textContent=' PAUSED';}
+}
+
+// ── MAIN TICK (1s) — poll every 2s ───────────────────
+setInterval(()=>{
+  if(autoOn&&cdSec>0){cdSec--;document.getElementById('cdBar').style.width=((cdSec/60)*100)+'%';document.getElementById('cdTimer').textContent=cdSec+'s';}
+  else if(!autoOn){document.getElementById('cdBar').style.width='0%';document.getElementById('cdTimer').textContent='--';}
+  if(autoOn){tickCount++;if(tickCount>=2){tickCount=0;silentFetch();}}
+},1000);
+
+// ── INIT ─────────────────────────────────────────────
+// Check saved key
+const savedKey=localStorage.getItem(LS_KEY);
+if(savedKey){
+  // Auto-verify saved key
+  checkKeyInFirebase(savedKey).then(result=>{
+    if(result.ok){
+      document.getElementById('keyOverlay').style.display='none';
+      unlockPredictions(savedKey,result.data);
+    }else{
+      localStorage.removeItem(LS_KEY);
+    }
+  });
+}
+
+// Load Firebase data immediately (feed visible to all)
+loadFromFirebase();
+</script>
+</body>
+</html>
