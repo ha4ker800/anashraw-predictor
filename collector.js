@@ -18,18 +18,8 @@ const TS = Date.now();
 // ── MULTIPLE APIs to try (different domains/endpoints) ──
 // These are public WinGo 1Min APIs from different lottery platforms
 const API_URLS = [
-  // Variant 1 — with pageNo param
-  `https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=100&language=0&ts=${TS}`,
-  // Variant 2 — tc lottery
-  `https://api.tcgame.vip/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=50&ts=${TS}`,
-  // Variant 3 — 91club style
-  `https://api.91club.blue/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=50&ts=${TS}`,
-  // Variant 4 — daman style
-  `https://api.damangames.in/api/webapi/GetNoaverageEmerdList?pageNo=1&pageSize=100&typeId=1&language=0&ts=${TS}`,
-  // Variant 5 — lottery9 
-  `https://api.lottery9.vip/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=50&ts=${TS}`,
+  `https://api.allorigins.win/raw?url=${encodeURIComponent('https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=100&language=0&ts=' + Date.now())}`
 ];
-
 // Different User-Agent strings to rotate
 const USER_AGENTS = [
   'Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
