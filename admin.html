@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANASHRAW.AI — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#000;--sur:#050f05;--bdr:#0f2b0f;--dim:#003a0f;
+  --g:#00ff41;--g3:#007a1e;--r:#ff0040;--y:#ffe000;
+  --c:#00ffea;--v:#bf7fff;--txt:#b8ffb8;--mut:#3a6b3a;
+  --glow:0 0 10px #00ff41,0 0 22px #00ff4166;
+  --glsm:0 0 6px #00ff41,0 0 12px #00ff4133;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--g);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999;}
+#mc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.04;pointer-events:none;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:#000;z-index:10000;display:flex;align-items:center;justify-content:center;}
+.login-box{background:var(--sur);border:1px solid var(--g3);border-radius:6px;padding:36px 28px;max-width:360px;width:90%;text-align:center;}
+.login-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.12em;margin-bottom:4px;}
+.login-sub{font-size:9px;color:var(--mut);letter-spacing:.25em;margin-bottom:26px;}
+.login-input{width:100%;padding:12px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:14px;text-align:center;outline:none;margin-bottom:12px;letter-spacing:.15em;}
+.login-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
+.login-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--g);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.2em;cursor:pointer;transition:all .2s;}
+.login-btn:hover{background:var(--dim);box-shadow:var(--glow);}
+.login-err{color:var(--r);font-size:10px;margin-top:10px;min-height:16px;}
+
+/* LAYOUT */
+.w{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 14px 80px;}
+header{padding:16px 0 10px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;}
+.brand{font-family:'Orbitron',monospace;font-size:clamp(14px,3vw,22px);font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.1em;}
+.brand .ai{color:var(--c);}
+.brand .tag{font-size:clamp(8px,1.5vw,11px);color:var(--r);text-shadow:0 0 8px var(--r);}
+.brand-sub{font-size:8px;color:var(--mut);letter-spacing:.25em;margin-top:3px;}
+.hdr-right{text-align:right;}
+.clkm{font-family:'Orbitron',monospace;font-size:clamp(16px,3.5vw,26px);font-weight:700;color:var(--g);text-shadow:var(--glow);}
+.clkd{font-size:8px;color:var(--mut);letter-spacing:.15em;margin-top:2px;}
+
+/* STATS BAR */
+.statsbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
+@media(max-width:560px){.statsbar{grid-template-columns:repeat(2,1fr);}}
+.statcard{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;padding:12px 14px;text-align:center;}
+.stat-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;line-height:1.2;}
+.stat-lbl{font-size:7px;color:var(--mut);letter-spacing:.2em;margin-top:3px;text-transform:uppercase;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+@media(max-width:700px){.grid2{grid-template-columns:1fr;}}
+.full{grid-column:1/-1;}
+
+/* PANEL BOX */
+.pbox{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;overflow:hidden;}
+.pbar{display:flex;align-items:center;gap:7px;padding:7px 12px;background:var(--dim);border-bottom:1px solid var(--bdr);}
+.pd{width:8px;height:8px;border-radius:50%;}
+.pd-r{background:var(--r);}.pd-y{background:var(--y);}.pd-g{background:var(--g);}
+.ptl{font-size:9px;color:var(--mut);letter-spacing:.22em;flex:1;}
+.pbody{padding:14px;}
+
+/* FORM */
+.form-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;}
+.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:80px;}
+.form-lbl{font-size:8px;color:var(--mut);letter-spacing:.15em;text-transform:uppercase;}
+.form-input{padding:8px 10px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;width:100%;}
+.form-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
+.form-select{padding:8px 10px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;width:100%;}
+
+/* GENERATED KEY DISPLAY */
+.gen-key-box{background:#000;border:1px solid var(--g);border-radius:3px;padding:12px;text-align:center;margin-top:10px;display:none;}
+.gen-key-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--g);text-shadow:var(--glow);letter-spacing:.2em;word-break:break-all;}
+.gen-key-info{font-size:9px;color:var(--mut);margin-top:6px;letter-spacing:.1em;}
+
+/* KEYS TABLE */
+.ktbl-wrap{overflow-x:auto;max-height:320px;overflow-y:auto;}
+.ktbl-wrap::-webkit-scrollbar{width:3px;height:3px;}
+.ktbl-wrap::-webkit-scrollbar-track{background:var(--dim);}
+.ktbl-wrap::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
+.ktbl{width:100%;border-collapse:collapse;font-size:9px;}
+.ktbl th{padding:6px 8px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.2em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;position:sticky;top:0;}
+.ktbl td{padding:6px 8px;border-bottom:1px solid var(--bdr);color:var(--txt);white-space:nowrap;vertical-align:middle;}
+.ktbl tr:hover td{background:rgba(0,255,65,.02);}
+.badge{padding:2px 8px;border-radius:2px;font-size:8px;font-weight:bold;display:inline-block;}
+.b-active{background:rgba(0,255,65,.15);border:1px solid var(--g);color:var(--g);}
+.b-blocked{background:rgba(255,0,64,.15);border:1px solid var(--r);color:var(--r);}
+.b-expired{background:rgba(100,100,100,.15);border:1px solid #555;color:#888;}
+.b-online{background:rgba(0,255,234,.15);border:1px solid var(--c);color:var(--c);}
+.b-offline{background:rgba(50,50,50,.3);border:1px solid #333;color:#555;}
+
+/* USERS TABLE */
+.utbl-wrap{overflow-x:auto;max-height:280px;overflow-y:auto;}
+.utbl-wrap::-webkit-scrollbar{width:3px;}
+.utbl-wrap::-webkit-scrollbar-track{background:var(--dim);}
+.utbl-wrap::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
+.utbl{width:100%;border-collapse:collapse;font-size:9px;}
+.utbl th{padding:6px 8px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.2em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;position:sticky;top:0;}
+.utbl td{padding:6px 8px;border-bottom:1px solid var(--bdr);color:var(--txt);white-space:nowrap;vertical-align:middle;}
+
+/* LIVE DOT */
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 6px var(--g);display:inline-block;animation:blink 1.2s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
+/* BUTTONS */
+.btn{background:transparent;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:8px;font-weight:700;letter-spacing:.16em;cursor:pointer;padding:6px 10px;text-transform:uppercase;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:var(--g);box-shadow:var(--glsm);color:#fff;}
+.btn:active{transform:scale(.97);}
+.btn-r{border-color:#7a0010;color:var(--r);}
+.btn-r:hover{border-color:var(--r);box-shadow:0 0 6px var(--r);}
+.btn-y{border-color:#7a5500;color:var(--y);}
+.btn-y:hover{border-color:var(--y);box-shadow:0 0 6px var(--y);}
+.btn-c{border-color:#006060;color:var(--c);}
+.btn-c:hover{border-color:var(--c);box-shadow:0 0 6px var(--c);}
+.btn-lg{width:100%;padding:10px;font-size:10px;}
+.frow{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+
+/* RESULTS MONITOR */
+.res-mini{max-height:160px;overflow-y:auto;background:#000;border:1px solid var(--bdr);border-radius:3px;padding:7px 9px;font-size:10px;line-height:1.8;}
+.res-mini::-webkit-scrollbar{width:3px;}
+.res-mini::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;}
+.toast-item{background:var(--sur);border:1px solid var(--g3);border-radius:4px;padding:10px 16px;font-size:10px;color:var(--g);letter-spacing:.1em;animation:toastin .3s ease;box-shadow:var(--glsm);}
+.toast-item.err{border-color:var(--r);color:var(--r);}
+.toast-item.warn{border-color:var(--y);color:var(--y);}
+@keyframes toastin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dg{background:var(--g);box-shadow:var(--glsm);animation:blink 1.4s infinite;}
+.dy{background:var(--y);animation:blink 2s infinite;}
+.empty-row{text-align:center;padding:20px;color:var(--mut);font-size:9px;}
+.sbar{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);flex-wrap:wrap;gap:2px;margin-top:8px;}
+.si{display:flex;align-items:center;gap:4px;padding:2px 9px 2px 5px;font-size:8px;color:var(--mut);border-right:1px solid var(--bdr);}
+.si:last-child{border-right:none;}
+.sv{color:var(--g);font-weight:700;}
+</style>
+</head>
+<body>
+<canvas id="mc"></canvas>
+<div id="toast"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div style="font-size:32px;margin-bottom:10px">🛡️</div>
+    <div class="login-title">ADMIN PANEL</div>
+    <div class="login-sub">ANASHRAW.AI // SECURE ACCESS</div>
+    <input class="login-input" id="pwInput" type="password" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')adminLogin()"/>
+    <button class="login-btn" onclick="adminLogin()">🔓 LOGIN</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="w">
+<header>
+  <div>
+    <div class="brand">ANASHRAW<span class="ai">.AI</span> <span class="tag">◈ ADMIN</span></div>
+    <div class="brand-sub">CONTROL PANEL // FIREBASE MANAGER // v6</div>
+  </div>
+  <div class="hdr-right">
+    <div class="clkm" id="clkm">00:00:00</div>
+    <div class="clkd" id="clkd">---</div>
+    <button class="btn btn-r" style="margin-top:6px;font-size:7px" onclick="adminLogout()">LOGOUT</button>
+  </div>
+</header>
+
+<!-- STATUS BAR -->
+<div class="sbar">
+  <div class="si"><div class="dot dg"></div>SYSTEM<span class="sv">&nbsp;ONLINE</span></div>
+  <div class="si"><div class="dot dg"></div>FIREBASE<span class="sv" id="fbStat">&nbsp;CONN</span></div>
+  <div class="si">TOTAL KEYS<span class="sv" id="sTotalKeys">&nbsp;0</span></div>
+  <div class="si">ACTIVE<span class="sv" id="sActiveKeys">&nbsp;0</span></div>
+  <div class="si">LIVE USERS<span class="sv" id="sLiveUsers">&nbsp;0</span></div>
+  <div class="si">RESULTS<span class="sv" id="sResults">&nbsp;0</span></div>
+  <div class="si">LAST RESULT<span class="sv" id="sLastResult">&nbsp;--</span></div>
+</div>
+
+<!-- STATS CARDS -->
+<div class="statsbar">
+  <div class="statcard">
+    <div class="stat-val" id="dTotalKeys" style="color:var(--g)">0</div>
+    <div class="stat-lbl">Total Keys</div>
+  </div>
+  <div class="statcard">
+    <div class="stat-val" id="dActiveKeys" style="color:var(--c)">0</div>
+    <div class="stat-lbl">Active Keys</div>
+  </div>
+  <div class="statcard">
+    <div class="stat-val" id="dLiveUsers" style="color:var(--y)">0</div>
+    <div class="stat-lbl">Live Users</div>
+  </div>
+  <div class="statcard">
+    <div class="stat-val" id="dResults" style="color:var(--v)">0</div>
+    <div class="stat-lbl">Results Stored</div>
+  </div>
+</div>
+
+<div class="grid2">
+
+  <!-- KEY GENERATOR -->
+  <div>
+    <div class="pbox">
+      <div class="pbar">
+        <div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div>
+        <div class="ptl">KEY GENERATOR</div>
+      </div>
+      <div class="pbody">
+
+        <!-- LABEL -->
+        <div class="form-group" style="margin-bottom:10px">
+          <div class="form-lbl">Key Label (optional)</div>
+          <input class="form-input" id="keyLabel" placeholder="e.g. User1, VIP, etc"/>
+        </div>
+
+        <!-- DURATION TYPE -->
+        <div class="form-group" style="margin-bottom:10px">
+          <div class="form-lbl">Duration Type</div>
+          <select class="form-select" id="durType" onchange="updateDurInput()">
+            <option value="hours">Hours</option>
+            <option value="days" selected>Days</option>
+            <option value="months">Months</option>
+            <option value="years">Years</option>
+            <option value="lifetime">Lifetime (No Expiry)</option>
+          </select>
+        </div>
+
+        <!-- DURATION VALUE -->
+        <div class="form-group" id="durValGroup" style="margin-bottom:12px">
+          <div class="form-lbl">Duration Value</div>
+          <input class="form-input" id="durVal" type="number" value="30" min="1" placeholder="Enter number"/>
+        </div>
+
+        <!-- CUSTOM KEY OPTION -->
+        <div class="form-group" style="margin-bottom:12px">
+          <div class="form-lbl">Custom Key (optional — leave blank for random)</div>
+          <input class="form-input" id="customKey" placeholder="ANASH-XXXX-XXXX" maxlength="14" oninput="this.value=this.value.toUpperCase()"/>
+        </div>
+
+        <div class="frow">
+          <button class="btn btn-lg" onclick="generateKey()" style="border-color:var(--g)">⚡ GENERATE KEY</button>
+        </div>
+
+        <!-- GENERATED KEY DISPLAY -->
+        <div class="gen-key-box" id="genKeyBox">
+          <div style="font-size:8px;color:var(--mut);letter-spacing:.2em;margin-bottom:8px">✅ KEY GENERATED</div>
+          <div class="gen-key-val" id="genKeyVal">---</div>
+          <div class="gen-key-info" id="genKeyInfo">---</div>
+          <div class="frow" style="justify-content:center;margin-top:10px">
+            <button class="btn btn-c" onclick="copyKey()">📋 COPY KEY</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE USERS -->
+  <div>
+    <div class="pbox">
+      <div class="pbar">
+        <div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div>
+        <div class="ptl">LIVE USERS</div>
+        <div class="live-dot"></div>
+        <span id="liveCount" style="font-size:9px;color:var(--c);margin-left:4px">0 online</span>
+      </div>
+      <div class="pbody" style="padding:0">
+        <div class="utbl-wrap">
+          <table class="utbl">
+            <thead><tr>
+              <th>KEY</th>
+              <th>LABEL</th>
+              <th>STATUS</th>
+              <th>LAST SEEN</th>
+              <th>ACTIONS</th>
+            </tr></thead>
+            <tbody id="usersBody">
+              <tr><td colspan="5" class="empty-row">// Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL KEYS TABLE -->
+  <div class="full">
+    <div class="pbox">
+      <div class="pbar">
+        <div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div>
+        <div class="ptl" id="keysTtl">ALL KEYS (0)</div>
+        <div class="frow" style="margin:0;gap:6px">
+          <button class="btn" onclick="loadKeys()" style="font-size:7px;padding:4px 8px">⟳ REFRESH</button>
+        </div>
+      </div>
+      <div class="pbody" style="padding:0">
+        <div class="ktbl-wrap">
+          <table class="ktbl">
+            <thead><tr>
+              <th>#</th>
+              <th>KEY</th>
+              <th>LABEL</th>
+              <th>STATUS</th>
+              <th>CREATED</th>
+              <th>EXPIRES</th>
+              <th>LAST USED</th>
+              <th>ACTIONS</th>
+            </tr></thead>
+            <tbody id="keysBody">
+              <tr><td colspan="8" class="empty-row">// Loading keys...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS MONITOR -->
+  <div>
+    <div class="pbox">
+      <div class="pbar">
+        <div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div>
+        <div class="ptl">RESULTS MONITOR</div>
+        <span style="font-size:8px;color:var(--mut)" id="resSyncLbl">--</span>
+      </div>
+      <div class="pbody">
+        <div class="res-mini" id="resMini">
+          <div style="color:var(--mut)">// Loading Firebase results...</div>
+        </div>
+        <div class="frow">
+          <button class="btn" onclick="loadResults()">⟳ REFRESH</button>
+          <button class="btn btn-r" onclick="clearResults()">🗑 CLEAR ALL RESULTS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div>
+    <div class="pbox">
+      <div class="pbar">
+        <div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div>
+        <div class="ptl">QUICK ACTIONS</div>
+      </div>
+      <div class="pbody">
+
+        <!-- BLOCK BY KEY -->
+        <div style="margin-bottom:14px">
+          <div class="form-lbl" style="margin-bottom:6px">BLOCK / UNBLOCK KEY</div>
+          <div class="form-row">
+            <input class="form-input" id="blockKeyInput" placeholder="ANASH-XXXX-XXXX" oninput="this.value=this.value.toUpperCase()" style="flex:1"/>
+            <button class="btn btn-r" onclick="blockKeyByInput()">BLOCK</button>
+            <button class="btn btn-c" onclick="unblockKeyByInput()">UNBLOCK</button>
+          </div>
+        </div>
+
+        <!-- DELETE KEY -->
+        <div style="margin-bottom:14px">
+          <div class="form-lbl" style="margin-bottom:6px">DELETE KEY</div>
+          <div class="form-row">
+            <input class="form-input" id="deleteKeyInput" placeholder="ANASH-XXXX-XXXX" oninput="this.value=this.value.toUpperCase()" style="flex:1"/>
+            <button class="btn btn-r" onclick="deleteKeyByInput()">DELETE</button>
+          </div>
+        </div>
+
+        <!-- KICK BY KEY -->
+        <div style="margin-bottom:14px">
+          <div class="form-lbl" style="margin-bottom:6px">KICK USER (force logout)</div>
+          <div class="form-row">
+            <input class="form-input" id="kickKeyInput" placeholder="ANASH-XXXX-XXXX" oninput="this.value=this.value.toUpperCase()" style="flex:1"/>
+            <button class="btn btn-y" onclick="kickKeyByInput()">KICK</button>
+          </div>
+        </div>
+
+        <!-- DANGER ZONE -->
+        <div style="border-top:1px solid var(--bdr);padding-top:12px;margin-top:4px">
+          <div class="form-lbl" style="color:var(--r);margin-bottom:8px">⚠ DANGER ZONE</div>
+          <div class="frow">
+            <button class="btn btn-r" onclick="deleteAllExpired()">🗑 DELETE EXPIRED KEYS</button>
+            <button class="btn btn-r" onclick="kickAllUsers()">⚡ KICK ALL USERS</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- end grid -->
+</div><!-- end wrapper -->
+
+<script>
+// ── FIREBASE ──────────────────────────────────────
+const firebaseConfig={
+  apiKey:"AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ",
+  authDomain:"anashrawwingokey.firebaseapp.com",
+  projectId:"anashrawwingokey",
+  storageBucket:"anashrawwingokey.firebasestorage.app",
+  messagingSenderId:"515715007863",
+  appId:"1:515715007863:web:bdebab42892be2d1bc0d72"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+// ── MATRIX ────────────────────────────────────────
+const mc=document.getElementById('mc'),ctx=mc.getContext('2d');
+function rsz(){mc.width=window.innerWidth;mc.height=window.innerHeight;}rsz();
+window.addEventListener('resize',rsz);
+const CH='アイウエオ0123456789ABCDEF<>[]{}';
+let dr=Array(Math.floor(window.innerWidth/14)).fill(1);
+setInterval(()=>{
+  ctx.fillStyle='rgba(0,0,0,0.04)';ctx.fillRect(0,0,mc.width,mc.height);
+  ctx.font='14px Share Tech Mono';
+  const cols=Math.floor(mc.width/14);while(dr.length<cols)dr.push(1);
+  for(let i=0;i<cols;i++){
+    ctx.fillStyle=dr[i]*14<80?'#00ff41':'#003a0f';
+    ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*14,dr[i]*14);
+    if(dr[i]*14>mc.height&&Math.random()>.975)dr[i]=0;dr[i]++;
+  }
+},50);
+
+// ── CLOCK ──────────────────────────────────────────
+setInterval(()=>{
+  const n=new Date(),p=x=>String(x).padStart(2,'0');
+  document.getElementById('clkm').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  const D=['SUN','MON','TUE','WED','THU','FRI','SAT'],M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('clkd').textContent=`${D[n.getDay()]} ${p(n.getDate())} ${M[n.getMonth()]} ${n.getFullYear()}`;
+},1000);
+
+// ── ADMIN AUTH ────────────────────────────────────
+const ADMIN_PASS="ANASHRAWDIXIT'S";
+function adminLogin(){
+  const pw=document.getElementById('pwInput').value;
+  if(pw===ADMIN_PASS){
+    document.getElementById('loginScreen').style.display='none';
+    initAdmin();
+  }else{
+    document.getElementById('loginErr').textContent='❌ Wrong password';
+    document.getElementById('pwInput').value='';
+  }
+}
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
+function adminLogout(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('pwInput').value='';
+  document.getElementById('loginErr').textContent='';
+}
+
+// ── TOAST ─────────────────────────────────────────
+function toast(msg,type=''){
+  const c=document.getElementById('toast');
+  const d=document.createElement('div');
+  d.className='toast-item'+(type?' '+type:'');
+  d.textContent=msg;
+  c.appendChild(d);
+  setTimeout(()=>d.remove(),3500);
+}
+
+// ── HELPERS ───────────────────────────────────────
+function ts(){const n=new Date(),p=x=>String(x).padStart(2,'0');return`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
+function fmtDate(ts){
+  if(!ts)return'--';
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  return d.toLocaleDateString()+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+}
+function fmtExpiry(ts){
+  if(!ts)return'LIFETIME';
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  const diff=d-new Date();
+  if(diff<0)return'EXPIRED';
+  const days=Math.floor(diff/86400000);
+  if(days>0)return days+'d left';
+  const hrs=Math.floor(diff/3600000);
+  return hrs+'h left';
+}
+function genRandKey(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const r=n=>Array.from({length:n},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  return`ANASH-${r(4)}-${r(4)}`;
+}
+
+// ── KEY GENERATION ────────────────────────────────
+function updateDurInput(){
+  const t=document.getElementById('durType').value;
+  const g=document.getElementById('durValGroup');
+  g.style.display=t==='lifetime'?'none':'flex';
+}
+
+async function generateKey(){
+  const label=document.getElementById('keyLabel').value.trim();
+  const durType=document.getElementById('durType').value;
+  const customK=document.getElementById('customKey').value.trim().toUpperCase();
+  const key=customK||genRandKey();
+
+  // Calculate expiry
+  let expiresAt=null;
+  if(durType!=='lifetime'){
+    const val=parseInt(document.getElementById('durVal').value)||1;
+    const now=new Date();
+    if(durType==='hours')now.setHours(now.getHours()+val);
+    else if(durType==='days')now.setDate(now.getDate()+val);
+    else if(durType==='months')now.setMonth(now.getMonth()+val);
+    else if(durType==='years')now.setFullYear(now.getFullYear()+val);
+    expiresAt=now;
+  }
+
+  // Check duplicate
+  const existing=await db.collection('keys').where('key','==',key).get();
+  if(!existing.empty){toast('❌ Key already exists!','err');return;}
+
+  const docData={
+    key,
+    label:label||key.slice(-4),
+    status:'active',
+    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt:expiresAt?firebase.firestore.Timestamp.fromDate(expiresAt):null,
+    lastUsed:null,
+    onlineStatus:'offline',
+    kickedAt:null
+  };
+
+  try{
+    await db.collection('keys').add(docData);
+    // Show generated key
+    document.getElementById('genKeyBox').style.display='block';
+    document.getElementById('genKeyVal').textContent=key;
+    const expStr=expiresAt?`Expires: ${expiresAt.toLocaleDateString()}`:'Lifetime key';
+    document.getElementById('genKeyInfo').textContent=`${label?'Label: '+label+' · ':''} ${expStr}`;
+    toast('✅ Key generated: '+key);
+    loadKeys();
+    updateStats();
+  }catch(e){
+    toast('❌ Error: '+e.message,'err');
+  }
+}
+
+function copyKey(){
+  const k=document.getElementById('genKeyVal').textContent;
+  navigator.clipboard.writeText(k).then(()=>toast('📋 Key copied!')).catch(()=>{
+    // Fallback
+    const ta=document.createElement('textarea');
+    ta.value=k;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    toast('📋 Key copied!');
+  });
+}
+
+// ── LOAD KEYS ──────────────────────────────────────
+async function loadKeys(){
+  const tb=document.getElementById('keysBody');
+  try{
+    const snap=await db.collection('keys').orderBy('createdAt','desc').get();
+    if(snap.empty){tb.innerHTML='<tr><td colspan="8" class="empty-row">// No keys found</td></tr>';return;}
+    const now=new Date();
+    let total=0,active=0;
+    tb.innerHTML='';
+    snap.docs.forEach((doc,i)=>{
+      const d=doc.data();total++;
+      let status=d.status||'active';
+      if(status==='active'&&d.expiresAt){
+        const exp=d.expiresAt.toDate?d.expiresAt.toDate():new Date(d.expiresAt);
+        if(exp<now)status='expired';
+      }
+      if(status==='active')active++;
+      const statusBadge=status==='active'?'<span class="badge b-active">ACTIVE</span>':
+        status==='blocked'?'<span class="badge b-blocked">BLOCKED</span>':
+        '<span class="badge b-expired">EXPIRED</span>';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td style="color:var(--mut)">#${i+1}</td>
+        <td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--c)">${d.key}</td>
+        <td style="color:var(--txt)">${d.label||'--'}</td>
+        <td>${statusBadge}</td>
+        <td style="color:var(--mut);font-size:8px">${fmtDate(d.createdAt)}</td>
+        <td style="color:${d.expiresAt?'var(--y)':'var(--g)'};font-size:8px">${fmtExpiry(d.expiresAt)}</td>
+        <td style="color:var(--mut);font-size:8px">${fmtDate(d.lastUsed)}</td>
+        <td>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${status!=='blocked'?`<button class="btn btn-r" style="font-size:7px;padding:3px 7px" onclick="blockKey('${doc.id}')">BLOCK</button>`:''}
+            ${status==='blocked'?`<button class="btn btn-c" style="font-size:7px;padding:3px 7px" onclick="unblockKey('${doc.id}')">UNBLOCK</button>`:''}
+            <button class="btn btn-y" style="font-size:7px;padding:3px 7px" onclick="kickKey('${doc.id}','${d.key}')">KICK</button>
+            <button class="btn btn-r" style="font-size:7px;padding:3px 7px" onclick="deleteKey('${doc.id}','${d.key}')">DEL</button>
+          </div>
+        </td>`;
+      tb.appendChild(tr);
+    });
+    document.getElementById('keysTtl').textContent=`ALL KEYS (${total})`;
+    document.getElementById('sTotalKeys').textContent=' '+total;
+    document.getElementById('sActiveKeys').textContent=' '+active;
+    document.getElementById('dTotalKeys').textContent=total;
+    document.getElementById('dActiveKeys').textContent=active;
+  }catch(e){
+    tb.innerHTML=`<tr><td colspan="8" class="empty-row">// Error: ${e.message}</td></tr>`;
+    toast('❌ Load error: '+e.message,'err');
+  }
+}
+
+// ── KEY ACTIONS ────────────────────────────────────
+async function blockKey(docId){
+  await db.collection('keys').doc(docId).update({status:'blocked'});
+  toast('🚫 Key blocked');loadKeys();
+}
+async function unblockKey(docId){
+  await db.collection('keys').doc(docId).update({status:'active'});
+  toast('✅ Key unblocked');loadKeys();
+}
+async function kickKey(docId,key){
+  await db.collection('keys').doc(docId).update({kickedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  toast('⚡ User kicked: '+key,'warn');loadKeys();
+}
+async function deleteKey(docId,key){
+  if(!confirm('Delete key '+key+'?'))return;
+  await db.collection('keys').doc(docId).delete();
+  toast('🗑 Key deleted: '+key,'warn');loadKeys();updateStats();
+}
+
+async function blockKeyByInput(){
+  const k=document.getElementById('blockKeyInput').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.update({status:'blocked'});
+  toast('🚫 Blocked: '+k);loadKeys();
+}
+async function unblockKeyByInput(){
+  const k=document.getElementById('blockKeyInput').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.update({status:'active'});
+  toast('✅ Unblocked: '+k);loadKeys();
+}
+async function kickKeyByInput(){
+  const k=document.getElementById('kickKeyInput').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.update({kickedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  toast('⚡ Kicked: '+k,'warn');
+}
+async function deleteKeyByInput(){
+  const k=document.getElementById('deleteKeyInput').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  if(!confirm('Delete key '+k+'?'))return;
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.delete();
+  toast('🗑 Deleted: '+k,'warn');loadKeys();updateStats();
+}
+async function deleteAllExpired(){
+  if(!confirm('Delete all expired keys?'))return;
+  const now=firebase.firestore.Timestamp.now();
+  const snap=await db.collection('keys').where('status','==','expired').get();
+  const snap2=await db.collection('keys').where('expiresAt','<',now).get();
+  const allDocs=[...snap.docs,...snap2.docs];
+  const ids=new Set();
+  const batch=db.batch();
+  allDocs.forEach(d=>{if(!ids.has(d.id)){ids.add(d.id);batch.delete(d.ref);}});
+  await batch.commit();
+  toast(`🗑 Deleted ${ids.size} expired keys`,'warn');loadKeys();updateStats();
+}
+async function kickAllUsers(){
+  if(!confirm('Kick ALL online users?'))return;
+  const snap=await db.collection('keys').where('onlineStatus','==','online').get();
+  const batch=db.batch();
+  snap.docs.forEach(d=>batch.update(d.ref,{kickedAt:firebase.firestore.FieldValue.serverTimestamp()}));
+  await batch.commit();
+  toast(`⚡ Kicked ${snap.size} users`,'warn');loadUsers();
+}
+
+// ── LIVE USERS ─────────────────────────────────────
+function loadUsers(){
+  const tb=document.getElementById('usersBody');
+  // Listen in realtime
+  db.collection('keys')
+    .where('onlineStatus','==','online')
+    .onSnapshot(snap=>{
+      const count=snap.size;
+      document.getElementById('liveCount').textContent=count+' online';
+      document.getElementById('sLiveUsers').textContent=' '+count;
+      document.getElementById('dLiveUsers').textContent=count;
+      if(!count){
+        tb.innerHTML='<tr><td colspan="5" class="empty-row">// No users online</td></tr>';
+        return;
+      }
+      tb.innerHTML='';
+      snap.docs.forEach(doc=>{
+        const d=doc.data();
+        const lastSeen=d.lastUsed?fmtDate(d.lastUsed):'--';
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td style="font-family:'Orbitron',monospace;font-size:9px;color:var(--c)">${d.key}</td>
+          <td style="color:var(--txt)">${d.label||'--'}</td>
+          <td><span class="badge b-online"><div class="live-dot" style="width:6px;height:6px;display:inline-block;margin-right:4px"></div>ONLINE</span></td>
+          <td style="color:var(--mut);font-size:8px">${lastSeen}</td>
+          <td>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-y" style="font-size:7px;padding:3px 7px" onclick="kickKey('${doc.id}','${d.key}')">KICK</button>
+              <button class="btn btn-r" style="font-size:7px;padding:3px 7px" onclick="blockKey('${doc.id}')">BLOCK</button>
+            </div>
+          </td>`;
+        tb.appendChild(tr);
+      });
+    });
+}
+
+// ── RESULTS MONITOR ────────────────────────────────
+async function loadResults(){
+  const box=document.getElementById('resMini');
+  try{
+    const snap=await db.collection('results').orderBy('savedAt','desc').limit(30).get();
+    const total=snap.size;
+    document.getElementById('sResults').textContent=' '+total;
+    document.getElementById('dResults').textContent=total;
+    document.getElementById('resSyncLbl').textContent='SYNC: '+ts();
+    if(!total){box.innerHTML='<div style="color:var(--mut)">// No results stored</div>';return;}
+    const colorOf=n=>{if(n===0||n===5)return'violet';if([1,3,7,9].includes(n))return'green';return'red';};
+    const numCss=n=>{const c=colorOf(n);return c==='violet'?'#bf7fff':c==='green'?'#00ff41':'#ff0040';};
+    let html='';
+    snap.docs.forEach((doc,i)=>{
+      const d=doc.data();
+      const e=d.colour?.includes('violet')?'🟣':d.colour?.includes('green')?'🟢':'🔴';
+      const bs=d.bigSmall==='BIG'?'<span style="color:var(--c)">BIG</span>':'<span style="color:var(--y)">SML</span>';
+      html+=`<div style="display:flex;gap:8px;padding:2px 0;border-bottom:1px solid #050f05;align-items:center">
+        <span style="color:var(--dim);font-size:8px;min-width:20px">[${String(i).padStart(2,'0')}]</span>
+        <span style="color:var(--mut);font-size:8px">P ${String(d.period||'').slice(-6)}</span>
+        <span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:${numCss(d.number)}">${d.number}</span>
+        <span>${e}</span>${bs}
+      </div>`;
+    });
+    box.innerHTML=html;
+    document.getElementById('sLastResult').textContent=snap.docs[0]?.data()?.period?(' P'+String(snap.docs[0].data().period).slice(-6)):'--';
+  }catch(e){
+    box.innerHTML=`<div style="color:var(--r)">// Error: ${e.message}</div>`;
+  }
+}
+
+async function clearResults(){
+  if(!confirm('Delete ALL stored results? This cannot be undone!'))return;
+  if(!confirm('Are you SURE? This will delete all 500 results from Firebase!'))return;
+  toast('🗑 Deleting all results...','warn');
+  try{
+    let snap=await db.collection('results').limit(500).get();
+    while(!snap.empty){
+      const batch=db.batch();
+      snap.docs.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      snap=await db.collection('results').limit(500).get();
+    }
+    toast('✅ All results cleared');loadResults();
+  }catch(e){toast('❌ Error: '+e.message,'err');}
+}
+
+// ── STATS UPDATE ───────────────────────────────────
+async function updateStats(){
+  try{
+    const kSnap=await db.collection('keys').get();
+    const rSnap=await db.collection('results').get();
+    const total=kSnap.size;
+    const now=new Date();
+    let active=0;
+    kSnap.docs.forEach(d=>{
+      const data=d.data();
+      if(data.status==='active'){
+        if(!data.expiresAt)active++;
+        else{
+          const exp=data.expiresAt.toDate?data.expiresAt.toDate():new Date(data.expiresAt);
+          if(exp>now)active++;
+        }
+      }
+    });
+    document.getElementById('dTotalKeys').textContent=total;
+    document.getElementById('dActiveKeys').textContent=active;
+    document.getElementById('dResults').textContent=rSnap.size;
+    document.getElementById('sTotalKeys').textContent=' '+total;
+    document.getElementById('sActiveKeys').textContent=' '+active;
+    document.getElementById('sResults').textContent=' '+rSnap.size;
+  }catch(e){}
+}
+
+// ── INIT ADMIN ─────────────────────────────────────
+function initAdmin(){
+  toast('✅ Admin logged in');
+  document.getElementById('fbStat').textContent=' OK';
+  loadKeys();
+  loadUsers();
+  loadResults();
+  updateStats();
+  // Auto refresh every 30s
+  setInterval(()=>{loadKeys();loadResults();updateStats();},30000);
+}
+</script>
+</body>
+</html>
