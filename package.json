@@ -1,0 +1,9 @@
+{
+  "name": "wingo-collector",
+  "version": "1.0.0",
+  "description": "WinGo data collector",
+  "main": "collector.js",
+  "dependencies": {
+    "firebase-admin": "^11.0.0"
+  }
+}
