@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ANASHRAW.AI — Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ANASHRAW.AI — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -15,131 +15,832 @@
   --glow:0 0 10px #00ff41,0 0 22px #00ff4166;
   --glsm:0 0 6px #00ff41,0 0 12px #00ff4133;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--g);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--g);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden;}
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999;}
 #mc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.04;pointer-events:none;}
 
 /* LOGIN */
-#loginScreen{position:fixed;inset:0;background:#000;z-index:10000;display:flex;align-items:center;justify-content:center;}
-.login-box{background:var(--sur);border:1px solid var(--g3);border-radius:6px;padding:36px 28px;max-width:360px;width:90%;text-align:center;}
-.login-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.12em;margin-bottom:4px;}
-.login-sub{font-size:9px;color:var(--mut);letter-spacing:.25em;margin-bottom:26px;}
-.login-input{width:100%;padding:12px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:14px;text-align:center;outline:none;margin-bottom:12px;letter-spacing:.15em;}
+#loginScreen{position:fixed;inset:0;background:#000;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;}
+.login-box{background:var(--sur);border:1px solid var(--g3);border-radius:8px;padding:32px 20px;max-width:340px;width:100%;text-align:center;}
+.login-icon{font-size:44px;margin-bottom:12px;display:block;}
+.login-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.1em;margin-bottom:4px;}
+.login-sub{font-size:9px;color:var(--mut);letter-spacing:.22em;margin-bottom:24px;}
+.login-input{width:100%;padding:13px;background:#000;border:1px solid var(--g3);border-radius:4px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:16px;text-align:center;outline:none;margin-bottom:12px;letter-spacing:.15em;}
 .login-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
-.login-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--g);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.2em;cursor:pointer;transition:all .2s;}
-.login-btn:hover{background:var(--dim);box-shadow:var(--glow);}
+.login-btn{width:100%;padding:13px;background:transparent;border:1px solid var(--g);border-radius:4px;color:var(--g);font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:.2em;cursor:pointer;transition:all .2s;}
+.login-btn:active{background:var(--dim);}
 .login-err{color:var(--r);font-size:10px;margin-top:10px;min-height:16px;}
 
-/* LAYOUT */
-.w{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 14px 80px;}
-header{padding:16px 0 10px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;}
-.brand{font-family:'Orbitron',monospace;font-size:clamp(14px,3vw,22px);font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.1em;}
+.w{position:relative;z-index:2;max-width:600px;margin:0 auto;padding:0 12px 80px;}
+
+header{padding:12px 0 8px;border-bottom:1px solid var(--bdr);}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;}
+.brand{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.08em;}
 .brand .ai{color:var(--c);}
-.brand .tag{font-size:clamp(8px,1.5vw,11px);color:var(--r);text-shadow:0 0 8px var(--r);}
-.brand-sub{font-size:8px;color:var(--mut);letter-spacing:.25em;margin-top:3px;}
+.brand .tag{font-size:10px;color:var(--r);text-shadow:0 0 8px var(--r);}
+.brand-sub{font-size:8px;color:var(--mut);letter-spacing:.2em;margin-top:3px;}
 .hdr-right{text-align:right;}
-.clkm{font-family:'Orbitron',monospace;font-size:clamp(16px,3.5vw,26px);font-weight:700;color:var(--g);text-shadow:var(--glow);}
-.clkd{font-size:8px;color:var(--mut);letter-spacing:.15em;margin-top:2px;}
+.clkm{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--g);text-shadow:var(--glow);}
+.clkd{font-size:8px;color:var(--mut);margin-top:2px;}
+.logout-row{display:flex;justify-content:flex-end;margin-top:6px;}
 
-/* STATS BAR */
-.statsbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
-@media(max-width:560px){.statsbar{grid-template-columns:repeat(2,1fr);}}
-.statcard{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;padding:12px 14px;text-align:center;}
-.stat-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;line-height:1.2;}
-.stat-lbl{font-size:7px;color:var(--mut);letter-spacing:.2em;margin-top:3px;text-transform:uppercase;}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0;}
+.stat-c{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;padding:10px 12px;text-align:center;}
+.stat-v{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;line-height:1.2;}
+.stat-l{font-size:7px;color:var(--mut);letter-spacing:.18em;margin-top:3px;text-transform:uppercase;}
 
-/* GRID */
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
-@media(max-width:700px){.grid2{grid-template-columns:1fr;}}
-.full{grid-column:1/-1;}
+.section{margin-top:12px;}
+.sec-hdr{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--dim);border:1px solid var(--bdr);border-radius:4px 4px 0 0;}
+.sec-dots{display:flex;gap:4px;}
+.sec-dot{width:7px;height:7px;border-radius:50%;}
+.sec-title{font-size:8px;color:var(--mut);letter-spacing:.22em;flex:1;}
+.sec-body{background:var(--sur);border:1px solid var(--bdr);border-top:none;border-radius:0 0 4px 4px;padding:14px;}
 
-/* PANEL BOX */
-.pbox{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;overflow:hidden;}
-.pbar{display:flex;align-items:center;gap:7px;padding:7px 12px;background:var(--dim);border-bottom:1px solid var(--bdr);}
-.pd{width:8px;height:8px;border-radius:50%;}
-.pd-r{background:var(--r);}.pd-y{background:var(--y);}.pd-g{background:var(--g);}
-.ptl{font-size:9px;color:var(--mut);letter-spacing:.22em;flex:1;}
-.pbody{padding:14px;}
-
-/* FORM */
-.form-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;}
-.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:80px;}
-.form-lbl{font-size:8px;color:var(--mut);letter-spacing:.15em;text-transform:uppercase;}
-.form-input{padding:8px 10px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;width:100%;}
+.form-group{margin-bottom:12px;}
+.form-lbl{font-size:8px;color:var(--mut);letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px;display:block;}
+.form-input{width:100%;padding:10px 12px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;}
 .form-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
-.form-select{padding:8px 10px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;width:100%;}
+.form-textarea{width:100%;padding:10px 12px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;resize:vertical;min-height:80px;line-height:1.6;}
+.form-textarea:focus{border-color:var(--g);}
+.form-select{width:100%;padding:10px 12px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 
-/* GENERATED KEY DISPLAY */
-.gen-key-box{background:#000;border:1px solid var(--g);border-radius:3px;padding:12px;text-align:center;margin-top:10px;display:none;}
-.gen-key-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--g);text-shadow:var(--glow);letter-spacing:.2em;word-break:break-all;}
-.gen-key-info{font-size:9px;color:var(--mut);margin-top:6px;letter-spacing:.1em;}
+.gen-key-box{background:#000;border:1px solid var(--g);border-radius:4px;padding:14px;text-align:center;margin-top:10px;display:none;}
+.gen-key-list{display:flex;flex-direction:column;gap:6px;}
+.gen-key-item{background:var(--sur);border:1px solid var(--g3);border-radius:3px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;}
+.gen-key-val{font-family:'Orbitron',monospace;font-size:13px;color:var(--g);text-shadow:var(--glsm);letter-spacing:.18em;}
+.gen-key-info{font-size:8px;color:var(--mut);margin-top:4px;}
 
-/* KEYS TABLE */
-.ktbl-wrap{overflow-x:auto;max-height:320px;overflow-y:auto;}
-.ktbl-wrap::-webkit-scrollbar{width:3px;height:3px;}
-.ktbl-wrap::-webkit-scrollbar-track{background:var(--dim);}
-.ktbl-wrap::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
-.ktbl{width:100%;border-collapse:collapse;font-size:9px;}
-.ktbl th{padding:6px 8px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.2em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;position:sticky;top:0;}
-.ktbl td{padding:6px 8px;border-bottom:1px solid var(--bdr);color:var(--txt);white-space:nowrap;vertical-align:middle;}
-.ktbl tr:hover td{background:rgba(0,255,65,.02);}
+.tbl-wrap{overflow-x:auto;max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.tbl-wrap::-webkit-scrollbar{width:3px;height:3px;}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
+.tbl{width:100%;border-collapse:collapse;font-size:9px;min-width:420px;}
+.tbl th{padding:6px 7px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;position:sticky;top:0;}
+.tbl td{padding:6px 7px;border-bottom:1px solid var(--bdr);color:var(--txt);white-space:nowrap;vertical-align:middle;}
+.tbl tr:hover td{background:rgba(0,255,65,.02);}
+
 .badge{padding:2px 8px;border-radius:2px;font-size:8px;font-weight:bold;display:inline-block;}
 .b-active{background:rgba(0,255,65,.15);border:1px solid var(--g);color:var(--g);}
 .b-blocked{background:rgba(255,0,64,.15);border:1px solid var(--r);color:var(--r);}
 .b-expired{background:rgba(100,100,100,.15);border:1px solid #555;color:#888;}
 .b-online{background:rgba(0,255,234,.15);border:1px solid var(--c);color:var(--c);}
-.b-offline{background:rgba(50,50,50,.3);border:1px solid #333;color:#555;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:var(--glsm);display:inline-block;animation:blink 1.2s infinite;margin-right:4px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
 
-/* USERS TABLE */
-.utbl-wrap{overflow-x:auto;max-height:280px;overflow-y:auto;}
-.utbl-wrap::-webkit-scrollbar{width:3px;}
-.utbl-wrap::-webkit-scrollbar-track{background:var(--dim);}
-.utbl-wrap::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
-.utbl{width:100%;border-collapse:collapse;font-size:9px;}
-.utbl th{padding:6px 8px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.2em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;position:sticky;top:0;}
-.utbl td{padding:6px 8px;border-bottom:1px solid var(--bdr);color:var(--txt);white-space:nowrap;vertical-align:middle;}
-
-/* LIVE DOT */
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 6px var(--g);display:inline-block;animation:blink 1.2s infinite;flex-shrink:0;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
-
-/* BUTTONS */
-.btn{background:transparent;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:8px;font-weight:700;letter-spacing:.16em;cursor:pointer;padding:6px 10px;text-transform:uppercase;transition:all .2s;white-space:nowrap;}
-.btn:hover{border-color:var(--g);box-shadow:var(--glsm);color:#fff;}
-.btn:active{transform:scale(.97);}
+.btn{background:transparent;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:8px;font-weight:700;letter-spacing:.14em;cursor:pointer;padding:7px 11px;text-transform:uppercase;transition:all .2s;}
+.btn:active{transform:scale(.96);background:var(--dim);}
+.btn-full{width:100%;padding:12px;font-size:10px;margin-top:8px;}
 .btn-r{border-color:#7a0010;color:var(--r);}
-.btn-r:hover{border-color:var(--r);box-shadow:0 0 6px var(--r);}
+.btn-r:active{background:rgba(255,0,64,.1);}
 .btn-y{border-color:#7a5500;color:var(--y);}
-.btn-y:hover{border-color:var(--y);box-shadow:0 0 6px var(--y);}
 .btn-c{border-color:#006060;color:var(--c);}
-.btn-c:hover{border-color:var(--c);box-shadow:0 0 6px var(--c);}
-.btn-lg{width:100%;padding:10px;font-size:10px;}
-.frow{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+.btn-v{border-color:#5500aa;color:var(--v);}
+.btn-sm{padding:4px 8px;font-size:7px;}
+.btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
 
-/* RESULTS MONITOR */
-.res-mini{max-height:160px;overflow-y:auto;background:#000;border:1px solid var(--bdr);border-radius:3px;padding:7px 9px;font-size:10px;line-height:1.8;}
-.res-mini::-webkit-scrollbar{width:3px;}
-.res-mini::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
-
-/* TOAST */
-#toast{position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;}
-.toast-item{background:var(--sur);border:1px solid var(--g3);border-radius:4px;padding:10px 16px;font-size:10px;color:var(--g);letter-spacing:.1em;animation:toastin .3s ease;box-shadow:var(--glsm);}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;}
+.toast-item{background:var(--sur);border:1px solid var(--g3);border-radius:4px;padding:9px 16px;font-size:10px;color:var(--g);letter-spacing:.08em;animation:tin .3s ease;box-shadow:var(--glsm);white-space:nowrap;}
 .toast-item.err{border-color:var(--r);color:var(--r);}
 .toast-item.warn{border-color:var(--y);color:var(--y);}
-@keyframes toastin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.dg{background:var(--g);box-shadow:var(--glsm);animation:blink 1.4s infinite;}
-.dy{background:var(--y);animation:blink 2s infinite;}
-.empty-row{text-align:center;padding:20px;color:var(--mut);font-size:9px;}
-.sbar{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);flex-wrap:wrap;gap:2px;margin-top:8px;}
-.si{display:flex;align-items:center;gap:4px;padding:2px 9px 2px 5px;font-size:8px;color:var(--mut);border-right:1px solid var(--bdr);}
-.si:last-child{border-right:none;}
-.sv{color:var(--g);font-weight:700;}
+.empty-row{text-align:center;padding:18px;color:var(--mut);font-size:9px;}
+.divider{height:1px;background:var(--bdr);margin:12px 0;}
+.section-note{font-size:8px;color:var(--mut);margin-top:6px;line-height:1.7;}
+
+/* Q OVERRIDE INLINE */
+.q-override-row{display:flex;align-items:center;gap:4px;margin-top:4px;}
+.q-override-inp{width:52px;padding:3px 6px;background:#000;border:1px solid var(--g3);border-radius:2px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;text-align:center;}
+.q-override-lbl{font-size:8px;color:var(--mut);}
+
+/* COLLECTOR SETTINGS */
+.collector-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.col-stat{background:#000;border:1px solid var(--bdr);border-radius:3px;padding:8px;text-align:center;}
+.col-stat-v{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;}
+.col-stat-l{font-size:7px;color:var(--mut);letter-spacing:.1em;margin-top:2px;}
 </style>
 </head>
 <body>
+<canvas id="mc"></canvas>
+<div id="toast"></div>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <span class="login-icon">🛡️</span>
+    <div class="login-title">ADMIN PANEL</div>
+    <div class="login-sub">ANASHRAW.AI // SECURE ACCESS</div>
+    <input class="login-input" id="pwInput" type="password" placeholder="Enter password"
+      onkeydown="if(event.key==='Enter')adminLogin()"/>
+    <button class="login-btn" onclick="adminLogin()">🔓 LOGIN</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="w">
+<header>
+  <div class="hdr">
+    <div>
+      <div class="brand">ANASHRAW<span class="ai">.AI</span> <span class="tag">ADMIN</span></div>
+      <div class="brand-sub">CONTROL PANEL // FIREBASE MANAGER</div>
+    </div>
+    <div class="hdr-right">
+      <div class="clkm" id="clkm">00:00:00</div>
+      <div class="clkd" id="clkd">---</div>
+    </div>
+  </div>
+  <div class="logout-row">
+    <button class="btn btn-r btn-sm" onclick="adminLogout()">LOGOUT</button>
+  </div>
+</header>
+
+<div class="stats-row">
+  <div class="stat-c"><div class="stat-v" id="dTotal" style="color:var(--g)">0</div><div class="stat-l">Total Keys</div></div>
+  <div class="stat-c"><div class="stat-v" id="dActive" style="color:var(--c)">0</div><div class="stat-l">Active Keys</div></div>
+  <div class="stat-c"><div class="stat-v" id="dLive" style="color:var(--y)">0</div><div class="stat-l">Live Users</div></div>
+  <div class="stat-c"><div class="stat-v" id="dResults" style="color:var(--v)">0</div><div class="stat-l">Results Stored</div></div>
+</div>
+
+<!-- KEY GENERATOR -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title">KEY GENERATOR</div>
+  </div>
+  <div class="sec-body">
+    <div class="form-group">
+      <label class="form-lbl">Label (optional)</label>
+      <input class="form-input" id="keyLabel" placeholder="e.g. User1, VIP"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-lbl">Duration Type</label>
+        <select class="form-select" id="durType" onchange="toggleDurVal()">
+          <option value="hours">Hours</option>
+          <option value="days" selected>Days</option>
+          <option value="months">Months</option>
+          <option value="years">Years</option>
+          <option value="lifetime">Lifetime</option>
+        </select>
+      </div>
+      <div class="form-group" id="durValGrp">
+        <label class="form-lbl">Value</label>
+        <input class="form-input" id="durVal" type="number" value="30" min="1"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-lbl">Quantity (1-20)</label>
+        <input class="form-input" id="keyQty" type="number" value="1" min="1" max="20"/>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Custom Key (optional)</label>
+        <input class="form-input" id="customKey" placeholder="ANASH-XXXX-XXXX" maxlength="20"
+          oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+    </div>
+    <button class="btn btn-full" onclick="generateKeys()">⚡ GENERATE KEY(S)</button>
+    <div class="gen-key-box" id="genKeyBox">
+      <div style="font-size:8px;color:var(--mut);letter-spacing:.2em;margin-bottom:10px">✅ KEYS GENERATED</div>
+      <div class="gen-key-list" id="genKeyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE USERS -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title">LIVE USERS</div>
+    <span class="live-dot"></span>
+    <span id="liveCount" style="font-size:8px;color:var(--c)">0 online</span>
+  </div>
+  <div class="sec-body" style="padding:0">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>KEY</th><th>LABEL</th><th>STATUS</th><th>LAST SEEN</th><th>ACTIONS</th></tr></thead>
+        <tbody id="usersBody"><tr><td colspan="5" class="empty-row">// Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ALL KEYS — with per-key Q override -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title" id="keysTtl">ALL KEYS (0)</div>
+    <button class="btn btn-sm" onclick="loadKeys()">⟳</button>
+  </div>
+  <div class="sec-body" style="padding:0">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>#</th><th>KEY</th><th>LABEL</th><th>STATUS</th>
+          <th>EXPIRES</th><th>Q/DAY</th><th>ACTIONS</th>
+        </tr></thead>
+        <tbody id="keysBody"><tr><td colspan="7" class="empty-row">// Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title">QUICK ACTIONS</div>
+  </div>
+  <div class="sec-body">
+    <div class="form-group">
+      <label class="form-lbl">Block / Unblock Key</label>
+      <div style="display:flex;gap:6px">
+        <input class="form-input" id="blockKeyInp" placeholder="KEY" style="flex:1" oninput="this.value=this.value.toUpperCase()"/>
+        <button class="btn btn-r" onclick="blockKeyByInput()">BLOCK</button>
+        <button class="btn btn-c" onclick="unblockKeyByInput()">UNBLOCK</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-lbl">Kick User</label>
+      <div style="display:flex;gap:6px">
+        <input class="form-input" id="kickKeyInp" placeholder="KEY" style="flex:1" oninput="this.value=this.value.toUpperCase()"/>
+        <button class="btn btn-y" onclick="kickKeyByInput()">KICK</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-lbl">Delete Key</label>
+      <div style="display:flex;gap:6px">
+        <input class="form-input" id="delKeyInp" placeholder="KEY" style="flex:1" oninput="this.value=this.value.toUpperCase()"/>
+        <button class="btn btn-r" onclick="deleteKeyByInput()">DELETE</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="btn-row">
+      <button class="btn btn-r" onclick="deleteExpiredKeys()">🗑 DELETE EXPIRED</button>
+      <button class="btn btn-r" onclick="kickAllUsers()">⚡ KICK ALL</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT SETTINGS -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title">PAYMENT & AI CHAT SETTINGS</div>
+  </div>
+  <div class="sec-body">
+    <div class="form-group">
+      <label class="form-lbl">QR Image URL</label>
+      <input class="form-input" id="payQrUrl" placeholder="https://...your-qr-image.png"/>
+    </div>
+    <div class="form-group">
+      <label class="form-lbl">Payment Text (shown when questions run out)</label>
+      <textarea class="form-textarea" id="payText" placeholder="Scan QR to buy more questions..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-lbl">Daily Questions Per User (global default)</label>
+      <input class="form-input" id="payQCount" type="number" value="5" min="1" max="1000" placeholder="5"/>
+    </div>
+    <button class="btn btn-full btn-c" onclick="savePaymentSettings()">💾 SAVE PAYMENT SETTINGS</button>
+    <div class="section-note">
+      ⬡ Global default: all users get this many questions per day<br>
+      ⬡ Per-key override: set different amount for specific key (in Keys table above)<br>
+      ⬡ Resets daily at midnight for each user
+    </div>
+  </div>
+</div>
+
+<!-- COLLECTOR SETTINGS -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title">COLLECTOR SETTINGS</div>
+    <button class="btn btn-sm" onclick="loadCollectorStats()">⟳</button>
+  </div>
+  <div class="sec-body">
+    <div class="collector-stats">
+      <div class="col-stat"><div class="col-stat-v" id="colStored" style="color:var(--v)">--</div><div class="col-stat-l">STORED</div></div>
+      <div class="col-stat"><div class="col-stat-v" id="colMax" style="color:var(--g)">500</div><div class="col-stat-l">MAX LIMIT</div></div>
+      <div class="col-stat"><div class="col-stat-v" id="colLatest" style="color:var(--c)">--</div><div class="col-stat-l">LATEST PRD</div></div>
+    </div>
+    <div class="form-group">
+      <label class="form-lbl">Max Results to Store (Cloudflare Worker reads this)</label>
+      <input class="form-input" id="colMaxInp" type="number" value="500" min="50" max="2000" placeholder="500"/>
+    </div>
+    <button class="btn btn-full" onclick="saveCollectorSettings()">💾 SAVE COLLECTOR LIMIT</button>
+    <div class="section-note">
+      ⬡ Worker reads this limit from Firebase every run<br>
+      ⬡ Old results auto-deleted when limit exceeded<br>
+      ⬡ Recommended: 300-500 for fast website
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title">CHANGE ADMIN PASSWORD</div>
+  </div>
+  <div class="sec-body">
+    <div class="form-group">
+      <label class="form-lbl">Current Password</label>
+      <input class="form-input" id="curPass" type="password" placeholder="Current password"/>
+    </div>
+    <div class="form-group">
+      <label class="form-lbl">New Password</label>
+      <input class="form-input" id="newPass" type="password" placeholder="New password"/>
+    </div>
+    <div class="form-group">
+      <label class="form-lbl">Confirm New Password</label>
+      <input class="form-input" id="confPass" type="password" placeholder="Confirm new password"/>
+    </div>
+    <button class="btn btn-full btn-v" onclick="changePassword()">🔐 CHANGE PASSWORD</button>
+  </div>
+</div>
+
+<!-- RESULTS MONITOR -->
+<div class="section">
+  <div class="sec-hdr">
+    <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
+    <div class="sec-title">RESULTS MONITOR</div>
+    <span style="font-size:7px;color:var(--mut)" id="resSyncLbl">--</span>
+  </div>
+  <div class="sec-body">
+    <div id="resMini" style="max-height:160px;overflow-y:auto;background:#000;border:1px solid var(--bdr);border-radius:3px;padding:7px 9px;font-size:10px;line-height:1.8;color:var(--mut)">// Loading results...</div>
+    <div class="btn-row">
+      <button class="btn" onclick="loadResults()">⟳ REFRESH</button>
+      <button class="btn btn-r" onclick="clearAllResults()">🗑 CLEAR ALL</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ── FIREBASE ──────────────────────────────────────
+const firebaseConfig={
+  apiKey:"AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ",
+  authDomain:"anashrawwingokey.firebaseapp.com",
+  projectId:"anashrawwingokey",
+  storageBucket:"anashrawwingokey.firebasestorage.app",
+  messagingSenderId:"515715007863",
+  appId:"1:515715007863:web:bdebab42892be2d1bc0d72"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+// ── MATRIX ────────────────────────────────────────
+const mc=document.getElementById('mc'),ctx=mc.getContext('2d');
+function rsz(){mc.width=window.innerWidth;mc.height=window.innerHeight;}rsz();window.addEventListener('resize',rsz);
+const CH='アイウエオ0123456789ABCDEF<>[]{}';
+let dr=Array(Math.floor(window.innerWidth/14)).fill(1);
+setInterval(()=>{
+  ctx.fillStyle='rgba(0,0,0,0.04)';ctx.fillRect(0,0,mc.width,mc.height);
+  ctx.font='14px Share Tech Mono';
+  const c=Math.floor(mc.width/14);while(dr.length<c)dr.push(1);
+  for(let i=0;i<c;i++){
+    ctx.fillStyle=dr[i]*14<80?'#00ff41':'#003a0f';
+    ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*14,dr[i]*14);
+    if(dr[i]*14>mc.height&&Math.random()>.975)dr[i]=0;dr[i]++;
+  }
+},50);
+
+// ── CLOCK ─────────────────────────────────────────
+setInterval(()=>{
+  const n=new Date(),p=x=>String(x).padStart(2,'0');
+  document.getElementById('clkm').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  const D=['SUN','MON','TUE','WED','THU','FRI','SAT'],M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('clkd').textContent=`${D[n.getDay()]} ${p(n.getDate())} ${M[n.getMonth()]} ${n.getFullYear()}`;
+},1000);
+
+// ── ADMIN AUTH ─────────────────────────────────────
+const LS_PASS='anashraw_admin_pass';
+let adminPass=localStorage.getItem(LS_PASS)||"ANASHRAWDIXIT'S";
+
+function adminLogin(){
+  const pw=document.getElementById('pwInput').value;
+  if(pw===adminPass){document.getElementById('loginScreen').style.display='none';initAdmin();}
+  else{document.getElementById('loginErr').textContent='❌ Wrong password';document.getElementById('pwInput').value='';}
+}
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
+
+function adminLogout(){document.getElementById('loginScreen').style.display='flex';document.getElementById('pwInput').value='';document.getElementById('loginErr').textContent='';}
+
+function changePassword(){
+  const cur=document.getElementById('curPass').value;
+  const nw=document.getElementById('newPass').value;
+  const conf=document.getElementById('confPass').value;
+  if(cur!==adminPass){toast('❌ Current password wrong','err');return;}
+  if(!nw){toast('❌ Enter new password','err');return;}
+  if(nw!==conf){toast('❌ Passwords do not match','err');return;}
+  adminPass=nw;localStorage.setItem(LS_PASS,nw);
+  document.getElementById('curPass').value='';document.getElementById('newPass').value='';document.getElementById('confPass').value='';
+  toast('✅ Password changed!');
+}
+
+// ── TOAST ──────────────────────────────────────────
+function toast(msg,type=''){
+  const c=document.getElementById('toast');
+  const d=document.createElement('div');d.className='toast-item'+(type?' '+type:'');d.textContent=msg;
+  c.appendChild(d);setTimeout(()=>d.remove(),3000);
+}
+
+// ── HELPERS ───────────────────────────────────────
+function ts(){const n=new Date(),p=x=>String(x).padStart(2,'0');return`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
+function fmtDate(ts){if(!ts)return'--';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('en-IN')+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});}
+function fmtExpiry(data){
+  if(data.lifetime)return'<span style="color:var(--g)">LIFETIME</span>';
+  if(!data.expiresAt)return'<span style="color:var(--g)">LIFETIME</span>';
+  const d=data.expiresAt.toDate?data.expiresAt.toDate():new Date(data.expiresAt);
+  const diff=d-new Date();
+  if(diff<0)return'<span style="color:#888">EXPIRED</span>';
+  const days=Math.floor(diff/86400000);
+  if(days>0)return`<span style="color:var(--y)">${days}d left</span>`;
+  const hrs=Math.floor(diff/3600000);
+  return`<span style="color:var(--r)">${hrs}h left</span>`;
+}
+function genRandKey(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const r=n=>Array.from({length:n},()=>c[Math.floor(Math.random()*c.length)]).join('');
+  return`ANASH-${r(5)}-${r(5)}`;
+}
+function toggleDurVal(){document.getElementById('durValGrp').style.display=document.getElementById('durType').value==='lifetime'?'none':'block';}
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=>toast('📋 Copied!')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 Copied!');
+  });
+}
+
+// ── GENERATE KEYS ──────────────────────────────────
+async function generateKeys(){
+  const label=document.getElementById('keyLabel').value.trim();
+  const durType=document.getElementById('durType').value;
+  const customK=document.getElementById('customKey').value.trim().toUpperCase();
+  const qty=Math.min(20,Math.max(1,parseInt(document.getElementById('keyQty').value)||1));
+  const durVal=parseInt(document.getElementById('durVal').value)||1;
+  function getExpiry(){
+    if(durType==='lifetime')return null;
+    const d=new Date();
+    if(durType==='hours')d.setHours(d.getHours()+durVal);
+    else if(durType==='days')d.setDate(d.getDate()+durVal);
+    else if(durType==='months')d.setMonth(d.getMonth()+durVal);
+    else if(durType==='years')d.setFullYear(d.getFullYear()+durVal);
+    return d;
+  }
+  const generatedKeys=[];
+  for(let i=0;i<qty;i++){
+    const key=(qty===1&&customK)?customK:genRandKey();
+    const ex=await db.collection('keys').where('key','==',key).get();
+    if(!ex.empty){toast('⚠ Key already exists: '+key,'warn');continue;}
+    const expiresAt=getExpiry();
+    const docData={
+      key,label:label||('KEY-'+key.slice(-4)),
+      status:'active',blocked:false,active:true,kicked:false,
+      lifetime:durType==='lifetime',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      expiresAt:expiresAt?firebase.firestore.Timestamp.fromDate(expiresAt):null,
+      lastUsed:null,
+      questionsOverride:null  // null = use global default
+    };
+    await db.collection('keys').add(docData);
+    generatedKeys.push({key,expiresAt,label:docData.label});
+  }
+  if(!generatedKeys.length)return;
+  const box=document.getElementById('genKeyBox'),list=document.getElementById('genKeyList');
+  box.style.display='block';list.innerHTML='';
+  generatedKeys.forEach(({key,expiresAt,label})=>{
+    const expStr=expiresAt?expiresAt.toLocaleDateString('en-IN'):'Lifetime';
+    const div=document.createElement('div');div.className='gen-key-item';
+    div.innerHTML=`<div><div class="gen-key-val">${key}</div><div class="gen-key-info">${label} · ${expStr}</div></div><button class="btn btn-c btn-sm" onclick="copyText('${key}')">COPY</button>`;
+    list.appendChild(div);
+  });
+  toast(`✅ ${generatedKeys.length} key(s) generated!`);
+  loadKeys();updateStats2();
+}
+
+// ── LOAD KEYS — with per-key Q override ───────────
+async function loadKeys(){
+  const tb=document.getElementById('keysBody');
+  try{
+    const snap=await db.collection('keys').orderBy('createdAt','desc').get();
+    if(snap.empty){tb.innerHTML='<tr><td colspan="7" class="empty-row">// No keys found</td></tr>';updateKeyStats(0,0);return;}
+    const now=new Date();let total=0,active=0;
+    tb.innerHTML='';
+    snap.docs.forEach((doc,i)=>{
+      const d=doc.data();total++;
+      let status=d.status||'active';
+      if(d.blocked===true)status='blocked';
+      else if(status==='active'&&d.expiresAt&&!d.lifetime){
+        const exp=d.expiresAt.toDate?d.expiresAt.toDate():new Date(d.expiresAt);
+        if(exp<now)status='expired';
+      }
+      if(status==='active')active++;
+      const sBadge=status==='active'?'<span class="badge b-active">ACTIVE</span>':
+        status==='blocked'?'<span class="badge b-blocked">BLOCKED</span>':
+        '<span class="badge b-expired">EXPIRED</span>';
+
+      // Per-key questions override
+      const qOverride=d.questionsOverride;
+      const qDisplay=qOverride!==null&&qOverride!==undefined?`<span style="color:var(--y);font-weight:700">${qOverride}</span>`:`<span style="color:var(--mut)">global</span>`;
+
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td style="color:var(--mut)">#${i+1}</td>
+        <td style="font-family:'Orbitron',monospace;font-size:9px;color:var(--c)">${d.key}</td>
+        <td style="color:var(--txt)">${d.label||'--'}</td>
+        <td>${sBadge}</td>
+        <td style="font-size:8px">${fmtExpiry(d)}</td>
+        <td>
+          ${qDisplay}
+          <div class="q-override-row">
+            <input class="q-override-inp" id="qov_${doc.id}" type="number" min="0" max="1000"
+              placeholder="${qOverride!==null&&qOverride!==undefined?qOverride:'def'}"
+              value="${qOverride!==null&&qOverride!==undefined?qOverride:''}"/>
+            <button class="btn btn-sm btn-v" onclick="setQOverride('${doc.id}')">SET</button>
+            ${qOverride!==null&&qOverride!==undefined?`<button class="btn btn-sm" onclick="clearQOverride('${doc.id}')">CLR</button>`:''}
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;gap:3px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="copyText('${d.key}')">📋</button>
+            ${status!=='blocked'?`<button class="btn btn-r btn-sm" onclick="blockKey('${doc.id}')">BLK</button>`:''}
+            ${status==='blocked'?`<button class="btn btn-c btn-sm" onclick="unblockKey('${doc.id}')">UBK</button>`:''}
+            <button class="btn btn-y btn-sm" onclick="kickKey('${doc.id}','${d.key}')">KICK</button>
+            <button class="btn btn-r btn-sm" onclick="deleteKey('${doc.id}','${d.key}')">DEL</button>
+          </div>
+        </td>`;
+      tb.appendChild(tr);
+    });
+    document.getElementById('keysTtl').textContent=`ALL KEYS (${total})`;
+    updateKeyStats(total,active);
+  }catch(e){
+    tb.innerHTML=`<tr><td colspan="7" class="empty-row">// Error: ${e.message}</td></tr>`;
+    toast('❌ Load error: '+e.message,'err');
+  }
+}
+
+// ── PER-KEY Q OVERRIDE ────────────────────────────
+async function setQOverride(docId){
+  const inp=document.getElementById('qov_'+docId);
+  const val=parseInt(inp.value);
+  if(isNaN(val)||val<0){toast('Enter valid number','err');return;}
+  await db.collection('keys').doc(docId).update({questionsOverride:val});
+  toast(`✅ Set ${val} questions/day for this key`);
+  loadKeys();
+}
+async function clearQOverride(docId){
+  await db.collection('keys').doc(docId).update({questionsOverride:null});
+  toast('✅ Cleared — using global default');
+  loadKeys();
+}
+
+function updateKeyStats(total,active){
+  document.getElementById('dTotal').textContent=total;
+  document.getElementById('dActive').textContent=active;
+}
+
+// ── KEY ACTIONS ───────────────────────────────────
+async function blockKey(docId){await db.collection('keys').doc(docId).update({status:'blocked',blocked:true});toast('🚫 Blocked');loadKeys();}
+async function unblockKey(docId){await db.collection('keys').doc(docId).update({status:'active',blocked:false,kicked:false});toast('✅ Unblocked');loadKeys();}
+async function kickKey(docId,key){await db.collection('keys').doc(docId).update({kicked:true});toast('⚡ Kicked: '+key,'warn');}
+async function deleteKey(docId,key){
+  if(!confirm('Delete key '+key+'?'))return;
+  await db.collection('keys').doc(docId).delete();
+  toast('🗑 Deleted','warn');loadKeys();updateStats2();
+}
+async function blockKeyByInput(){
+  const k=document.getElementById('blockKeyInp').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.update({status:'blocked',blocked:true});
+  toast('🚫 Blocked: '+k);loadKeys();
+}
+async function unblockKeyByInput(){
+  const k=document.getElementById('blockKeyInp').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.update({status:'active',blocked:false});
+  toast('✅ Unblocked: '+k);loadKeys();
+}
+async function kickKeyByInput(){
+  const k=document.getElementById('kickKeyInp').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.update({kicked:true});
+  toast('⚡ Kicked: '+k,'warn');
+}
+async function deleteKeyByInput(){
+  const k=document.getElementById('delKeyInp').value.trim().toUpperCase();
+  if(!k){toast('Enter a key','err');return;}
+  if(!confirm('Delete key '+k+'?'))return;
+  const snap=await db.collection('keys').where('key','==',k).get();
+  if(snap.empty){toast('Key not found','err');return;}
+  await snap.docs[0].ref.delete();
+  toast('🗑 Deleted: '+k,'warn');loadKeys();updateStats2();
+}
+async function deleteExpiredKeys(){
+  if(!confirm('Delete all expired keys?'))return;
+  const snap=await db.collection('keys').get();
+  const now=new Date();let count=0;
+  const batch=db.batch();
+  snap.docs.forEach(doc=>{
+    const d=doc.data();
+    if(d.status==='expired'){batch.delete(doc.ref);count++;return;}
+    if(d.expiresAt&&!d.lifetime){
+      const exp=d.expiresAt.toDate?d.expiresAt.toDate():new Date(d.expiresAt);
+      if(exp<now){batch.delete(doc.ref);count++;}
+    }
+  });
+  await batch.commit();
+  toast(`🗑 Deleted ${count} expired keys`,'warn');loadKeys();updateStats2();
+}
+async function kickAllUsers(){
+  if(!confirm('Kick ALL online users?'))return;
+  const snap=await db.collection('keys').get();
+  const batch=db.batch();
+  snap.docs.forEach(d=>batch.update(d.ref,{kicked:true}));
+  await batch.commit();
+  toast('⚡ All users kicked','warn');
+}
+
+// ── LIVE USERS ─────────────────────────────────────
+function loadUsers(){
+  db.collection('sessions').onSnapshot(snap=>{
+    const now=new Date();
+    const online=snap.docs.filter(d=>{
+      const ls=d.data().lastSeen;
+      if(!ls)return false;
+      const t=ls.toDate?ls.toDate():new Date(ls);
+      return(now-t)<30000&&!d.data().kicked;
+    });
+    document.getElementById('liveCount').textContent=online.length+' online';
+    document.getElementById('dLive').textContent=online.length;
+    const tb=document.getElementById('usersBody');
+    if(!online.length){tb.innerHTML='<tr><td colspan="5" class="empty-row">// No users online</td></tr>';return;}
+    tb.innerHTML='';
+    online.forEach(doc=>{
+      const d=doc.data();
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td style="font-family:'Orbitron',monospace;font-size:9px;color:var(--c)">${d.key||'--'}</td>
+        <td style="color:var(--txt)">--</td>
+        <td><span class="live-dot"></span><span class="badge b-online">ONLINE</span></td>
+        <td style="color:var(--mut);font-size:7px">${fmtDate(d.lastSeen)}</td>
+        <td><div style="display:flex;gap:3px">
+          <button class="btn btn-y btn-sm" onclick="kickBySessionKey('${d.key}')">KICK</button>
+          <button class="btn btn-r btn-sm" onclick="blockByKey('${d.key}')">BLOCK</button>
+        </div></td>`;
+      tb.appendChild(tr);
+    });
+  });
+}
+async function kickBySessionKey(key){
+  const snap=await db.collection('keys').where('key','==',key).get();
+  if(!snap.empty)await snap.docs[0].ref.update({kicked:true});
+  toast('⚡ Kicked: '+key,'warn');
+}
+async function blockByKey(key){
+  const snap=await db.collection('keys').where('key','==',key).get();
+  if(!snap.empty)await snap.docs[0].ref.update({status:'blocked',blocked:true});
+  toast('🚫 Blocked: '+key);loadKeys();
+}
+
+// ── PAYMENT SETTINGS ──────────────────────────────
+async function loadPaymentSettings(){
+  try{
+    const doc=await db.collection('settings').doc('payment').get();
+    if(doc.exists){
+      const d=doc.data();
+      document.getElementById('payQrUrl').value=d.qrImageUrl||'';
+      document.getElementById('payText').value=d.paymentText||'';
+      document.getElementById('payQCount').value=d.questionsPerKey||5;
+    }
+  }catch(e){}
+}
+async function savePaymentSettings(){
+  const qrUrl=document.getElementById('payQrUrl').value.trim();
+  const payText=document.getElementById('payText').value.trim();
+  const qCount=parseInt(document.getElementById('payQCount').value)||5;
+  try{
+    await db.collection('settings').doc('payment').set({
+      qrImageUrl:qrUrl,
+      paymentText:payText||'Contact admin for your access key.',
+      questionsPerKey:qCount,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('✅ Payment settings saved!');
+  }catch(e){toast('❌ Save error: '+e.message,'err');}
+}
+
+// ── COLLECTOR SETTINGS ────────────────────────────
+async function loadCollectorSettings(){
+  try{
+    const doc=await db.collection('settings').doc('collector').get();
+    if(doc.exists){
+      const d=doc.data();
+      document.getElementById('colMaxInp').value=d.maxResults||500;
+      document.getElementById('colMax').textContent=d.maxResults||500;
+    }
+  }catch(e){}
+}
+async function saveCollectorSettings(){
+  const maxR=parseInt(document.getElementById('colMaxInp').value)||500;
+  if(maxR<50){toast('Minimum 50 results!','err');return;}
+  try{
+    await db.collection('settings').doc('collector').set({
+      maxResults:maxR,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('colMax').textContent=maxR;
+    toast('✅ Collector limit saved: '+maxR);
+  }catch(e){toast('❌ Save error: '+e.message,'err');}
+}
+async function loadCollectorStats(){
+  try{
+    const snap=await db.collection('results').get();
+    const metaSnap=await db.collection('meta').doc('latest').get();
+    document.getElementById('colStored').textContent=snap.size;
+    document.getElementById('dResults').textContent=snap.size;
+    if(metaSnap.exists){
+      const p=metaSnap.data().period||'--';
+      document.getElementById('colLatest').textContent=String(p).slice(-6);
+    }
+  }catch(e){}
+}
+
+// ── RESULTS MONITOR ───────────────────────────────
+async function loadResults(){
+  const box=document.getElementById('resMini');
+  document.getElementById('resSyncLbl').textContent='LOADING...';
+  try{
+    const snap=await db.collection('results').orderBy('savedAt','desc').limit(20).get();
+    document.getElementById('dResults').textContent=snap.size;
+    document.getElementById('colStored').textContent=snap.size;
+    document.getElementById('resSyncLbl').textContent='SYNC:'+ts();
+    if(!snap.size){box.innerHTML='<div style="color:var(--mut)">// No results stored</div>';return;}
+    const colorOf=n=>{if(n===0||n===5)return'violet';if([1,3,7,9].includes(n))return'green';return'red';};
+    const numCss=n=>{const c=colorOf(n);return c==='violet'?'#bf7fff':c==='green'?'#00ff41':'#ff0040';};
+    let html='';
+    snap.docs.forEach((doc,i)=>{
+      const d=doc.data();
+      const e=d.colour?.includes('violet')?'🟣':d.colour?.includes('green')?'🟢':'🔴';
+      const bs=d.bigSmall==='BIG'?`<span style="color:var(--c)">BIG</span>`:`<span style="color:var(--y)">SML</span>`;
+      html+=`<div style="display:flex;gap:8px;padding:2px 0;border-bottom:1px solid #050f05;align-items:center">
+        <span style="color:var(--dim);font-size:8px;min-width:20px">[${String(i).padStart(2,'0')}]</span>
+        <span style="color:var(--mut);font-size:8px">P${String(d.period||'').slice(-6)}</span>
+        <span style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:${numCss(d.number)}">${d.number}</span>
+        <span>${e}</span>${bs}
+      </div>`;
+    });
+    box.innerHTML=html;
+  }catch(e){box.innerHTML=`<div style="color:var(--r)">// Error: ${e.message}</div>`;toast('❌ '+e.message,'err');}
+}
+async function clearAllResults(){
+  if(!confirm('Delete ALL stored results?'))return;
+  if(!confirm('Sure? This cannot be undone!'))return;
+  toast('🗑 Clearing...','warn');
+  try{
+    let snap=await db.collection('results').limit(500).get();
+    while(!snap.empty){
+      const batch=db.batch();snap.docs.forEach(d=>batch.delete(d.ref));
+      await batch.commit();snap=await db.collection('results').limit(500).get();
+    }
+    toast('✅ All results cleared');loadResults();
+  }catch(e){toast('❌ Error: '+e.message,'err');}
+}
+
+// ── STATS ─────────────────────────────────────────
+async function updateStats2(){
+  try{
+    const kSnap=await db.collection('keys').get();
+    const now=new Date();let active=0;
+    kSnap.docs.forEach(d=>{
+      const data=d.data();if(data.blocked===true)return;
+      if(data.status==='active'){
+        if(data.lifetime||!data.expiresAt)active++;
+        else{const exp=data.expiresAt.toDate?data.expiresAt.toDate():new Date(data.expiresAt);if(exp>now)active++;}
+      }
+    });
+    document.getElementById('dTotal').textContent=kSnap.size;
+    document.getElementById('dActive').textContent=active;
+  }catch(e){}
+}
+
+// ── INIT ──────────────────────────────────────────
+function initAdmin(){
+  toast('✅ Admin logged in');
+  loadKeys();loadUsers();loadResults();updateStats2();
+  loadPaymentSettings();loadCollectorSettings();loadCollectorStats();
+  setInterval(()=>{loadResults();updateStats2();loadCollectorStats();},30000);
+}
+</script>
+</body>
+</html>
 <canvas id="mc"></canvas>
 <div id="toast"></div>
 
