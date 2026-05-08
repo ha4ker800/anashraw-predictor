@@ -1,13 +1,11 @@
 // ╔══════════════════════════════════════════════════════════════╗
-// ║  ANASHRAW WINGO AI — Cloudflare Worker v11 FIXED             ║
-// ║  All endpoints added. No hardcoded secrets. Bug-free.        ║
+// ║  ANASHRAW WINGO AI — Cloudflare Worker v12                  ║
+// ║  NEW Firebase: newwingoaikey | Enhanced Prediction Engine   ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 // ── CONFIG ────────────────────────────────────────────────────
-const FIREBASE_PROJECT = 'anashrawwingokey';
-// NOTE: FIREBASE_API_KEY is safe to expose (it's a client-side key, protected by Firestore rules)
-const FIREBASE_API_KEY = 'AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ';
-// GROQ KEY: stored in Firestore settings/apiKeys.groqKey — NOT hardcoded
+const FIREBASE_PROJECT = 'newwingoaikey';
+const FIREBASE_API_KEY = 'AIzaSyBYwuezKZPXU3pcM6hVi2hkD1EWKX9_5B8';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const WINGO_URL = 'https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=100&language=0&ts=';
 const DEFAULT_MAX = 500;
@@ -120,7 +118,6 @@ async function fbSet(path, data) {
   } catch { return false; }
 }
 
-// FIX: arrayUnion via read-modify-write (Firestore REST doesn't support arrayUnion natively)
 async function fbArrayUnion(path, fieldName, newItem) {
   try {
     const existing = await fbGet(path);
@@ -129,7 +126,6 @@ async function fbArrayUnion(path, fieldName, newItem) {
       : [];
     const arr = Array.isArray(current) ? current : [];
     arr.push(newItem);
-    // Keep last 200 messages max
     const trimmed = arr.slice(-200);
     const doc = existing?.fields ? parseDoc(existing.fields) : {};
     doc[fieldName] = trimmed;
@@ -161,7 +157,7 @@ async function queryCollection(collectionId, orderField, direction, limit) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// GET GROQ KEY FROM FIREBASE (not hardcoded)
+// GET GROQ KEY
 // ═══════════════════════════════════════════════════════════════
 async function getGroqKey() {
   const doc = await fbGet('settings/apiKeys');
@@ -236,36 +232,41 @@ async function fetchWinGo() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 🧠 ADVANCED PREDICTION ENGINE — 11-MODEL ENSEMBLE
+// 🧠 ULTRA PREDICTION ENGINE v12 — 15-MODEL ENSEMBLE
+//    Modes: normal | high | vip
+//    Logic: Anti-betting psychology + Pattern analysis
 // ═══════════════════════════════════════════════════════════════
-function advancedPredict(data) {
+function advancedPredict(data, mode = 'normal') {
   if (!data || data.length < 5) return null;
   const nums = data.map(d => d.number);
   const colors = data.map(d => String(d.colour).toLowerCase());
   const sizes = data.map(d => String(d.bigSmall).toUpperCase());
   const n = nums.length;
 
+  // ── MODEL 1: Global frequency (all history) ──
   const freqAll = Array(10).fill(0);
   nums.forEach(x => freqAll[x]++);
 
+  // ── MODEL 2: Exponentially weighted frequency ──
   const freqWeighted = Array(10).fill(0);
   nums.forEach((x, i) => { freqWeighted[x] += Math.exp((i - n) / 15); });
 
+  // ── MODEL 3,4,5: Markov chains (order 1,2,3) ──
   const m1 = {}, m2 = {}, m3 = {};
   for (let i = 0; i < n - 1; i++) {
-    const s1 = String(nums[i]);
-    if (!m1[s1]) m1[s1] = {};
-    m1[s1][nums[i+1]] = (m1[s1][nums[i+1]] || 0) + 1;
+    const s = String(nums[i]);
+    if (!m1[s]) m1[s] = {};
+    m1[s][nums[i+1]] = (m1[s][nums[i+1]] || 0) + 1;
   }
   for (let i = 0; i < n - 2; i++) {
-    const s2 = `${nums[i]},${nums[i+1]}`;
-    if (!m2[s2]) m2[s2] = {};
-    m2[s2][nums[i+2]] = (m2[s2][nums[i+2]] || 0) + 1;
+    const s = `${nums[i]},${nums[i+1]}`;
+    if (!m2[s]) m2[s] = {};
+    m2[s][nums[i+2]] = (m2[s][nums[i+2]] || 0) + 1;
   }
   for (let i = 0; i < n - 3; i++) {
-    const s3 = `${nums[i]},${nums[i+1]},${nums[i+2]}`;
-    if (!m3[s3]) m3[s3] = {};
-    m3[s3][nums[i+3]] = (m3[s3][nums[i+3]] || 0) + 1;
+    const s = `${nums[i]},${nums[i+1]},${nums[i+2]}`;
+    if (!m3[s]) m3[s] = {};
+    m3[s][nums[i+3]] = (m3[s][nums[i+3]] || 0) + 1;
   }
 
   const m1S = Array(10).fill(0), m2S = Array(10).fill(0), m3S = Array(10).fill(0);
@@ -282,6 +283,7 @@ function advancedPredict(data) {
     if (m3[s]) { const t = Object.values(m3[s]).reduce((a,b)=>a+b,0); Object.entries(m3[s]).forEach(([k,v])=>m3S[k]+=(v/t)*100); }
   }
 
+  // ── MODEL 6: Gap/Due analysis ──
   const lastSeen = Array(10).fill(-1);
   nums.forEach((x, i) => lastSeen[x] = i);
   const expectedGap = n / 10;
@@ -291,39 +293,42 @@ function advancedPredict(data) {
     if (gap > expectedGap) gapS[num] = Math.min(50, (gap - expectedGap) * 3);
   });
 
+  // ── MODEL 7,8: Sliding windows (10 & 20) ──
+  const w10 = nums.slice(-10), w20 = nums.slice(-20), w5 = nums.slice(-5);
+  const w10F = Array(10).fill(0); w10.forEach(x => w10F[x]++);
+  const w20F = Array(10).fill(0); w20.forEach(x => w20F[x]++);
+  const w5F = Array(10).fill(0); w5.forEach(x => w5F[x]++);
+  const big10 = w10.filter(x => x >= 5).length;
+  const big20 = w20.filter(x => x >= 5).length;
+  const big5 = w5.filter(x => x >= 5).length;
+
+  // ── MODEL 9: Streak detection ──
   let sNum = nums[n-1], sLen = 1;
   for (let i = n-2; i >= 0; i--) { if (nums[i] === sNum) sLen++; else break; }
   let cColor = colors[n-1], cLen = 1;
   for (let i = n-2; i >= 0; i--) { if (colors[i] === cColor) cLen++; else break; }
+  let sBS = sizes[n-1], bsLen = 1;
+  for (let i = n-2; i >= 0; i--) { if (sizes[i] === sBS) bsLen++; else break; }
 
-  const w10 = nums.slice(-10), w20 = nums.slice(-20);
-  const w10F = Array(10).fill(0); w10.forEach(x => w10F[x]++);
-  const w20F = Array(10).fill(0); w20.forEach(x => w20F[x]++);
-  const big10 = w10.filter(x => x >= 5).length;
-  const big20 = w20.filter(x => x >= 5).length;
-
+  // ── MODEL 10: Fibonacci pattern ──
   const fibS = Array(10).fill(0);
   for (let i = 2; i < Math.min(n, 50); i++) {
     if (nums[i] === (nums[i-1] + nums[i-2]) % 10) fibS[(nums[i-1] + nums[i]) % 10] += 8;
   }
 
+  // ── MODEL 11: Cycle detection ──
   const cycleS = Array(10).fill(0);
   for (let c = 5; c <= 20; c++) { if (n > c) cycleS[nums[n-c]] += 5; }
 
+  // ── MODEL 12: Diversity score ──
   const divS = Array(10).fill(0);
-  const last5 = new Set(nums.slice(-5)), last10 = new Set(nums.slice(-10));
+  const last5Set = new Set(w5), last10Set = new Set(w10);
   for (let i = 0; i < 10; i++) {
-    if (!last5.has(i)) divS[i] += 6;
-    if (!last10.has(i)) divS[i] += 4;
+    if (!last5Set.has(i)) divS[i] += 8;
+    if (!last10Set.has(i)) divS[i] += 5;
   }
 
-  const colF20 = { green: 0, red: 0, violet: 0 };
-  colors.slice(-20).forEach(c => {
-    if (c.includes('green')) colF20.green++;
-    else if (c.includes('violet')) colF20.violet++;
-    else colF20.red++;
-  });
-
+  // ── MODEL 13: Anti-follow (mean reversion) ──
   const antiS = Array(10).fill(0);
   if (n >= 2) {
     const prev = nums[n-1];
@@ -332,34 +337,129 @@ function advancedPredict(data) {
     for (let i = 0; i < n - 1; i++) {
       if (nums[i] === prev) { followCounts[nums[i+1]]++; total++; }
     }
-    if (total > 5) followCounts.forEach((cnt, num) => { antiS[num] = (cnt / total) * 30; });
+    if (total > 5) followCounts.forEach((cnt, num) => { antiS[num] = (cnt / total) * 35; });
   }
 
+  // ── MODEL 14: Color transition matrix ──
+  const colTransS = Array(10).fill(0);
+  const colTrans = {};
+  for (let i = 0; i < n-1; i++) {
+    const c = colors[i];
+    if (!colTrans[c]) colTrans[c] = { green: 0, red: 0, violet: 0 };
+    const nc = colors[i+1];
+    if (nc.includes('green')) colTrans[c].green++;
+    else if (nc.includes('violet')) colTrans[c].violet++;
+    else colTrans[c].red++;
+  }
+  if (colTrans[cColor]) {
+    const ct = colTrans[cColor];
+    const total = ct.green + ct.red + ct.violet || 1;
+    for (let i = 0; i < 10; i++) {
+      const c = colorOf(i);
+      if (c === 'green') colTransS[i] += (ct.green / total) * 40;
+      else if (c === 'red') colTransS[i] += (ct.red / total) * 40;
+      else colTransS[i] += (ct.violet / total) * 40;
+    }
+  }
+
+  // ── MODEL 15: ANTI-BETTING PSYCHOLOGY MODEL ──
+  // Jis number/color pe jyada betting hogi, woh NAHI aayega
+  // High-volume numbers = most recently repeated = sab bet kar rahe hain
+  const antiBetS = Array(10).fill(0);
+  // Jo numbers baar baar aa rahe hain, unpe log bet karte hain — unhe penalize karo
+  const recentFreq = Array(10).fill(0);
+  nums.slice(-30).forEach(x => recentFreq[x]++);
+  const maxRF = Math.max(...recentFreq) || 1;
+  recentFreq.forEach((f, i) => {
+    // Jo zyada popular hai (baar aaya), uski probability REDUCE karo
+    antiBetS[i] = ((maxRF - f) / maxRF) * 30;
+  });
+  // Color betting psychology: jo color recent mein hot hai, log bet karte hain
+  const colF10 = { green: 0, red: 0, violet: 0 };
+  colors.slice(-10).forEach(c => {
+    if (c.includes('green')) colF10.green++;
+    else if (c.includes('violet')) colF10.violet++;
+    else colF10.red++;
+  });
+  const colF20 = { green: 0, red: 0, violet: 0 };
+  colors.slice(-20).forEach(c => {
+    if (c.includes('green')) colF20.green++;
+    else if (c.includes('violet')) colF20.violet++;
+    else colF20.red++;
+  });
+  // Agar green zyada aa raha hai, log green pe bet karenge — to NON-green pe boost
+  if (colF10.green >= 6) for (let i = 0; i < 10; i++) { if (colorOf(i) !== 'green') antiBetS[i] += 15; }
+  if (colF10.red >= 6) for (let i = 0; i < 10; i++) { if (colorOf(i) !== 'red') antiBetS[i] += 15; }
+  if (colF10.violet >= 4) for (let i = 0; i < 10; i++) { if (colorOf(i) !== 'violet') antiBetS[i] += 12; }
+
+  // ── VOTE AGGREGATION ──
   const votes = Array(10).fill(0);
   const norm2 = (arr, w) => {
     const mx = Math.max(...arr) || 1;
     arr.forEach((v, i) => votes[i] += (v / mx) * w);
   };
-  norm2(freqAll, 8); norm2(freqWeighted, 18); norm2(m1S, 12); norm2(m2S, 18);
-  norm2(m3S, 22); norm2(gapS, 12); norm2(w10F, 14); norm2(w20F, 10);
-  norm2(fibS, 7); norm2(cycleS, 7); norm2(divS, 10); norm2(antiS, 16);
 
+  // Mode-based weights
+  if (mode === 'vip') {
+    // VIP: Heavy on Markov-3, anti-bet, anti-follow
+    norm2(freqAll, 5);       norm2(freqWeighted, 12);
+    norm2(m1S, 10);          norm2(m2S, 15);
+    norm2(m3S, 28);          norm2(gapS, 10);
+    norm2(w10F, 10);         norm2(w20F, 8);
+    norm2(fibS, 6);          norm2(cycleS, 6);
+    norm2(divS, 10);         norm2(antiS, 22);
+    norm2(colTransS, 18);    norm2(antiBetS, 30);  // Anti-bet heavy
+    norm2(w5F, 8);
+  } else if (mode === 'high') {
+    // HIGH: Balanced, strong Markov + anti-bet
+    norm2(freqAll, 7);       norm2(freqWeighted, 15);
+    norm2(m1S, 12);          norm2(m2S, 18);
+    norm2(m3S, 25);          norm2(gapS, 12);
+    norm2(w10F, 12);         norm2(w20F, 10);
+    norm2(fibS, 7);          norm2(cycleS, 7);
+    norm2(divS, 10);         norm2(antiS, 18);
+    norm2(colTransS, 14);    norm2(antiBetS, 22);
+    norm2(w5F, 8);
+  } else {
+    // NORMAL: Classic weights
+    norm2(freqAll, 8);       norm2(freqWeighted, 18);
+    norm2(m1S, 12);          norm2(m2S, 18);
+    norm2(m3S, 22);          norm2(gapS, 12);
+    norm2(w10F, 14);         norm2(w20F, 10);
+    norm2(fibS, 7);          norm2(cycleS, 7);
+    norm2(divS, 10);         norm2(antiS, 16);
+    norm2(colTransS, 10);    norm2(antiBetS, 15);
+    norm2(w5F, 6);
+  }
+
+  // ── STREAK PENALTIES & BONUSES ──
   if (sLen >= 2) votes[sNum] -= sLen * 8;
-  if (sLen >= 4) votes[sNum] -= 20;
+  if (sLen >= 4) votes[sNum] -= 25;
+  if (sLen >= 6) votes[sNum] -= 40; // Hard penalty for long streaks
   if (cLen >= 3) {
-    const oppColors = cColor.includes('green') ? ['red','violet']
-      : cColor.includes('violet') ? ['green','red'] : ['green','violet'];
+    const oppColors = cColor.includes('green') ? ['red', 'violet']
+      : cColor.includes('violet') ? ['green', 'red'] : ['green', 'violet'];
     for (let i = 0; i < 10; i++) {
-      if (oppColors.includes(colorOf(i))) votes[i] += cLen * 5;
+      if (oppColors.includes(colorOf(i))) votes[i] += cLen * 6;
     }
   }
-  if (big10 >= 8) for (let i = 0; i < 5; i++) votes[i] += 15;
-  if (big10 <= 2) for (let i = 5; i <= 9; i++) votes[i] += 15;
+  if (bsLen >= 4) {
+    // Big/Small streak — opposite is due
+    const oppBS = sBS === 'BIG' ? 'SMALL' : 'BIG';
+    for (let i = 0; i < 10; i++) {
+      if (sizeOf(i) === oppBS) votes[i] += bsLen * 5;
+    }
+  }
+  if (big10 >= 8) for (let i = 0; i < 5; i++) votes[i] += 18;
+  if (big10 <= 2) for (let i = 5; i <= 9; i++) votes[i] += 18;
+  if (big5 >= 4) for (let i = 0; i < 5; i++) votes[i] += 12;
+  if (big5 <= 1) for (let i = 5; i <= 9; i++) votes[i] += 12;
   if (big20 >= 15) for (let i = 0; i < 5; i++) votes[i] += 10;
   if (big20 <= 5) for (let i = 5; i <= 9; i++) votes[i] += 10;
   if (colF20.red >= 12) for (let i = 0; i < 10; i++) { if (colorOf(i) !== 'red') votes[i] += 8; }
   if (colF20.green >= 12) for (let i = 0; i < 10; i++) { if (colorOf(i) !== 'green') votes[i] += 8; }
 
+  // ── PROBABILITY CALCULATION ──
   const minV = Math.min(...votes);
   const adj = votes.map(v => v - minV + 1);
   const total = adj.reduce((a, b) => a + b, 0);
@@ -367,8 +467,6 @@ function advancedPredict(data) {
 
   const best = probs.indexOf(Math.max(...probs));
   const sorted = probs.map((p, i) => ({ n: i, p })).sort((a, b) => b.p - a.p);
-
-  // FIX: alternatives saved as array of objects (not JSON string)
   const alternatives = sorted.filter(x => x.n !== best).slice(0, 4).map(a => ({
     number: a.n,
     colour: colorOf(a.n),
@@ -376,44 +474,47 @@ function advancedPredict(data) {
     probability: a.p
   }));
 
+  // ── CONFIDENCE CALCULATION (mode-boosted) ──
   const gap2 = probs[best] - sorted[1].p;
   const dataBonus = n >= 400 ? 18 : n >= 300 ? 14 : n >= 200 ? 10 : n >= 100 ? 6 : n >= 50 ? 3 : 0;
+  const modeBonus = mode === 'vip' ? 12 : mode === 'high' ? 7 : 0;
   const markovBonus = m3S[best] > 50 ? 12 : m3S[best] > 20 ? 6 : 0;
-  const numConf = Math.min(92, Math.max(30, 32 + gap2 * 2 + dataBonus + markovBonus));
+  const antiBetBonus = antiBetS[best] > 20 ? 8 : 0;
+
+  let numConf = Math.min(95, Math.max(30, 32 + gap2 * 2 + dataBonus + markovBonus + modeBonus + antiBetBonus));
 
   const predColor = colorOf(best);
-  let colorConf = 40;
-  if (cLen >= 5) colorConf = 80;
-  else if (cLen >= 4) colorConf = 72;
-  else if (cLen >= 3) colorConf = 63;
-  else if (cLen >= 2) colorConf = 52;
+  let colorConf = 42;
+  if (cLen >= 5) colorConf = 85;
+  else if (cLen >= 4) colorConf = 76;
+  else if (cLen >= 3) colorConf = 67;
+  else if (cLen >= 2) colorConf = 56;
   const myCC = colF20[predColor] || 0;
-  if (myCC <= 4) colorConf += 8;
+  if (myCC <= 4) colorConf += 10;
   else if (myCC >= 14) colorConf -= 10;
-  colorConf = Math.min(90, Math.max(30, Math.round(colorConf)));
+  colorConf = Math.min(95, Math.max(30, Math.round(colorConf + modeBonus)));
 
   const bsImb10 = Math.abs(big10 - 5);
   const bsImb20 = Math.abs(big20 - 10);
-  let bsConf = 36 + bsImb10 * 4 + bsImb20 * 1.5 + dataBonus * 0.8;
-  if (sizeOf(best) === (big10 >= 5 ? 'SMALL' : 'BIG')) bsConf = Math.max(bsConf, 72);
-  bsConf = Math.min(90, Math.max(30, Math.round(bsConf)));
+  let bsConf = 36 + bsImb10 * 4 + bsImb20 * 1.5 + dataBonus * 0.8 + modeBonus;
+  if (sizeOf(best) === (big10 >= 5 ? 'SMALL' : 'BIG')) bsConf = Math.max(bsConf, 75);
+  bsConf = Math.min(95, Math.max(30, Math.round(bsConf)));
 
   const freqSorted = [...freqAll.map((f, i) => ({ n: i, f }))].sort((a, b) => b.f - a.f);
   const hot = freqSorted.slice(0, 3).map(x => x.n);
   const cold = freqSorted.slice(-3).map(x => x.n);
 
-  const bsRatio = `${big10}/10 BIG`;
-  const colorRun = cLen >= 3 ? `${cColor.toUpperCase()} x${cLen}` : null;
-  const streakInfo = sLen >= 2 ? `${sNum} x${sLen}` : null;
-
+  // ── ANTI-BET REASONING ──
   const reasons = [];
-  if (sLen >= 2) reasons.push(`#${sNum} ran ${sLen}x — mean reversion likely`);
-  if (cLen >= 3) reasons.push(`${cColor} streak ${cLen}x — color switch expected`);
-  if (big10 >= 8) reasons.push(`${big10}/10 Big — Small overdue`);
-  if (big10 <= 2) reasons.push(`${big10}/10 Big — Big overdue`);
+  if (sLen >= 2) reasons.push(`#${sNum} repeated ${sLen}x — mean reversion triggered`);
+  if (cLen >= 3) reasons.push(`${cColor} color streak ${cLen}x — switch expected`);
+  if (big10 >= 8) reasons.push(`${big10}/10 BIG — SMALL overdue`);
+  if (big10 <= 2) reasons.push(`${big10}/10 BIG — BIG overdue`);
   if (gapS[best] > 15) reasons.push(`#${best} overdue by ${Math.round(n-1-lastSeen[best])} periods`);
-  if (m3S[best] > 40) reasons.push(`Markov-3: strong sequence leads to #${best}`);
-  reasons.push(`11-model ensemble: ${n} records analyzed`);
+  if (m3S[best] > 40) reasons.push(`Markov-3 chain: strong signal → #${best}`);
+  if (antiBetS[best] > 20) reasons.push(`Anti-bet model: low public volume on #${best}`);
+  if (bsLen >= 3) reasons.push(`${sBS} streak ${bsLen}x — ${sBS === 'BIG' ? 'SMALL' : 'BIG'} expected`);
+  reasons.push(`15-model ensemble | ${n} records | Mode: ${mode.toUpperCase()}`);
 
   return {
     predictedNum: best,
@@ -422,19 +523,24 @@ function advancedPredict(data) {
     numConf: Math.round(numConf),
     colorConf,
     bsConf,
-    alternatives,  // array of objects now
-    reasoning: reasons.slice(0, 3).join('. ') + '.',
+    alternatives,
+    reasoning: reasons.slice(0, 4).join('. ') + '.',
     hot,
     cold,
-    bsRatio,
-    colorRun,
-    streakInfo,
+    bsRatio: `${big10}/10 BIG`,
+    colorRun: cLen >= 3 ? `${cColor.toUpperCase()} x${cLen}` : null,
+    streakInfo: sLen >= 2 ? `${sNum} x${sLen}` : null,
     streakNum: sNum,
     streakLen: sLen,
     colorStreakColor: cColor,
     colorStreakLen: cLen,
+    bsStreakBS: sBS,
+    bsStreakLen: bsLen,
     bigCount10: big10,
-    dataPoints: n
+    bigCount5: big5,
+    dataPoints: n,
+    mode,
+    antiBetActive: true
   };
 }
 
@@ -529,7 +635,7 @@ async function checkAndIncrementQuota(key, keyData, settings) {
 async function runCollector() {
   const logs = [];
   const lg = m => { logs.push(m); console.log(m); };
-  lg('=== ANASHRAW COLLECTOR v11 === ' + new Date().toISOString());
+  lg('=== ANASHRAW COLLECTOR v12 === ' + new Date().toISOString());
 
   const settings = await getGlobalSettings();
   const MAX = settings.maxResults;
@@ -609,27 +715,27 @@ async function runCollector() {
     const history = await queryCollection('results', 'period', 'DESCENDING', 500);
     const seq = [...history].reverse();
     if (seq.length >= 10) {
-      const pred = advancedPredict(seq);
-      if (pred) {
+      // Run prediction for ALL 3 modes, save the one matching key tier
+      // We save the 'high' mode by default (vip users get vip in /prediction endpoint)
+      const predNormal = advancedPredict(seq, 'normal');
+      const predHigh = advancedPredict(seq, 'high');
+      const predVip = advancedPredict(seq, 'vip');
+
+      if (predHigh) {
         const nextPeriod = latestPeriod + 1;
-        // FIX: field names match what predictor.html expects
-        const predData = {
+        const makePredData = (pred, m) => ({
           period: String(nextPeriod),
           forPeriod: String(latestPeriod),
-          // FIX: use 'number' field (predictor reads number ?? predictedNumber)
           number: pred.predictedNum,
           predictedNum: pred.predictedNum,
-          // FIX: use 'colour' field
           colour: pred.predictedColor,
           predictedColor: pred.predictedColor,
-          // FIX: use 'bigSmall' field
           bigSmall: pred.predictedBS,
           predictedBS: pred.predictedBS,
           numberConfidence: pred.numConf,
           numConf: pred.numConf,
           colorConf: pred.colorConf,
           bsConf: pred.bsConf,
-          // FIX: save alternatives as array, not JSON string
           alternatives: pred.alternatives,
           reasoning: pred.reasoning,
           hotNumbers: pred.hot,
@@ -643,8 +749,13 @@ async function runCollector() {
           streakLen: pred.streakLen,
           colorStreakColor: pred.colorStreakColor,
           colorStreakLen: pred.colorStreakLen,
+          bsStreakBS: pred.bsStreakBS,
+          bsStreakLen: pred.bsStreakLen,
           bigCount10: pred.bigCount10,
+          bigCount5: pred.bigCount5,
           dataPoints: pred.dataPoints,
+          mode: m,
+          antiBetActive: true,
           createdAt: new Date().toISOString(),
           actualNum: -1,
           actualColor: '',
@@ -654,31 +765,19 @@ async function runCollector() {
           winBS: false,
           anyWin: false,
           resolved: false
-        };
-        await fbSet(`predictions/${String(nextPeriod)}`, predData);
-        await fbSet('meta/latestPrediction', {
-          period: String(nextPeriod),
-          number: pred.predictedNum,
-          predictedNum: pred.predictedNum,
-          colour: pred.predictedColor,
-          predictedColor: pred.predictedColor,
-          bigSmall: pred.predictedBS,
-          predictedBS: pred.predictedBS,
-          numberConfidence: pred.numConf,
-          numConf: pred.numConf,
-          colorConf: pred.colorConf,
-          bsConf: pred.bsConf,
-          alternatives: pred.alternatives,
-          reasoning: pred.reasoning,
-          hotNumbers: pred.hot,
-          coldNumbers: pred.cold,
-          bsRatio: pred.bsRatio,
-          colorRun: pred.colorRun,
-          streak: pred.streakInfo,
-          dataPoints: pred.dataPoints,
-          createdAt: new Date().toISOString()
         });
-        lg(`Prediction saved: #${pred.predictedNum} ${pred.predictedColor} ${pred.predictedBS}`);
+
+        // Save all 3 modes separately
+        await fbSet(`predictions/${String(nextPeriod)}`, makePredData(predHigh, 'high'));
+        await fbSet(`predictions_vip/${String(nextPeriod)}`, makePredData(predVip, 'vip'));
+        await fbSet(`predictions_normal/${String(nextPeriod)}`, makePredData(predNormal, 'normal'));
+
+        // meta/latestPrediction = high (default)
+        await fbSet('meta/latestPrediction', makePredData(predHigh, 'high'));
+        await fbSet('meta/latestPrediction_vip', makePredData(predVip, 'vip'));
+        await fbSet('meta/latestPrediction_normal', makePredData(predNormal, 'normal'));
+
+        lg(`Predictions saved: HIGH=#${predHigh.predictedNum} VIP=#${predVip.predictedNum} NORMAL=#${predNormal.predictedNum}`);
       }
     }
   }
@@ -702,7 +801,7 @@ async function runCollector() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// AI CHAT HANDLER
+// AI CHAT
 // ═══════════════════════════════════════════════════════════════
 async function handleAIChat(request) {
   let body;
@@ -727,10 +826,14 @@ async function handleAIChat(request) {
     `Period ${r.periodStr || r.period}: №${r.number} | ${r.colour} | ${r.bigSmall}`
   ).join('\n');
 
-  const latestPredDoc = await fbGet('meta/latestPrediction');
+  const tier = keyResult.data.tier || 'basic';
+  const metaKey = tier === 'vip' ? 'meta/latestPrediction_vip'
+    : tier === 'premium' ? 'meta/latestPrediction'
+    : 'meta/latestPrediction_normal';
+  const latestPredDoc = await fbGet(metaKey);
   const lp = latestPredDoc?.fields ? parseDoc(latestPredDoc.fields) : null;
   const predContext = lp
-    ? `Latest Prediction for period ${lp.period}: №${lp.number ?? lp.predictedNum} | ${lp.colour ?? lp.predictedColor} | ${lp.bigSmall ?? lp.predictedBS} (Num:${lp.numberConfidence ?? lp.numConf}% Color:${lp.colorConf}% B/S:${lp.bsConf}%)`
+    ? `Latest Prediction for period ${lp.period}: №${lp.number ?? lp.predictedNum} | ${lp.colour ?? lp.predictedColor} | ${lp.bigSmall ?? lp.predictedBS} (Num:${lp.numberConfidence ?? lp.numConf}% Color:${lp.colorConf}% B/S:${lp.bsConf}%) [Mode: ${lp.mode}]`
     : 'No prediction available';
 
   const systemPrompt = `You are ANASHRAW WINGO AI, an expert WinGo 1-minute game pattern analyst.
@@ -742,8 +845,12 @@ ${predContext}
 
 GAME RULES:
 - Numbers: 0-9
-- 0,5 = Violet | 1,3,7,9 = Green | 2,4,6,8 = Red
+- 0,5 = Violet | 1,3,7,9 = Green | 2,4,6,8 = Red  
 - 0-4 = SMALL | 5-9 = BIG
+
+ANTI-BET LOGIC ACTIVE:
+- Numbers/colors with high public betting volume are AVOIDED in predictions
+- Streak reversals are factored in
 
 INSTRUCTIONS:
 - Reply in the same language as the user (Hindi/English/Hinglish)
@@ -780,7 +887,7 @@ INSTRUCTIONS:
 }
 
 // ═══════════════════════════════════════════════════════════════
-// VALIDATE KEY HANDLER (FIX: was missing)
+// VALIDATE KEY HANDLER
 // ═══════════════════════════════════════════════════════════════
 async function handleValidateKey(request) {
   let body;
@@ -792,8 +899,6 @@ async function handleValidateKey(request) {
   if (!keyResult.ok) return jsonResp({ ok: false, error: keyResult.msg });
 
   const settings = await getGlobalSettings();
-
-  // Get quota info
   const today = new Date().toISOString().split('T')[0];
   const quotaId = `${key.toUpperCase()}_${today}`.replace(/[^a-zA-Z0-9_-]/g, '_');
   const quotaDoc = await fbGet(`quota/${quotaId}`);
@@ -821,15 +926,35 @@ async function handleValidateKey(request) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// HEARTBEAT HANDLER (FIX: was missing)
+// PREDICTION ENDPOINT (tier-based mode)
+// ═══════════════════════════════════════════════════════════════
+async function handlePrediction(request, url) {
+  const key = url.searchParams.get('key');
+  let tier = 'basic';
+  if (key) {
+    const kv = await validateKey(key);
+    if (!kv.ok) return jsonResp({ error: kv.msg }, 401);
+    tier = kv.data.tier || 'basic';
+  }
+
+  // Pick prediction based on tier
+  const metaKey = tier === 'vip' ? 'meta/latestPrediction_vip'
+    : (tier === 'premium' || tier === 'basic') ? 'meta/latestPrediction'
+    : 'meta/latestPrediction_normal';
+
+  const doc = await fbGet(metaKey);
+  if (!doc?.fields) return jsonResp({ error: 'No prediction yet' }, 404);
+  return jsonResp({ prediction: parseDoc(doc.fields) });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HEARTBEAT
 // ═══════════════════════════════════════════════════════════════
 async function handleHeartbeat(request) {
   let body;
   try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
   const { key } = body;
   if (!key) return jsonResp({ error: 'key required' }, 400);
-
-  // Update session
   await fbSet(`sessions/${key.toUpperCase()}`, {
     key: key.toUpperCase(),
     lastSeen: new Date().toISOString(),
@@ -839,14 +964,13 @@ async function handleHeartbeat(request) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SAVE CHAT HANDLER (FIX: was missing)
+// SAVE CHAT
 // ═══════════════════════════════════════════════════════════════
 async function handleSaveChat(request) {
   let body;
   try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
   const { key, role, content, chatId, senderName, isGuest } = body;
   if (!key || !role || !content) return jsonResp({ error: 'key, role, content required' }, 400);
-
   const id = chatId || key;
   const newMsg = {
     role,
@@ -855,20 +979,18 @@ async function handleSaveChat(request) {
     senderName: senderName || null,
     isGuest: isGuest || false
   };
-
   const ok = await fbArrayUnion(`adminChat/${id}`, 'messages', newMsg);
   return jsonResp({ ok });
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ADMIN: UPDATE API KEY (FIX: was missing)
+// UPDATE API KEY
 // ═══════════════════════════════════════════════════════════════
 async function handleUpdateApiKey(request) {
   let body;
   try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
   const { apiKey, service } = body;
   if (!apiKey) return jsonResp({ error: 'apiKey required' }, 400);
-
   const ok = await fbSet('settings/apiKeys', {
     groqKey: apiKey,
     service: service || 'groq',
@@ -878,7 +1000,7 @@ async function handleUpdateApiKey(request) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXPORT DEFAULT
+// MAIN ROUTER
 // ═══════════════════════════════════════════════════════════════
 export default {
   async fetch(request, env, ctx) {
@@ -894,22 +1016,11 @@ export default {
       return jsonResp({ error: 'Rate limit exceeded. Max 30 req/min.' }, 429);
     }
 
-    // ── Routes ──
     if (path === '/validate-key' && request.method === 'POST') return handleValidateKey(request);
     if (path === '/heartbeat' && request.method === 'POST') return handleHeartbeat(request);
     if (path === '/save-chat' && request.method === 'POST') return handleSaveChat(request);
     if (path === '/ai-chat' && request.method === 'POST') return handleAIChat(request);
-
-    if (path === '/prediction' && request.method === 'GET') {
-      const key = url.searchParams.get('key');
-      if (key) {
-        const kv = await validateKey(key);
-        if (!kv.ok) return jsonResp({ error: kv.msg }, 401);
-      }
-      const doc = await fbGet('meta/latestPrediction');
-      if (!doc?.fields) return jsonResp({ error: 'No prediction yet' }, 404);
-      return jsonResp({ prediction: parseDoc(doc.fields) });
-    }
+    if (path === '/prediction' && request.method === 'GET') return handlePrediction(request, url);
 
     if (path === '/results' && request.method === 'GET') {
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '100'), 500);
@@ -928,14 +1039,7 @@ export default {
       const qDoc = await fbGet(`quota/${quotaId}`);
       const used = qDoc?.fields?.used?.integerValue ? parseInt(qDoc.fields.used.integerValue) : 0;
       const maxQ = (kv.data.questionsOverride != null) ? parseInt(kv.data.questionsOverride) : parseInt(settings.questionsPerDay || 5);
-      return jsonResp({
-        used, max: maxQ, remaining: Math.max(0, maxQ - used),
-        tier: kv.data.tier || 'basic',
-        confidenceMode: kv.data.confidenceMode || 'normal',
-        label: kv.data.label || '',
-        lifetime: kv.data.lifetime || false,
-        expiresAt: kv.data.expiresAt || null
-      });
+      return jsonResp({ used, max: maxQ, remaining: Math.max(0, maxQ - used), tier: kv.data.tier || 'basic', confidenceMode: kv.data.confidenceMode || 'normal', label: kv.data.label || '', lifetime: kv.data.lifetime || false, expiresAt: kv.data.expiresAt || null });
     }
 
     if (path === '/settings' && request.method === 'GET') {
@@ -950,7 +1054,6 @@ export default {
       return jsonResp(result);
     }
 
-    // Admin routes
     if (path === '/admin/trim' && request.method === 'POST') {
       const settings = await getGlobalSettings();
       const result = await trimResults(settings.maxResults);
@@ -965,7 +1068,8 @@ export default {
       const settings = await getGlobalSettings();
       return jsonResp({
         status: 'ok',
-        version: 'v11-FIXED',
+        version: 'v12-NEWDB',
+        firebase_project: FIREBASE_PROJECT,
         collector: collMeta?.fields ? parseDoc(collMeta.fields) : null,
         latest: latestMeta?.fields ? parseDoc(latestMeta.fields) : null,
         settings
@@ -973,7 +1077,8 @@ export default {
     }
 
     return jsonResp({
-      name: 'ANASHRAW WINGO AI Worker v11-FIXED',
+      name: 'ANASHRAW WINGO AI Worker v12',
+      firebase: FIREBASE_PROJECT,
       routes: [
         '/validate-key [POST]', '/heartbeat [POST]', '/save-chat [POST]',
         '/ai-chat [POST]', '/prediction [GET]', '/results [GET]',
