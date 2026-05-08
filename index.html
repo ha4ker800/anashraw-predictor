@@ -792,12 +792,12 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 <script>
 // ── CONFIG ──────────────────────────────────────────────
 const FB_CONFIG = {
-  apiKey: "AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ",
-  authDomain: "anashrawwingokey.firebaseapp.com",
-  projectId: "anashrawwingokey",
-  storageBucket: "anashrawwingokey.firebasestorage.app",
-  messagingSenderId: "515715007863",
-  appId: "1:515715007863:web:bdebab42892be2d1bc0d72"
+  apiKey: "AIzaSyBYwuezKZPXU3pcM6hVi2hkD1EWKX9_5B8",
+  authDomain: "newwingoaikey.firebaseapp.com",
+  projectId: "newwingoaikey",
+  storageBucket: "newwingoaikey.firebasestorage.app",
+  messagingSenderId: "887881948342",
+  appId: "1:887881948342:web:4d9d9cd37a5911d500da17"
 };
 const WORKER = 'https://anashraw-predictor.anashrawdixit191.workers.dev';
 const WINGO_PERIOD_SEC = 60;
@@ -992,7 +992,10 @@ function onKeyVerified(resp) {
 
   // Update key bar
   document.getElementById('keyLabel').textContent = keyData.label || userKey.slice(0,8);
+  // FIX: Fetch fresh quota from worker on login
   updateAIRemaining(resp.remaining, resp.max);
+  // Also refresh quota in background
+  fetchFreshQuota();
 
   // Expiry
   if(keyData.expiresAt) {
@@ -1466,13 +1469,20 @@ function scrollChat(id) {
 }
 
 function updateAIRemaining(rem, max) {
-  aiRemaining = rem ?? aiRemaining;
-  document.getElementById('aiRemaining').textContent =
-    (aiRemaining !== null && aiRemaining !== undefined) ? `${aiRemaining}/${max||'∞'}` : '--';
+  // FIX: rem=0 is valid (quota exhausted), don't skip with ??
+  if(rem !== undefined && rem !== null) aiRemaining = rem;
+  const display = (aiRemaining !== null && aiRemaining !== undefined) ? `${aiRemaining}/${max||'∞'}` : '--';
+  document.getElementById('aiRemaining').textContent = display;
   const badge = document.getElementById('chatBadge');
   if(aiRemaining !== null) {
     badge.textContent = aiRemaining;
-    badge.style.display = aiRemaining <= 3 ? 'block' : 'none';
+    badge.style.display = (aiRemaining <= 3) ? 'block' : 'none';
+  }
+  // Update AI chip based on quota
+  if(aiRemaining > 0) {
+    setChip('chipAI', 'ok');
+  } else if(aiRemaining === 0) {
+    setChip('chipAI', 'warn');
   }
 }
 
@@ -1639,6 +1649,18 @@ function setChip(id, state) {
   if(dot) dot.className = `chip-dot chip-dot-${state}`;
 }
 
+// ── FRESH QUOTA FETCH ───────────────────────────────────
+async function fetchFreshQuota() {
+  if(!userKey) return;
+  try {
+    const resp = await fetch(`${WORKER}/quota?key=${encodeURIComponent(userKey)}`);
+    const data = await resp.json();
+    if(data.remaining !== undefined) {
+      updateAIRemaining(data.remaining, data.max);
+    }
+  } catch(e) {}
+}
+
 // ── INIT ─────────────────────────────────────────────────
 async function init() {
   startClock();
@@ -1654,6 +1676,8 @@ async function init() {
 
   // Status chips updater
   setInterval(updateChips, 3000);
+  // Refresh quota every 60 seconds
+  setInterval(() => { if(userKey) fetchFreshQuota(); }, 60000);
 }
 
 // Start
