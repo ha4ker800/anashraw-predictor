@@ -15,7 +15,7 @@
   --txt:#b8ffb8;--mut:#3a6b3a;
   --glow:0 0 10px #00ff41,0 0 22px #00ff4166;
   --glsm:0 0 6px #00ff41,0 0 12px #00ff4133;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overscroll-behavior:none;}
@@ -23,45 +23,62 @@ body{background:var(--bg);color:var(--g);font-family:'Share Tech Mono',monospace
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:9000;}
 #mc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.05;pointer-events:none;}
 .w{position:relative;z-index:2;max-width:600px;margin:0 auto;padding:0 12px calc(80px + var(--safe-bottom));}
-
 .cr{position:fixed;width:30px;height:30px;pointer-events:none;z-index:5;opacity:.25;}
 .cr.tl{top:6px;left:6px;border-top:1px solid var(--g);border-left:1px solid var(--g);}
 .cr.tr{top:6px;right:6px;border-top:1px solid var(--g);border-right:1px solid var(--g);}
 .cr.bl{bottom:6px;left:6px;border-bottom:1px solid var(--g);border-left:1px solid var(--g);}
 .cr.br{bottom:6px;right:6px;border-bottom:1px solid var(--g);border-right:1px solid var(--g);}
 
-/* KEY OVERLAY */
+/* ── MAINTENANCE OVERLAY ── */
+#maintenanceOverlay{position:fixed;inset:0;background:rgba(0,0,0,.98);z-index:20000;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;}
+.maint-icon{font-size:56px;margin-bottom:16px;}
+.maint-title{font-family:'Orbitron',monospace;font-size:20px;color:var(--y);text-shadow:0 0 10px var(--y);letter-spacing:.1em;margin-bottom:10px;}
+.maint-msg{font-size:12px;color:var(--txt);line-height:1.8;max-width:340px;}
+
+/* ── KICKED OVERLAY ── */
+#kickedOverlay{position:fixed;inset:0;background:rgba(0,0,0,.98);z-index:19000;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;}
+.kicked-icon{font-size:56px;margin-bottom:16px;}
+.kicked-title{font-family:'Orbitron',monospace;font-size:18px;color:var(--r);text-shadow:0 0 10px var(--r);letter-spacing:.1em;margin-bottom:10px;}
+.kicked-msg{font-size:11px;color:var(--txt);line-height:1.8;margin-bottom:20px;}
+.kicked-btn{padding:12px 24px;background:transparent;border:1px solid var(--g);border-radius:4px;color:var(--g);font-family:'Orbitron',monospace;font-size:11px;letter-spacing:.15em;cursor:pointer;}
+
+/* ── PREMIUM LOCK OVERLAY ── */
+#premiumLock{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:8500;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;}
+.pl-icon{font-size:52px;margin-bottom:14px;}
+.pl-title{font-family:'Orbitron',monospace;font-size:18px;color:var(--y);text-shadow:0 0 10px var(--y);letter-spacing:.1em;margin-bottom:8px;}
+.pl-sub{font-size:11px;color:var(--txt);line-height:1.8;margin-bottom:16px;max-width:320px;}
+.pl-qr{width:160px;height:160px;object-fit:contain;border:2px solid var(--y);border-radius:6px;margin:0 auto 12px;display:block;}
+.pl-pay-text{font-size:11px;color:var(--mut);line-height:1.8;margin-bottom:14px;max-width:320px;}
+
+/* ── KEY OVERLAY ── */
 #keyOverlay{position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:16px;}
 .key-box{background:var(--sur);border:1px solid var(--g3);border-radius:8px;padding:28px 20px;width:100%;max-width:360px;text-align:center;}
 .key-logo{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--g);text-shadow:var(--glow);margin-bottom:2px;letter-spacing:.1em;}
 .key-logo .ai{color:var(--c);}
 .key-tagline{font-size:8px;color:var(--mut);letter-spacing:.3em;margin-bottom:20px;}
 .key-icon{font-size:44px;margin-bottom:12px;display:block;}
-.key-desc{font-size:12px;color:var(--txt);line-height:1.7;margin-bottom:20px;}
+.key-live-strip{background:rgba(0,255,65,.04);border:1px solid var(--bdr);border-radius:4px;padding:8px 10px;margin-bottom:12px;font-size:9px;color:var(--mut);line-height:1.8;}
+.key-live-num{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--g);text-shadow:var(--glow);}
+.key-desc{font-size:12px;color:var(--txt);line-height:1.7;margin-bottom:16px;}
 .key-desc strong{color:var(--y);}
-.key-input{width:100%;padding:14px;background:#000;border:1px solid var(--g3);border-radius:4px;color:var(--g);font-family:'Orbitron',monospace;font-size:14px;letter-spacing:.25em;text-align:center;outline:none;margin-bottom:12px;text-transform:uppercase;}
+.key-qr-section{margin-bottom:16px;}
+.key-qr-img{width:130px;height:130px;object-fit:contain;border:1px solid var(--y);border-radius:4px;display:none;margin:0 auto 8px;}
+.key-pay-text{font-size:10px;color:var(--mut);line-height:1.7;}
+.key-input{width:100%;padding:14px;background:#000;border:1px solid var(--g3);border-radius:4px;color:var(--g);font-family:'Orbitron',monospace;font-size:14px;letter-spacing:.25em;text-align:center;outline:none;margin-bottom:10px;text-transform:uppercase;}
 .key-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
 .key-input::placeholder{color:var(--mut);font-size:10px;letter-spacing:.15em;}
 .key-btn{width:100%;padding:14px;background:transparent;border:1px solid var(--g);border-radius:4px;color:var(--g);font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:.2em;cursor:pointer;text-transform:uppercase;transition:all .2s;}
 .key-btn:active{transform:scale(.97);background:var(--dim);}
 .key-btn:disabled{opacity:.5;cursor:not-allowed;}
 .key-err{color:var(--r);font-size:10px;margin-top:10px;letter-spacing:.08em;min-height:16px;}
-.key-footer{font-size:9px;color:var(--mut);margin-top:16px;line-height:1.9;letter-spacing:.05em;}
+.key-footer{font-size:9px;color:var(--mut);margin-top:14px;line-height:1.9;letter-spacing:.05em;}
 
-/* PAYMENT MODAL */
-#paymentModal{position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:9500;display:none;align-items:center;justify-content:center;padding:16px;}
-.pay-box{background:var(--sur);border:1px solid var(--y);border-radius:8px;padding:24px 20px;width:100%;max-width:340px;text-align:center;}
-.pay-title{font-family:'Orbitron',monospace;font-size:16px;color:var(--y);letter-spacing:.1em;margin-bottom:12px;}
-.pay-qr-img{width:160px;height:160px;object-fit:contain;border:2px solid var(--y);border-radius:6px;margin:0 auto 12px;display:block;}
-.pay-text{font-size:11px;color:var(--txt);line-height:1.8;margin-bottom:14px;}
-.pay-close{width:100%;padding:12px;background:transparent;border:1px solid var(--g);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:.15em;cursor:pointer;}
-
-/* AI CHAT FAB */
+/* ── AI CHAT FAB ── */
 #chatFab{position:fixed;bottom:calc(20px + var(--safe-bottom));right:16px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#003a0f,#007a1e);border:2px solid var(--g);box-shadow:var(--glow);display:none;align-items:center;justify-content:center;cursor:pointer;z-index:8000;font-size:22px;transition:transform .2s;}
 #chatFab:active{transform:scale(.92);}
 .chat-badge{position:absolute;top:-4px;right:-4px;background:var(--c);color:#000;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;font-family:'Orbitron',monospace;}
 
-/* AI CHAT PANEL */
+/* ── AI CHAT PANEL ── */
 #chatPanel{position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:9000;display:none;flex-direction:column;}
 .chat-header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--sur);border-bottom:1px solid var(--bdr);flex-shrink:0;}
 .chat-avatar{width:38px;height:38px;border-radius:50%;background:var(--dim);border:1px solid var(--g3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
@@ -97,7 +114,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .chat-send{width:40px;height:40px;border-radius:50%;background:var(--dim);border:1px solid var(--g3);color:var(--g);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .chat-send:active{transform:scale(.9);background:var(--g3);}
 
-/* HEADER */
+/* ── HEADER ── */
 header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 .hdr-main{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:8px;}
 .brand-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--g);text-shadow:var(--glow);letter-spacing:.08em;line-height:1.1;}
@@ -118,7 +135,11 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.1}}
 .key-status-bar{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:rgba(0,255,234,.03);border-bottom:1px solid var(--bdr);font-size:9px;flex-wrap:wrap;gap:4px;}
 .ks-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.ks-name{color:var(--c);font-weight:700;}
+.ks-tier{padding:2px 6px;border-radius:2px;font-size:7px;font-weight:700;font-family:'Orbitron',monospace;}
+.tier-trial{background:rgba(255,224,0,.1);border:1px solid var(--y);color:var(--y);}
+.tier-basic{background:rgba(0,255,65,.1);border:1px solid var(--g);color:var(--g);}
+.tier-premium{background:rgba(0,255,234,.1);border:1px solid var(--c);color:var(--c);}
+.tier-vip{background:rgba(191,127,255,.1);border:1px solid var(--v);color:var(--v);}
 .ks-exp{color:var(--mut);}
 .logout-btn{padding:3px 8px;border:1px solid var(--r);border-radius:3px;color:var(--r);font-family:'Orbitron',monospace;font-size:7px;background:transparent;cursor:pointer;letter-spacing:.1em;}
 .cd-wrap{display:flex;align-items:center;gap:8px;padding:5px 0 4px;border-bottom:1px solid var(--bdr);}
@@ -134,7 +155,7 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 .fb-bar{padding:3px 0;font-size:8px;color:var(--mut);border-bottom:1px solid var(--bdr);}
 .fb-bar span{color:var(--g);font-weight:700;}
 
-/* SECTIONS */
+/* ── SECTIONS ── */
 .section{margin-top:12px;}
 .sec-hdr{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--dim);border:1px solid var(--bdr);border-radius:4px 4px 0 0;}
 .sec-dots{display:flex;gap:4px;}
@@ -142,7 +163,7 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 .sec-title{font-size:8px;color:var(--mut);letter-spacing:.22em;flex:1;}
 .sec-body{background:var(--sur);border:1px solid var(--bdr);border-top:none;border-radius:0 0 4px 4px;padding:12px;}
 
-/* FEED */
+/* ── FEED ── */
 .feed{max-height:240px;overflow-y:auto;background:#000;border:1px solid var(--bdr);border-radius:3px;padding:6px 8px;font-size:11px;line-height:1.8;}
 .feed::-webkit-scrollbar{width:3px;}
 .feed::-webkit-scrollbar-thumb{background:var(--g3);border-radius:2px;}
@@ -158,7 +179,7 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 .bsml{background:rgba(255,224,0,.09);border:1px solid var(--y);color:var(--y);}
 .feed-btns{display:flex;gap:8px;margin-top:8px;}
 
-/* BUTTONS */
+/* ── BUTTONS ── */
 .btn{background:transparent;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:8px;font-weight:700;letter-spacing:.14em;cursor:pointer;padding:8px 12px;text-transform:uppercase;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .btn:active{transform:scale(.96);background:var(--dim);}
 .btn-c{border-color:#006060;color:var(--c);}
@@ -166,27 +187,31 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 .btn-r{border-color:#7a0010;color:var(--r);}
 .btn-full{width:100%;padding:12px;font-size:10px;margin-top:8px;}
 
-/* PREDICTION */
+/* ── PREDICTION LOCKED ── */
 .pred-locked{background:#000;border:1px solid var(--g3);border-radius:4px;padding:28px 16px;text-align:center;}
 .lock-icon{font-size:42px;display:block;margin-bottom:10px;}
 .lock-title{font-family:'Orbitron',monospace;font-size:13px;color:var(--y);text-shadow:0 0 8px var(--y);letter-spacing:.12em;margin-bottom:8px;line-height:1.3;}
 .lock-sub{font-size:10px;color:var(--mut);line-height:1.8;margin-bottom:18px;}
-.lock-input{width:100%;padding:12px;background:#000;border:1px solid var(--g3);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:13px;letter-spacing:.22em;text-align:center;outline:none;margin-bottom:10px;text-transform:uppercase;}
-.lock-input:focus{border-color:var(--g);}
-.lock-input::placeholder{color:var(--mut);font-size:9px;}
-.lock-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--g);border-radius:3px;color:var(--g);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.18em;cursor:pointer;text-transform:uppercase;}
-.lock-btn:active{transform:scale(.97);background:var(--dim);}
-.lock-btn:disabled{opacity:.4;cursor:not-allowed;}
-.lock-err{color:var(--r);font-size:9px;margin-top:8px;min-height:14px;}
+
+/* ── PREDICTION CARD ── */
 .pred-card{background:#000;border:1px solid var(--g3);border-radius:4px;padding:14px;position:relative;overflow:hidden;}
 .pred-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,255,65,.05),transparent 65%);pointer-events:none;}
-.pred-lbl{font-size:8px;color:var(--mut);letter-spacing:.24em;margin-bottom:4px;}
+.pred-period{font-size:8px;color:var(--mut);letter-spacing:.2em;margin-bottom:2px;text-align:center;}
+.pred-lbl{font-size:8px;color:var(--mut);letter-spacing:.24em;margin-bottom:4px;text-align:center;}
 .pred-number{font-family:'Orbitron',monospace;font-weight:900;font-size:80px;line-height:1;letter-spacing:.04em;text-align:center;margin:4px 0;}
 .pred-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;justify-content:center;}
 .pred-alts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:center;}
 .alt-chip{padding:4px 10px;background:var(--dim);border:1px solid var(--bdr);border-radius:3px;font-size:9px;color:var(--mut);}
 .alt-chip b{color:var(--txt);}
 .pred-reason{margin-top:10px;font-size:9px;color:var(--mut);line-height:1.7;border-top:1px solid var(--bdr);padding-top:8px;}
+
+/* High confidence mode */
+.high-conf-locked{background:#000;border:1px solid var(--y);border-radius:4px;padding:20px 16px;text-align:center;}
+.hcl-icon{font-size:36px;margin-bottom:8px;display:block;}
+.hcl-title{font-family:'Orbitron',monospace;font-size:12px;color:var(--y);letter-spacing:.12em;margin-bottom:6px;}
+.hcl-sub{font-size:9px;color:var(--mut);line-height:1.8;}
+
+/* ── CONFIDENCE ── */
 .conf-section{margin-top:10px;padding:10px;background:rgba(0,0,0,.6);border:1px solid var(--bdr);border-radius:3px;}
 .conf-title{font-size:7px;color:var(--mut);letter-spacing:.2em;margin-bottom:8px;}
 .conf-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
@@ -199,10 +224,15 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 .bar-b{background:linear-gradient(90deg,#005060,#00ffea);box-shadow:0 0 5px #00ffea55;}
 .conf-pct{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;min-width:34px;text-align:right;}
 .conf-corr{font-size:8px;min-width:56px;text-align:right;color:var(--mut);}
+
+/* VIP reasoning */
+.vip-reasoning{margin-top:10px;padding:10px;background:rgba(191,127,255,.04);border:1px solid rgba(191,127,255,.2);border-radius:3px;font-size:9px;color:var(--txt);line-height:1.8;}
+.vip-label{font-size:7px;color:var(--v);letter-spacing:.2em;margin-bottom:6px;}
+
 .analysis-box{margin-top:8px;padding:8px 10px;background:rgba(0,255,65,.02);border:1px solid var(--bdr);border-radius:3px;font-size:9px;color:var(--g3);line-height:2.1;}
 .ah{color:var(--c);}.av{color:var(--txt);}
 
-/* STATS */
+/* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;}
 .stats-grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
 .stat-card{background:#000;border:1px solid var(--bdr);border-radius:3px;padding:10px;text-align:center;}
@@ -210,7 +240,7 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 .stat-lbl{font-size:7px;color:var(--mut);letter-spacing:.14em;margin-top:2px;text-transform:uppercase;}
 .stat-sub{font-size:8px;color:var(--mut);margin-top:3px;}
 
-/* HISTORY */
+/* ── HISTORY ── */
 .hist-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .hist-table{width:100%;border-collapse:collapse;font-size:9px;min-width:520px;}
 .hist-table th{padding:6px 6px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;}
@@ -229,12 +259,47 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 <div class="cr tl"></div><div class="cr tr"></div>
 <div class="cr bl"></div><div class="cr br"></div>
 
+<!-- MAINTENANCE OVERLAY -->
+<div id="maintenanceOverlay">
+  <div class="maint-icon">🔧</div>
+  <div class="maint-title">MAINTENANCE MODE</div>
+  <div class="maint-msg" id="maintMsg">System maintenance in progress. Please check back later.</div>
+</div>
+
+<!-- KICKED OVERLAY -->
+<div id="kickedOverlay">
+  <div class="kicked-icon">⚠️</div>
+  <div class="kicked-title">SESSION TERMINATED</div>
+  <div class="kicked-msg" id="kickedMsg">Your session has been terminated by admin.<br>Please contact admin for assistance.</div>
+  <button class="kicked-btn" onclick="handleKickedReload()">🔄 BACK TO LOGIN</button>
+</div>
+
+<!-- PREMIUM LOCK OVERLAY -->
+<div id="premiumLock">
+  <div class="pl-icon">⭐</div>
+  <div class="pl-title">UPGRADE REQUIRED</div>
+  <div class="pl-sub">Predictions are currently locked.<br>Please upgrade your plan to continue.</div>
+  <img class="pl-qr" id="plQrImg" src="" alt="QR Code" style="display:none"/>
+  <div class="pl-pay-text" id="plPayText">Contact admin to upgrade your access.</div>
+</div>
+
+<!-- KEY OVERLAY -->
 <div id="keyOverlay">
   <div class="key-box">
     <div class="key-logo">ANASHRAW<span class="ai">.AI</span></div>
     <div class="key-tagline">WINGO PREDICTOR // SECURE ACCESS</div>
     <span class="key-icon">🔐</span>
-    <div class="key-desc">Live feed is running.<br>Enter your key to unlock<br><strong>predictions & AI chat</strong></div>
+    <div class="key-live-strip" id="keyLiveStrip">
+      Live: <span class="key-live-num" id="keyLiveNum">--</span>
+      &nbsp;<span id="keyLiveColor" style="color:var(--mut)">--</span>
+      &nbsp;<span id="keyLiveBS" style="color:var(--mut)">--</span>
+      <br><span style="font-size:8px;color:var(--mut)">Live feed running — key required for predictions</span>
+    </div>
+    <div class="key-desc">Enter your key to unlock<br><strong>predictions & AI chat</strong></div>
+    <div class="key-qr-section" id="keyQrSection">
+      <img class="key-qr-img" id="keyQrImg" src="" alt="Payment QR" onerror="this.style.display='none'"/>
+      <div class="key-pay-text" id="keyPayText">Contact admin for your access key.</div>
+    </div>
     <input class="key-input" id="keyInput" placeholder="ANASH-XXXX-XXXX" maxlength="20"
       oninput="this.value=this.value.toUpperCase()"
       onkeydown="if(event.key==='Enter')verifyKey()"/>
@@ -244,26 +309,19 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
   </div>
 </div>
 
-<div id="paymentModal">
-  <div class="pay-box">
-    <div class="pay-title">⚡ GET ACCESS KEY</div>
-    <img class="pay-qr-img" id="payQrImg" src="" alt="QR Code" onerror="this.style.display='none'"/>
-    <div class="pay-text" id="payModalText">Contact admin to get your access key.</div>
-    <button class="pay-close" onclick="document.getElementById('paymentModal').style.display='none'">CLOSE</button>
-  </div>
-</div>
-
+<!-- AI CHAT FAB -->
 <div id="chatFab" onclick="openChat()">
   🤖
   <span class="chat-badge" id="chatBadge">5</span>
 </div>
 
+<!-- AI CHAT PANEL -->
 <div id="chatPanel">
   <div class="chat-header">
     <div class="chat-avatar">🤖</div>
     <div class="chat-info">
       <div class="chat-name">ANASHRAW WINGO AI</div>
-      <div class="chat-status" id="chatStatusText">● Online — WinGo Pattern Expert</div>
+      <div class="chat-status">● Online — WinGo Pattern Expert</div>
     </div>
     <button class="chat-close" onclick="closeChat()">✕</button>
   </div>
@@ -272,7 +330,7 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
       <span>Questions today</span>
       <div class="q-reset-info" id="qResetInfo">Resets at midnight</div>
     </div>
-    <span class="q-count-val" id="qCountDisp">5</span>
+    <span class="q-count-val" id="qCountDisp">--</span>
   </div>
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-input-area">
@@ -283,6 +341,7 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
   </div>
 </div>
 
+<!-- MAIN CONTENT -->
 <div class="w">
 <header>
   <div class="hdr-main">
@@ -299,7 +358,7 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
   <div class="status-row">
     <div class="chip"><div class="dot dot-g"></div>SYS <span class="cv">ON</span></div>
     <div class="chip"><div class="dot dot-c"></div>AI <span class="cv" id="aiStat">READY</span></div>
-    <div class="chip"><div class="dot dot-y"></div>SERVER <span class="cv" id="apiStat">IDLE</span></div>
+    <div class="chip"><div class="dot dot-y"></div>SRV <span class="cv" id="apiStat">IDLE</span></div>
     <div class="chip"><div class="dot dot-g"></div>BUF <span class="cv" id="bufStat">0/500</span></div>
     <div class="chip"><div class="dot dot-g" id="autoDot"></div>AUTO <span class="cv" id="autoStat">ON</span></div>
     <div class="chip">PRD <span class="cv" id="prdStat">--</span></div>
@@ -308,7 +367,8 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
     <div class="ks-left">
       <div class="dot dot-c"></div>
       <span style="color:var(--mut)">KEY:</span>
-      <span class="ks-name" id="ksName">--</span>
+      <span style="color:var(--c);font-weight:700" id="ksName">--</span>
+      <span class="ks-tier" id="ksTier"></span>
       <span class="ks-exp" id="ksExp"></span>
     </div>
     <button class="logout-btn" onclick="logoutKey()">LOGOUT</button>
@@ -348,26 +408,31 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
 <div class="section">
   <div class="sec-hdr">
     <div class="sec-dots"><div class="sec-dot" style="background:var(--r)"></div><div class="sec-dot" style="background:var(--y)"></div><div class="sec-dot" style="background:var(--g)"></div></div>
-    <div class="sec-title">AI PREDICTION ENGINE</div>
+    <div class="sec-title">AI PREDICTION ENGINE — 11-MODEL ENSEMBLE</div>
   </div>
   <div class="sec-body">
+    <!-- Not logged in -->
     <div class="pred-locked" id="predLocked">
       <span class="lock-icon">🔒</span>
-      <div class="lock-title">ENTER KEY TO SEE<br>PREDICTIONS</div>
-      <div class="lock-sub">Live feed running in background.<br>Key required to unlock predictions.</div>
-      <input class="lock-input" id="lockInput" placeholder="ANASH-XXXX-XXXX" maxlength="20"
-        oninput="this.value=this.value.toUpperCase()"
-        onkeydown="if(event.key==='Enter')verifyKeyInline()"/>
-      <button class="lock-btn" id="lockBtn" onclick="verifyKeyInline()">🔓 UNLOCK PREDICTIONS</button>
-      <div class="lock-err" id="lockErr"></div>
+      <div class="lock-title">KEY REQUIRED FOR PREDICTIONS</div>
+      <div class="lock-sub">Live feed running in background.<br>Enter your key above to unlock predictions.</div>
     </div>
+    <!-- Logged in -->
     <div id="predUnlocked" style="display:none">
-      <div class="pred-card">
+      <!-- High confidence wait screen -->
+      <div class="high-conf-locked" id="highConfWait" style="display:none">
+        <span class="hcl-icon">🎯</span>
+        <div class="hcl-title">HIGH CONFIDENCE MODE</div>
+        <div class="hcl-sub">Waiting for high confidence signal (≥60%).<br>Current confidence too low to show prediction.<br><span style="color:var(--g);font-weight:700" id="hclCurrentConf">--</span></div>
+      </div>
+      <!-- Prediction card -->
+      <div class="pred-card" id="predCard" style="display:none">
+        <div class="pred-period" id="predPeriod">PERIOD --</div>
         <div class="pred-lbl" id="predLbl">AWAITING DATA...</div>
         <div class="pred-number" id="predNum" style="color:var(--g);text-shadow:var(--glow)">--</div>
         <div class="pred-badges" id="predBadges"></div>
         <div class="conf-section" id="confSection" style="display:none">
-          <div class="conf-title">PREDICTION CONFIDENCE</div>
+          <div class="conf-title">PREDICTION CONFIDENCE (11-MODEL ENSEMBLE)</div>
           <div class="conf-row">
             <span class="conf-lbl" style="color:var(--g)">● NUMBER</span>
             <div class="conf-bar-out"><div class="conf-bar-in bar-n" id="barN" style="width:0%"></div></div>
@@ -388,19 +453,25 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
           </div>
         </div>
         <div class="pred-alts" id="predAlts"></div>
-        <div class="pred-reason" id="predReason">// Loading data...</div>
+        <!-- VIP reasoning -->
+        <div class="vip-reasoning" id="vipReasoning" style="display:none">
+          <div class="vip-label">⭐ VIP REASONING</div>
+          <div id="predReasonText">--</div>
+        </div>
+        <div class="pred-reason" id="predReason" style="display:none">// Loading data...</div>
       </div>
       <div class="analysis-box" id="analysisBox" style="display:none">
         <span class="ah">HOT: </span><span id="aHot" class="av">--</span> &nbsp;
         <span class="ah">COLD: </span><span id="aCold" class="av">--</span><br>
         <span class="ah">STREAK: </span><span id="aStreak" class="av">--</span> &nbsp;
         <span class="ah">COLOR RUN: </span><span id="aColorRun" class="av">--</span><br>
-        <span class="ah">BIG/SMALL: </span><span id="aBSR" class="av">--</span>
+        <span class="ah">BIG/SMALL: </span><span id="aBSR" class="av">--</span> &nbsp;
+        <span class="ah">DATA: </span><span id="aData" class="av">--</span>
       </div>
       <div class="istrip">
         ⬡ <span class="hl">ANY 1</span> correct (num/color/B-S) = ✅ WIN<br>
-        ⬡ 500 records from <span class="hl">secure server</span><br>
-        ⬡ Predicts on <span class="hl">new period only</span>
+        ⬡ <span class="hl">11-model ensemble</span> algorithm (Markov-3, Gap, Cycle, Fibonacci...)<br>
+        ⬡ <span class="hl">500 records</span> from secure server
       </div>
     </div>
   </div>
@@ -451,512 +522,574 @@ header{padding:12px 0 0;border-bottom:1px solid var(--bdr);}
     </div>
   </div>
 </div>
-
 </div><!-- end .w -->
 
 <script>
-// ── FIREBASE ──────────────────────────────────────
-const firebaseConfig={
-  apiKey:"AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ",
-  authDomain:"anashrawwingokey.firebaseapp.com",
-  projectId:"anashrawwingokey",
-  storageBucket:"anashrawwingokey.firebasestorage.app",
-  messagingSenderId:"515715007863",
-  appId:"1:515715007863:web:bdebab42892be2d1bc0d72"
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+const WORKER_URL = 'https://anashraw-predictor.anashrawdixit191.workers.dev';
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ',
+  authDomain: 'anashrawwingokey.firebaseapp.com',
+  projectId: 'anashrawwingokey',
+  storageBucket: 'anashrawwingokey.firebasestorage.app',
+  messagingSenderId: '515715007863',
+  appId: '1:515715007863:web:bdebab42892be2d1bc0d72'
 };
-firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
+const MAX_BUF = 500;
+const LS_KEY = 'anashraw_key_v10';
+const LS_PREDS = 'anashraw_preds_v10';
 
-// ── GROQ ──────────────────────────────────────────
-const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
-const GROQ_KEY='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';
-const GROQ_MODEL='llama-3.3-70b-versatile';
+// ══════════════════════════════════════════════════════
+// FIREBASE — READ ONLY
+// ══════════════════════════════════════════════════════
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.firestore();
 
-// ── CONSTANTS ─────────────────────────────────────
-const API='https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=100&language=0&ts=';
-const MAX_BUF=500;
-const LS_KEY='anashraw_key_v7';
-const LS_PREDS='anashraw_preds_v7';
-const LS_QDATE='anashraw_qdate_v7';  // stores date for daily reset
-const LS_QREM='anashraw_qrem_v7';    // stores remaining count per key
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let buf = [], lastPeriod = '', preds = [], pending = null;
+let autoOn = true, cdSec = 0, isFetching = false, tickCount = 0;
+let isKeyVerified = false, currentKeyDocId = '', currentKey = '';
+let confidenceMode = 'normal', keyTier = 'basic';
+let kickListener = null, sessionHeartbeat = null;
+let qRemaining = 0, qMax = 5;
+let paymentSettings = { qrImageUrl: '', paymentText: 'Contact admin for key.' };
+let chatHistory = [];
+let globalSettings = null;
+let sessionId = '';
 
-// ── STATE ─────────────────────────────────────────
-let buf=[],lastPeriod='',preds=[],pending=null;
-let autoOn=true,cdSec=0,isFetching=false,tickCount=0;
-let isKeyVerified=false,currentKeyDocId='',currentKey='';
-let kickListener=null,sessionHeartbeat=null;
-let qRemaining=5,qMax=5;
-let paymentSettings={qrImageUrl:'',paymentText:'Contact admin for key.',questionsPerKey:5};
-let chatHistory=[];
-
-// ── MATRIX ────────────────────────────────────────
-const mc=document.getElementById('mc'),ctx=mc.getContext('2d');
-function rsz(){mc.width=window.innerWidth;mc.height=window.innerHeight;}rsz();window.addEventListener('resize',rsz);
-const CH='アイウエオ0123456789ABCDEF<>[]{}';
-let dr=Array(Math.floor(window.innerWidth/14)).fill(1);
-setInterval(()=>{
-  ctx.fillStyle='rgba(0,0,0,0.04)';ctx.fillRect(0,0,mc.width,mc.height);
-  ctx.font='14px Share Tech Mono';
-  const cols=Math.floor(mc.width/14);while(dr.length<cols)dr.push(1);
-  for(let i=0;i<cols;i++){
-    ctx.fillStyle=dr[i]*14<80?'#00ff41':'#003a0f';
-    ctx.fillText(CH[Math.floor(Math.random()*CH.length)],i*14,dr[i]*14);
-    if(dr[i]*14>mc.height&&Math.random()>.975)dr[i]=0;dr[i]++;
+// ══════════════════════════════════════════════════════
+// MATRIX RAIN
+// ══════════════════════════════════════════════════════
+const mc = document.getElementById('mc'), ctx = mc.getContext('2d');
+function rsz() { mc.width = window.innerWidth; mc.height = window.innerHeight; } rsz();
+window.addEventListener('resize', rsz);
+const CH = 'アイウエオ0123456789ABCDEF<>[]{}';
+let dr = Array(Math.floor(window.innerWidth / 14)).fill(1);
+setInterval(() => {
+  ctx.fillStyle = 'rgba(0,0,0,0.04)'; ctx.fillRect(0, 0, mc.width, mc.height);
+  ctx.font = '14px Share Tech Mono';
+  const cols = Math.floor(mc.width / 14);
+  while (dr.length < cols) dr.push(1);
+  for (let i = 0; i < cols; i++) {
+    ctx.fillStyle = dr[i] * 14 < 80 ? '#00ff41' : '#003a0f';
+    ctx.fillText(CH[Math.floor(Math.random() * CH.length)], i * 14, dr[i] * 14);
+    if (dr[i] * 14 > mc.height && Math.random() > .975) dr[i] = 0;
+    dr[i]++;
   }
-},55);
+}, 55);
 
-// ── CLOCK ─────────────────────────────────────────
-setInterval(()=>{
-  const n=new Date(),p=x=>String(x).padStart(2,'0');
-  document.getElementById('clockMain').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
-  const D=['SUN','MON','TUE','WED','THU','FRI','SAT'],M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  document.getElementById('clockDate').textContent=`${D[n.getDay()]} ${p(n.getDate())} ${M[n.getMonth()]} ${n.getFullYear()}`;
-},1000);
+// ══════════════════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════════════════
+setInterval(() => {
+  const n = new Date(), p = x => String(x).padStart(2, '0');
+  document.getElementById('clockMain').textContent = `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  const D = ['SUN','MON','TUE','WED','THU','FRI','SAT'], M = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('clockDate').textContent = `${D[n.getDay()]} ${p(n.getDate())} ${M[n.getMonth()]} ${n.getFullYear()}`;
+}, 1000);
 
-// ── HELPERS ───────────────────────────────────────
-function ts(){const n=new Date(),p=x=>String(x).padStart(2,'0');return`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
-function sp(p){return String(p).slice(-6);}
-function todayStr(){const n=new Date();return`${n.getFullYear()}-${n.getMonth()}-${n.getDate()}`;}
-function colorOf(n){if(n===0||n===5)return'violet';if([1,3,7,9].includes(n))return'green';return'red';}
-function sizeOf(n){return n>=5?'BIG':'SMALL';}
-function numCss(n){const c=colorOf(n);return c==='violet'?'var(--v)':c==='green'?'var(--g)':'var(--r)';}
-function colorMatch(a,b){
-  const sa=String(a).toLowerCase(),sb=String(b).toLowerCase();
-  return(sa.includes('violet')&&sb.includes('violet'))||(sa.includes('green')&&sb.includes('green'))||(sa.includes('red')&&sb.includes('red'));
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function ts() { const n = new Date(), p = x => String(x).padStart(2,'0'); return `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`; }
+function sp(p) { return String(p).slice(-6); }
+function colorOf(n) { if (n === 0 || n === 5) return 'violet'; if ([1,3,7,9].includes(n)) return 'green'; return 'red'; }
+function sizeOf(n) { return n >= 5 ? 'BIG' : 'SMALL'; }
+function numCss(n) { const c = colorOf(n); return c === 'violet' ? 'var(--v)' : c === 'green' ? 'var(--g)' : 'var(--r)'; }
+function colorMatch(a, b) {
+  const sa = String(a).toLowerCase(), sb = String(b).toLowerCase();
+  return (sa.includes('violet') && sb.includes('violet')) || (sa.includes('green') && sb.includes('green')) || (sa.includes('red') && sb.includes('red'));
 }
-function colorBadge(col){
-  const s=String(col).toLowerCase();
-  const e=s.includes('violet')?'🟣':s.includes('green')?'🟢':'🔴';
-  const l=s.includes('violet')?'VIOLET':s.includes('green')?'GREEN':'RED';
-  const c=s.includes('violet')?'bv':s.includes('green')?'bg2':'br2';
-  return`<span class="badge ${c}">${e} ${l}</span>`;
+function colorBadge(col) {
+  const s = String(col).toLowerCase();
+  const e = s.includes('violet') ? '🟣' : s.includes('green') ? '🟢' : '🔴';
+  const l = s.includes('violet') ? 'VIOLET' : s.includes('green') ? 'GREEN' : 'RED';
+  const c = s.includes('violet') ? 'bv' : s.includes('green') ? 'bg2' : 'br2';
+  return `<span class="badge ${c}">${e} ${l}</span>`;
 }
-function sizeBadge(bs){const b=String(bs).toUpperCase()==='BIG';return`<span class="badge ${b?'bbig':'bsml'}">${b?'BIG':'SMALL'}</span>`;}
+function sizeBadge(bs) { const b = String(bs).toUpperCase() === 'BIG'; return `<span class="badge ${b ? 'bbig' : 'bsml'}">${b ? 'BIG' : 'SMALL'}</span>`; }
 
-// ── PAYMENT SETTINGS ──────────────────────────────
-async function loadPaymentSettings(){
-  try{
-    const doc=await db.collection('settings').doc('payment').get();
-    if(doc.exists){
-      const d=doc.data();
-      paymentSettings={
-        qrImageUrl:d.qrImageUrl||'',
-        paymentText:d.paymentText||'Contact admin for your access key.',
-        questionsPerKey:d.questionsPerKey||5
-      };
-      // Update modal
-      if(paymentSettings.qrImageUrl){
-        document.getElementById('payQrImg').src=paymentSettings.qrImageUrl;
-        document.getElementById('payQrImg').style.display='block';
+// ══════════════════════════════════════════════════════
+// LOAD SETTINGS (from Firebase — read only)
+// ══════════════════════════════════════════════════════
+async function loadSettings() {
+  try {
+    const [globalDoc, payDoc] = await Promise.all([
+      db.collection('settings').doc('global').get(),
+      db.collection('settings').doc('payment').get()
+    ]);
+    if (globalDoc.exists) {
+      globalSettings = globalDoc.data();
+      if (globalSettings.maintenanceMode) {
+        document.getElementById('maintMsg').textContent = globalSettings.maintenanceMessage || 'Maintenance in progress.';
+        document.getElementById('maintenanceOverlay').style.display = 'flex';
       }
-      document.getElementById('payModalText').textContent=paymentSettings.paymentText;
     }
-  }catch(e){}
+    if (payDoc.exists) {
+      const pd = payDoc.data();
+      paymentSettings = { qrImageUrl: pd.qrImageUrl || '', paymentText: pd.paymentText || 'Contact admin for key.' };
+      if (paymentSettings.qrImageUrl) {
+        document.getElementById('keyQrImg').src = paymentSettings.qrImageUrl;
+        document.getElementById('keyQrImg').style.display = 'block';
+        const plQr = document.getElementById('plQrImg');
+        plQr.src = paymentSettings.qrImageUrl;
+        plQr.style.display = 'block';
+      }
+      document.getElementById('keyPayText').textContent = paymentSettings.paymentText;
+      document.getElementById('plPayText').textContent = paymentSettings.paymentText;
+    }
+  } catch (e) {}
 }
 
-// ── DAILY QUESTION RESET LOGIC ────────────────────
-// Priority: keyData.questionsOverride > paymentSettings.questionsPerKey > 5
-// Daily reset at midnight per key
-
-function getQStorageKey(key){return LS_QREM+'_'+key;}
-function getDateStorageKey(key){return LS_QDATE+'_'+key;}
-
-function loadQRemaining(key,keyData){
-  const today=todayStr();
-  const storedDate=localStorage.getItem(getDateStorageKey(key));
-  const storedRem=localStorage.getItem(getQStorageKey(key));
-
-  // Get max questions for this key
-  // Per-key override has highest priority
-  const perKeyMax=keyData.questionsOverride||null;
-  const globalMax=paymentSettings.questionsPerKey||5;
-  qMax=perKeyMax!==null?perKeyMax:globalMax;
-
-  if(storedDate!==today){
-    // New day — reset to max
-    qRemaining=qMax;
-    localStorage.setItem(getDateStorageKey(key),today);
-    localStorage.setItem(getQStorageKey(key),String(qMax));
-  }else if(storedRem!==null){
-    // Same day — use stored but cap at qMax
-    qRemaining=Math.min(parseInt(storedRem)||0,qMax);
-  }else{
-    // First time today
-    qRemaining=qMax;
-    localStorage.setItem(getDateStorageKey(key),today);
-    localStorage.setItem(getQStorageKey(key),String(qMax));
+// ══════════════════════════════════════════════════════
+// KEY SYSTEM
+// ══════════════════════════════════════════════════════
+async function verifyKey() {
+  const btn = document.getElementById('keyBtn');
+  const key = document.getElementById('keyInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('keyErr');
+  if (!key) { errEl.textContent = '⚠ Enter your key'; return; }
+  btn.disabled = true; btn.textContent = 'VERIFYING...'; errEl.textContent = '';
+  const r = await checkKey(key);
+  if (r.ok) {
+    document.getElementById('keyOverlay').style.display = 'none';
+    await unlockPredictions(key, r.data, r.docId);
+  } else {
+    errEl.textContent = '❌ ' + r.msg;
+    btn.disabled = false;
+    btn.textContent = '🔓 UNLOCK';
   }
-  updateQCount();
 }
 
-function saveQRemaining(key){
-  localStorage.setItem(getQStorageKey(key),String(qRemaining));
-}
-
-function updateQCount(){
-  document.getElementById('qCountDisp').textContent=qRemaining;
-  document.getElementById('chatBadge').textContent=qRemaining;
-  document.getElementById('chatBadge').style.background=qRemaining>0?'var(--c)':'var(--r)';
-  // Show reset time info
-  const n=new Date();
-  const hoursLeft=23-n.getHours();
-  const minsLeft=59-n.getMinutes();
-  document.getElementById('qResetInfo').textContent=`Resets in ${hoursLeft}h ${minsLeft}m`;
-}
-
-// ── KEY SYSTEM ─────────────────────────────────────
-async function verifyKey(){
-  const btn=document.getElementById('keyBtn');
-  const key=document.getElementById('keyInput').value.trim().toUpperCase();
-  const errEl=document.getElementById('keyErr');
-  if(!key){errEl.textContent='⚠ Enter your key';return;}
-  btn.disabled=true;btn.textContent='VERIFYING...';errEl.textContent='';
-  const r=await checkKey(key);
-  if(r.ok){document.getElementById('keyOverlay').style.display='none';unlockPredictions(key,r.data,r.docId);}
-  else{errEl.textContent='❌ '+r.msg;btn.disabled=false;btn.textContent='🔓 UNLOCK';}
-}
-
-async function verifyKeyInline(){
-  const btn=document.getElementById('lockBtn');
-  const key=document.getElementById('lockInput').value.trim().toUpperCase();
-  const errEl=document.getElementById('lockErr');
-  if(!key){errEl.textContent='⚠ Enter your key';return;}
-  btn.disabled=true;btn.textContent='VERIFYING...';errEl.textContent='';
-  const r=await checkKey(key);
-  if(r.ok){document.getElementById('keyOverlay').style.display='none';unlockPredictions(key,r.data,r.docId);}
-  else{errEl.textContent='❌ '+r.msg;btn.disabled=false;btn.textContent='🔓 UNLOCK PREDICTIONS';}
-}
-
-async function checkKey(key){
-  try{
-    const snap=await db.collection('keys').where('key','==',key).limit(1).get();
-    if(snap.empty)return{ok:false,msg:'Invalid key — not found'};
-    const doc=snap.docs[0];
-    const data=doc.data();
-    if(data.status==='blocked'||data.blocked===true)return{ok:false,msg:'Key is blocked'};
-    const now=new Date();
-    if(data.expiresAt&&!data.lifetime){
-      const exp=data.expiresAt.toDate?data.expiresAt.toDate():new Date(data.expiresAt);
-      if(exp<now){doc.ref.update({status:'expired'}).catch(()=>{});return{ok:false,msg:'Key has expired'};}
+async function checkKey(key) {
+  try {
+    const snap = await db.collection('keys').where('key', '==', key).limit(1).get();
+    if (snap.empty) return { ok: false, msg: 'Invalid key — not found' };
+    const doc = snap.docs[0];
+    const data = doc.data();
+    if (data.status === 'blocked' || data.blocked === true) return { ok: false, msg: 'Key is blocked' };
+    const now = new Date();
+    if (data.expiresAt && !data.lifetime) {
+      const exp = data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+      if (exp < now) return { ok: false, msg: 'Key has expired' };
     }
-    doc.ref.update({lastUsed:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-    return{ok:true,data,docId:doc.id};
-  }catch(e){return{ok:false,msg:'Connection error: '+e.message};}
+    return { ok: true, data, docId: doc.id };
+  } catch (e) { return { ok: false, msg: 'Connection error' }; }
 }
 
-function unlockPredictions(key,data,docId){
-  isKeyVerified=true;
-  currentKeyDocId=docId;
-  currentKey=key;
-  localStorage.setItem(LS_KEY,key);
+async function unlockPredictions(key, data, docId) {
+  isKeyVerified = true;
+  currentKeyDocId = docId;
+  currentKey = key;
+  confidenceMode = data.confidenceMode || 'normal';
+  keyTier = data.tier || 'basic';
 
-  document.getElementById('keyStatusBar').style.display='flex';
-  document.getElementById('ksName').textContent=data.label||('KEY-'+key.slice(-4));
-  if(data.expiresAt&&!data.lifetime){
-    const exp=data.expiresAt.toDate?data.expiresAt.toDate():new Date(data.expiresAt);
-    document.getElementById('ksExp').textContent='· '+exp.toLocaleDateString('en-IN');
-  }else{
-    document.getElementById('ksExp').textContent='· LIFETIME';
+  // Store in sessionStorage (not localStorage for security)
+  sessionStorage.setItem(LS_KEY, key);
+
+  document.getElementById('keyStatusBar').style.display = 'flex';
+  document.getElementById('ksName').textContent = data.label || ('KEY-' + key.slice(-4));
+
+  const tierEl = document.getElementById('ksTier');
+  tierEl.textContent = (keyTier || 'basic').toUpperCase();
+  tierEl.className = `ks-tier tier-${keyTier || 'basic'}`;
+
+  if (data.expiresAt && !data.lifetime) {
+    const exp = data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+    document.getElementById('ksExp').textContent = '· ' + exp.toLocaleDateString('en-IN');
+  } else {
+    document.getElementById('ksExp').textContent = '· LIFETIME';
   }
 
-  document.getElementById('predLocked').style.display='none';
-  document.getElementById('predUnlocked').style.display='block';
-  document.getElementById('statsSection').style.display='block';
-  document.getElementById('histSection').style.display='block';
-  document.getElementById('chatFab').style.display='flex';
+  document.getElementById('predLocked').style.display = 'none';
+  document.getElementById('predUnlocked').style.display = 'block';
+  document.getElementById('statsSection').style.display = 'block';
+  document.getElementById('histSection').style.display = 'block';
+  document.getElementById('chatFab').style.display = 'flex';
 
-  // Load daily question count
-  loadQRemaining(key,data);
+  // Check premium lock
+  await checkPremiumLock();
+
+  // Load quota from worker
+  await loadQuota();
 
   loadPreds();
-  if(buf.length>=10)doPredict();
-  startHeartbeat(docId,key);
+  if (buf.length >= 10) showPrediction();
+  startHeartbeat(docId, key);
   listenForKick(docId);
+
+  // Update lastUsed (read-only frontend — done via worker)
 }
 
-function startHeartbeat(docId,key){
-  if(sessionHeartbeat)clearInterval(sessionHeartbeat);
-  const sessionId='sess_'+key+'_'+Date.now();
-  const update=()=>{db.collection('sessions').doc(sessionId).set({key,lastSeen:firebase.firestore.FieldValue.serverTimestamp(),kicked:false},{merge:true}).catch(()=>{});};
-  update();sessionHeartbeat=setInterval(update,10000);
-}
-
-function listenForKick(docId){
-  if(kickListener)kickListener();
-  kickListener=db.collection('keys').doc(docId).onSnapshot(snap=>{
-    if(!snap.exists)return;
-    const d=snap.data();
-    if(d.status==='blocked'||d.blocked===true){alert('🚫 Your key has been blocked by admin.');logoutKey();return;}
-    if(d.kicked===true){db.collection('keys').doc(docId).update({kicked:false}).catch(()=>{});alert('⚠️ You have been kicked by admin.');logoutKey();}
+async function checkPremiumLock() {
+  if (globalSettings?.premiumLockMode) {
+    document.getElementById('premiumLock').style.display = 'flex';
+  }
+  // Real-time listener
+  db.collection('settings').doc('global').onSnapshot(snap => {
+    if (snap.exists && snap.data().premiumLockMode && isKeyVerified) {
+      document.getElementById('premiumLock').style.display = 'flex';
+    } else {
+      document.getElementById('premiumLock').style.display = 'none';
+    }
   });
 }
 
-function logoutKey(){
-  isKeyVerified=false;currentKeyDocId='';currentKey='';
-  if(kickListener){kickListener();kickListener=null;}
-  if(sessionHeartbeat){clearInterval(sessionHeartbeat);sessionHeartbeat=null;}
-  localStorage.removeItem(LS_KEY);
-  document.getElementById('keyStatusBar').style.display='none';
-  document.getElementById('predLocked').style.display='block';
-  document.getElementById('predUnlocked').style.display='none';
-  document.getElementById('statsSection').style.display='none';
-  document.getElementById('histSection').style.display='none';
-  document.getElementById('chatFab').style.display='none';
-  closeChat();
-  document.getElementById('keyOverlay').style.display='flex';
-  document.getElementById('keyInput').value='';
-  document.getElementById('keyErr').textContent='';
-  document.getElementById('keyBtn').disabled=false;
-  document.getElementById('keyBtn').textContent='🔓 UNLOCK';
-  document.getElementById('lockInput').value='';
-  document.getElementById('lockErr').textContent='';
-  document.getElementById('lockBtn').disabled=false;
-  document.getElementById('lockBtn').textContent='🔓 UNLOCK PREDICTIONS';
+function startHeartbeat(docId, key) {
+  if (sessionHeartbeat) clearInterval(sessionHeartbeat);
+  sessionId = 'sess_' + key + '_' + Date.now();
+  const update = () => {
+    db.collection('sessions').doc(sessionId).set({
+      key, lastSeen: firebase.firestore.FieldValue.serverTimestamp(), kicked: false
+    }, { merge: true }).catch(() => {});
+  };
+  update();
+  sessionHeartbeat = setInterval(update, 10000);
 }
 
-// ── PREDICTION HISTORY ────────────────────────────
-function savePreds(){try{localStorage.setItem(LS_PREDS,JSON.stringify(preds.slice(0,200)));}catch(e){}}
-function loadPreds(){
-  try{
-    const p=localStorage.getItem(LS_PREDS);
-    if(p){preds=JSON.parse(p);updateHistTable();updateStats();const pend=preds.find(e=>e.anyWin===null);if(pend)pending={id:pend.id,num:pend.predictedNum,color:pend.predictedColor,bs:pend.predictedBS};}
-  }catch(e){}
-}
-
-// ── FIREBASE LOAD ─────────────────────────────────
-async function loadFromFirebase(){
-  document.getElementById('syncLbl').textContent='LOADING...';
-  try{
-    const snap=await db.collection('results').orderBy('savedAt','desc').limit(MAX_BUF).get();
-    if(!snap.empty){
-      buf=[];
-      snap.forEach(doc=>{const d=doc.data();buf.push({period:d.period,number:d.number,colour:d.colour,bigSmall:d.bigSmall});});
-      renderFeed();
-      document.getElementById('bufStat').textContent=buf.length+'/500';
-      document.getElementById('fbCount').textContent=buf.length;
-      document.getElementById('fbLast').textContent=ts();
-      document.getElementById('syncLbl').textContent='FB:'+buf.length;
-      if(buf[0])lastPeriod=buf[0].period;
-      document.getElementById('prdStat').textContent=sp(lastPeriod);
-      if(isKeyVerified&&buf.length>=10)doPredict();
-    }else{document.getElementById('syncLbl').textContent='NO DATA';}
-  }catch(e){document.getElementById('syncLbl').textContent='ERR';}
-  setTimeout(silentFetch,500);
-}
-
-function saveToFirebase(r){
-  db.collection('results').doc(r.period).set({...r,savedAt:firebase.firestore.FieldValue.serverTimestamp()})
-    .then(()=>{document.getElementById('fbCount').textContent=buf.length;document.getElementById('fbLast').textContent=ts();})
-    .catch(()=>{});
-}
-
-// ── POLL ──────────────────────────────────────────
-async function silentFetch(){
-  if(isFetching)return;isFetching=true;
-  document.getElementById('apiStat').textContent='FETCH';
-  document.getElementById('pollStat').textContent='...';
-  animatePoll();
-  const url=API+Date.now();
-  try{
-    let resp;
-    try{resp=await fetch(url,{cache:'no-store'});}
-    catch{resp=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,{cache:'no-store'});}
-    const data=await resp.json();
-    let list=[];
-    if(data.data&&Array.isArray(data.data.list))list=data.data.list;
-    else if(data.data&&Array.isArray(data.data))list=data.data;
-    else if(Array.isArray(data))list=data;
-    else if(data.list&&Array.isArray(data.list))list=data.list;
-    else{for(const k of Object.keys(data||{})){if(Array.isArray(data[k])&&data[k].length){list=data[k];break;}if(data[k]&&typeof data[k]==='object'){for(const k2 of Object.keys(data[k]||{})){if(Array.isArray(data[k][k2])&&data[k][k2].length){list=data[k][k2];break;}}if(list.length)break;}}}
-    if(!list.length){document.getElementById('apiStat').textContent='NONE';document.getElementById('pollStat').textContent='EMPTY';isFetching=false;return;}
-    const norm=list.map(item=>{
-      const num=parseInt(item.openNum??item.number??item.num??item.drawNum??'?');
-      const period=String(item.issue??item.issueNumber??item.period??item.id??'?');
-      let col=String(item.colour??item.color??item.winColor??'').toLowerCase();if(!col&&!isNaN(num))col=colorOf(num);
-      let bs=String(item.bigSmall??item.size??item.BigSmall??'').toUpperCase();if(!bs&&!isNaN(num))bs=sizeOf(num);
-      return{period,number:num,colour:col,bigSmall:bs};
-    }).filter(x=>!isNaN(x.number)&&x.number>=0&&x.number<=9);
-    if(!norm.length){document.getElementById('apiStat').textContent='ERR';isFetching=false;return;}
-    const newPeriod=norm[0]?.period||'';
-    const isNew=newPeriod&&newPeriod!==lastPeriod;
-    const existingPeriods=new Set(buf.map(b=>b.period));
-    const freshOnly=norm.filter(r=>!existingPeriods.has(r.period));
-    if(freshOnly.length>0)buf=[...freshOnly,...buf].slice(0,MAX_BUF);
-    else if(buf.length===0)buf=norm.slice(0,MAX_BUF);
-    renderFeed();
-    document.getElementById('bufStat').textContent=buf.length+'/500';
-    document.getElementById('apiStat').textContent='LIVE';
-    document.getElementById('syncLbl').textContent='LIVE:'+ts();
-    document.getElementById('prdStat').textContent=sp(newPeriod);
-    document.getElementById('pollStat').textContent=isNew?'NEW!':'SAME';
-    if(isNew){
-      lastPeriod=newPeriod;
-      const latest=buf[0];
-      saveToFirebase(latest);
-      if(pending&&isKeyVerified){
-        const winNum=(pending.num===latest.number);
-        const winColor=colorMatch(pending.color,latest.colour);
-        const winBS=(String(pending.bs).toUpperCase()===String(latest.bigSmall).toUpperCase());
-        const anyWin=winNum||winColor||winBS;
-        preds=preds.map(e=>e.id===pending.id?{...e,actualNum:latest.number,actualColor:latest.colour,actualBS:latest.bigSmall,winNum,winColor,winBS,anyWin}:e);
-        pending=null;updateHistTable();updateStats();savePreds();
-      }
-      cdSec=60;
-      if(buf.length>=10&&isKeyVerified)doPredict();
+function listenForKick(docId) {
+  if (kickListener) kickListener();
+  kickListener = db.collection('keys').doc(docId).onSnapshot(snap => {
+    if (!snap.exists) return;
+    const d = snap.data();
+    if (d.status === 'blocked' || d.blocked === true) {
+      showKicked('🚫 Your key has been blocked by admin.');
+      return;
     }
-    if(buf.length>=10&&!pending&&preds.length===0&&lastPeriod&&isKeyVerified)doPredict();
-  }catch(e){document.getElementById('apiStat').textContent='ERR';document.getElementById('pollStat').textContent='FAIL';}
-  isFetching=false;
+    if (d.kicked === true) {
+      db.collection('keys').doc(docId).update({ kicked: false }).catch(() => {});
+      showKicked('⚠️ You have been kicked by admin. Please contact admin for assistance.');
+    }
+  });
 }
 
-function fetchNow(){lastPeriod='';silentFetch();}
-function animatePoll(){
-  const bar=document.getElementById('pollBar');let w=0;bar.style.width='0%';
-  const iv=setInterval(()=>{w+=8;bar.style.width=Math.min(w,100)+'%';if(w>=100){clearInterval(iv);setTimeout(()=>bar.style.width='0%',300);}},40);
+function showKicked(msg) {
+  document.getElementById('kickedMsg').innerHTML = msg + '<br>Please contact admin for assistance.';
+  document.getElementById('kickedOverlay').style.display = 'flex';
 }
 
-function renderFeed(){
-  const feed=document.getElementById('feed');
-  if(!buf.length){feed.innerHTML='<div style="color:var(--mut)">// No data</div>';return;}
-  feed.innerHTML=buf.slice(0,100).map((r,i)=>`
+function handleKickedReload() {
+  document.getElementById('kickedOverlay').style.display = 'none';
+  logoutKey();
+}
+
+function logoutKey() {
+  isKeyVerified = false; currentKeyDocId = ''; currentKey = '';
+  if (kickListener) { kickListener(); kickListener = null; }
+  if (sessionHeartbeat) { clearInterval(sessionHeartbeat); sessionHeartbeat = null; }
+  sessionStorage.removeItem(LS_KEY);
+
+  document.getElementById('keyStatusBar').style.display = 'none';
+  document.getElementById('predLocked').style.display = 'block';
+  document.getElementById('predUnlocked').style.display = 'none';
+  document.getElementById('predCard').style.display = 'none';
+  document.getElementById('statsSection').style.display = 'none';
+  document.getElementById('histSection').style.display = 'none';
+  document.getElementById('chatFab').style.display = 'none';
+  document.getElementById('premiumLock').style.display = 'none';
+  closeChat();
+  document.getElementById('keyOverlay').style.display = 'flex';
+  document.getElementById('keyInput').value = '';
+  document.getElementById('keyErr').textContent = '';
+  document.getElementById('keyBtn').disabled = false;
+  document.getElementById('keyBtn').textContent = '🔓 UNLOCK';
+}
+
+// ══════════════════════════════════════════════════════
+// QUOTA (from worker, backend-enforced)
+// ══════════════════════════════════════════════════════
+async function loadQuota() {
+  try {
+    const resp = await fetch(`${WORKER_URL}/quota?key=${currentKey}`);
+    const data = await resp.json();
+    if (resp.ok) {
+      qRemaining = data.remaining || 0;
+      qMax = data.max || 5;
+      confidenceMode = data.confidenceMode || confidenceMode;
+      updateQCount();
+    }
+  } catch (e) {}
+}
+
+function updateQCount() {
+  document.getElementById('qCountDisp').textContent = qRemaining;
+  document.getElementById('chatBadge').textContent = qRemaining;
+  document.getElementById('chatBadge').style.background = qRemaining > 0 ? 'var(--c)' : 'var(--r)';
+  const n = new Date();
+  const h = 23 - n.getHours(), m = 59 - n.getMinutes();
+  document.getElementById('qResetInfo').textContent = `Resets in ${h}h ${m}m`;
+}
+
+// ══════════════════════════════════════════════════════
+// PREDICTION (Firebase reads)
+// ══════════════════════════════════════════════════════
+function savePreds() {
+  try { sessionStorage.setItem(LS_PREDS, JSON.stringify(preds.slice(0, 200))); } catch (e) {}
+}
+function loadPreds() {
+  try {
+    const p = sessionStorage.getItem(LS_PREDS);
+    if (p) {
+      preds = JSON.parse(p);
+      updateHistTable();
+      updateStats();
+      const pend = preds.find(e => e.anyWin === null);
+      if (pend) pending = { id: pend.id, num: pend.predictedNum, color: pend.predictedColor, bs: pend.predictedBS };
+    }
+  } catch (e) {}
+}
+
+// Listen to latest prediction from Firebase (realtime)
+function listenPrediction() {
+  db.collection('meta').doc('latestPrediction').onSnapshot(snap => {
+    if (!snap.exists || !isKeyVerified) return;
+    const pred = snap.data();
+    if (!pred) return;
+
+    // Parse alternatives if string
+    let alts = pred.alternatives;
+    try { if (typeof alts === 'string') alts = JSON.parse(alts); } catch { alts = []; }
+
+    showPredictionData({
+      predictedNum: pred.predictedNum,
+      predictedColor: pred.predictedColor,
+      predictedBS: pred.predictedBS,
+      numConf: pred.numConf,
+      colorConf: pred.colorConf,
+      bsConf: pred.bsConf,
+      alternatives: alts || [],
+      reasoning: pred.reasoning || '',
+      hot: String(pred.hot || '').split(',').map(Number),
+      cold: String(pred.cold || '').split(',').map(Number),
+      dataPoints: pred.dataPoints || 0,
+      streakNum: pred.streakNum,
+      streakLen: pred.streakLen,
+      colorStreakColor: pred.colorStreakColor,
+      colorStreakLen: pred.colorStreakLen,
+      bigCount10: pred.bigCount10,
+      period: pred.period,
+      createdAt: pred.createdAt
+    });
+
+    // Add to local history if new period
+    if (pred.period && !preds.find(p => p.afterPeriod === pred.period)) {
+      const entry = {
+        id: pred.period,
+        time: ts(),
+        afterPeriod: pred.period,
+        predictedNum: pred.predictedNum,
+        predictedColor: pred.predictedColor,
+        predictedBS: pred.predictedBS,
+        numConf: pred.numConf,
+        colorConf: pred.colorConf,
+        bsConf: pred.bsConf,
+        actualNum: null, actualColor: null, actualBS: null,
+        winNum: null, winColor: null, winBS: null, anyWin: null
+      };
+      preds.unshift(entry);
+      if (preds.length > 200) preds = preds.slice(0, 200);
+      pending = { id: entry.id, num: pred.predictedNum, color: pred.predictedColor, bs: pred.predictedBS };
+      updateHistTable(); updateStats(); savePreds();
+    }
+  });
+}
+
+function showPrediction() {
+  listenPrediction();
+}
+
+function showPredictionData(pred) {
+  if (!isKeyVerified) return;
+
+  // High confidence mode check
+  if (confidenceMode === 'high' && pred.numConf < 60) {
+    document.getElementById('highConfWait').style.display = 'block';
+    document.getElementById('predCard').style.display = 'none';
+    document.getElementById('hclCurrentConf').textContent = `Number confidence: ${pred.numConf}% (need ≥60%)`;
+    return;
+  }
+
+  document.getElementById('highConfWait').style.display = 'none';
+  document.getElementById('predCard').style.display = 'block';
+
+  const pn = pred.predictedNum;
+  document.getElementById('predPeriod').textContent = pred.period ? `PERIOD ${sp(pred.period)}` : 'NEXT PERIOD';
+  document.getElementById('predNum').textContent = String(pn);
+  document.getElementById('predNum').style.color = numCss(pn);
+  document.getElementById('predNum').style.textShadow = `0 0 30px ${numCss(pn)},0 0 60px ${numCss(pn)}44`;
+  document.getElementById('predLbl').textContent = `NEXT NUMBER (${pred.dataPoints || '?'} records · 11-model)`;
+  document.getElementById('predBadges').innerHTML = colorBadge(pred.predictedColor) + ' ' + sizeBadge(pred.predictedBS);
+
+  // Confidence bars
+  document.getElementById('confSection').style.display = 'block';
+  document.getElementById('barN').style.width = pred.numConf + '%';
+  document.getElementById('pctN').textContent = pred.numConf + '%';
+  document.getElementById('pctN').style.color = pred.numConf >= 65 ? 'var(--g)' : pred.numConf >= 40 ? 'var(--y)' : 'var(--r)';
+  document.getElementById('barC').style.width = pred.colorConf + '%';
+  document.getElementById('pctC').textContent = pred.colorConf + '%';
+  document.getElementById('pctC').style.color = pred.colorConf >= 65 ? 'var(--v)' : pred.colorConf >= 40 ? 'var(--y)' : 'var(--r)';
+  document.getElementById('barB').style.width = pred.bsConf + '%';
+  document.getElementById('pctB').textContent = pred.bsConf + '%';
+  document.getElementById('pctB').style.color = pred.bsConf >= 65 ? 'var(--c)' : pred.bsConf >= 40 ? 'var(--y)' : 'var(--r)';
+  updateCorrLabels();
+
+  // Alternatives
+  const ae = document.getElementById('predAlts');
+  ae.innerHTML = '';
+  (pred.alternatives || []).forEach(a => {
+    const d = document.createElement('div');
+    d.className = 'alt-chip';
+    d.innerHTML = `№${a.number} <b>${a.pct}%</b> <span style="font-size:8px;opacity:.6">${String(a.color || '').charAt(0).toUpperCase()}</span>`;
+    ae.appendChild(d);
+  });
+
+  // VIP mode — show full reasoning
+  if (confidenceMode === 'vip') {
+    document.getElementById('vipReasoning').style.display = 'block';
+    document.getElementById('predReasonText').textContent = pred.reasoning || '-- analyzing patterns...';
+    document.getElementById('predReason').style.display = 'none';
+  } else {
+    document.getElementById('vipReasoning').style.display = 'none';
+    document.getElementById('predReason').style.display = 'block';
+    document.getElementById('predReason').textContent = pred.reasoning || '// Pattern analysis in progress...';
+  }
+
+  // Analysis box
+  document.getElementById('analysisBox').style.display = 'block';
+  document.getElementById('aHot').textContent = (pred.hot || []).join(', ') || '--';
+  document.getElementById('aCold').textContent = (pred.cold || []).join(', ') || '--';
+  document.getElementById('aStreak').textContent = `${pred.streakNum} x${pred.streakLen}`;
+  document.getElementById('aColorRun').textContent = `${pred.colorStreakColor} x${pred.colorStreakLen}`;
+  document.getElementById('aBSR').textContent = `Big ${pred.bigCount10 || '?'}/10`;
+  document.getElementById('aData').textContent = `${pred.dataPoints || '?'} records`;
+  document.getElementById('aiStat').textContent = 'READY';
+}
+
+// ══════════════════════════════════════════════════════
+// FIREBASE LOAD (results only — read)
+// ══════════════════════════════════════════════════════
+async function loadFromFirebase() {
+  document.getElementById('syncLbl').textContent = 'LOADING...';
+  try {
+    const snap = await db.collection('results').orderBy('period', 'desc').limit(MAX_BUF).get();
+    if (!snap.empty) {
+      buf = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        buf.push({ period: d.period, periodStr: d.periodStr || String(d.period), number: d.number, colour: d.colour, bigSmall: d.bigSmall });
+      });
+      renderFeed();
+      document.getElementById('bufStat').textContent = buf.length + '/500';
+      document.getElementById('fbCount').textContent = buf.length;
+      document.getElementById('fbLast').textContent = ts();
+      document.getElementById('syncLbl').textContent = 'FB:' + buf.length;
+      if (buf[0]) lastPeriod = buf[0].period;
+      document.getElementById('prdStat').textContent = sp(buf[0]?.periodStr || lastPeriod);
+      // Update live strip on overlay
+      updateKeyLiveStrip(buf[0]);
+    } else {
+      document.getElementById('syncLbl').textContent = 'NO DATA';
+    }
+  } catch (e) {
+    document.getElementById('syncLbl').textContent = 'ERR';
+  }
+  // Start live listener
+  listenResults();
+}
+
+function listenResults() {
+  db.collection('results').orderBy('period', 'desc').limit(5).onSnapshot(snap => {
+    if (snap.empty) return;
+    let gotNew = false;
+    snap.forEach(doc => {
+      const d = doc.data();
+      const r = { period: d.period, periodStr: d.periodStr || String(d.period), number: d.number, colour: d.colour, bigSmall: d.bigSmall };
+      if (!buf.find(b => b.period === r.period)) {
+        buf.unshift(r);
+        gotNew = true;
+      }
+    });
+    if (gotNew) {
+      buf = buf.slice(0, MAX_BUF);
+      renderFeed();
+      document.getElementById('bufStat').textContent = buf.length + '/500';
+      document.getElementById('fbCount').textContent = buf.length;
+      document.getElementById('fbLast').textContent = ts();
+      lastPeriod = buf[0].period;
+      document.getElementById('prdStat').textContent = sp(buf[0]?.periodStr || lastPeriod);
+      updateKeyLiveStrip(buf[0]);
+      document.getElementById('syncLbl').textContent = 'LIVE:' + ts();
+      document.getElementById('pollStat').textContent = 'NEW!';
+      document.getElementById('apiStat').textContent = 'LIVE';
+      // Check pending
+      if (pending && isKeyVerified) {
+        const latest = buf[0];
+        const winNum = pending.num === latest.number;
+        const winColor = colorMatch(pending.color, latest.colour);
+        const winBS = String(pending.bs).toUpperCase() === String(latest.bigSmall).toUpperCase();
+        const anyWin = winNum || winColor || winBS;
+        preds = preds.map(e => e.id === pending.id ? { ...e, actualNum: latest.number, actualColor: latest.colour, actualBS: latest.bigSmall, winNum, winColor, winBS, anyWin } : e);
+        pending = null;
+        updateHistTable(); updateStats(); savePreds();
+      }
+      cdSec = 60;
+    }
+  });
+}
+
+function updateKeyLiveStrip(r) {
+  if (!r) return;
+  document.getElementById('keyLiveNum').textContent = r.number;
+  document.getElementById('keyLiveNum').style.color = numCss(r.number);
+  document.getElementById('keyLiveColor').textContent = String(r.colour).toUpperCase();
+  document.getElementById('keyLiveBS').textContent = r.bigSmall;
+}
+
+function fetchNow() { loadFromFirebase(); }
+function renderFeed() {
+  const feed = document.getElementById('feed');
+  if (!buf.length) { feed.innerHTML = '<div style="color:var(--mut)">// No data</div>'; return; }
+  feed.innerHTML = buf.slice(0, 100).map((r, i) => `
     <div class="fr">
       <span class="fi">[${String(i).padStart(2,'0')}]</span>
-      <span class="fp">PRD ${sp(r.period)}</span>
+      <span class="fp">PRD ${sp(r.periodStr || r.period)}</span>
       <span class="fn" style="color:${numCss(r.number)}">${r.number}</span>
       ${colorBadge(r.colour)}${sizeBadge(r.bigSmall)}
     </div>`).join('');
 }
 
-// ── PREDICTION ENGINE ─────────────────────────────
-function analyzeAndPredict(data){
-  const nums=data.map(d=>d.number),n=nums.length;
-  const freq=Array(10).fill(0);nums.forEach(x=>freq[x]++);
-  const sorted=[...freq.map((f,i)=>({n:i,f}))].sort((a,b)=>b.f-a.f);
-  const hot=sorted.slice(0,3).map(x=>x.n),cold=sorted.slice(-3).map(x=>x.n);
-
-  // Markov Chain
-  const markov={};
-  for(let i=0;i<n-3;i++){
-    const state=`${nums[i]},${nums[i+1]},${nums[i+2]}`;
-    if(!markov[state])markov[state]={};
-    const next=nums[i+3];
-    markov[state][next]=(markov[state][next]||0)+1;
-  }
-  const markovScores=Array(10).fill(0);
-  if(n>=3){
-    const curState=`${nums[n-3]},${nums[n-2]},${nums[n-1]}`;
-    if(markov[curState]){const total=Object.values(markov[curState]).reduce((a,b)=>a+b,0);Object.entries(markov[curState]).forEach(([k,v])=>{markovScores[parseInt(k)]+=v/total*100;});}
-  }
-
-  // Weighted recent
-  const weightedScores=Array(10).fill(0);
-  nums.forEach((x,i)=>{const w=Math.pow(1.05,i);weightedScores[x]+=w;});
-
-  // Gap analysis
-  const lastSeen=Array(10).fill(-999);
-  nums.forEach((x,i)=>{lastSeen[x]=i;});
-  const gapScores=Array(10).fill(0);
-  nums.forEach((x,i)=>{const gap=i-lastSeen[x];if(gap>5)gapScores[x]+=gap*0.5;});
-
-  // Streak + color
-  let streakNum=nums[n-1],streakLen=1;
-  for(let i=n-2;i>=0;i--){if(nums[i]===streakNum)streakLen++;else break;}
-  const colors=data.map(d=>d.colour);
-  let colorStreakColor=colors[n-1],colorStreakLen=1;
-  for(let i=n-2;i>=0;i--){if(String(colors[i]).toLowerCase()===String(colorStreakColor).toLowerCase())colorStreakLen++;else break;}
-  const last10=nums.slice(-10),bigCount=last10.filter(x=>x>=5).length;
-
-  // Multi-model voting
-  const votes=Array(10).fill(0);
-  const maxF=Math.max(...freq);freq.forEach((f,i)=>{votes[i]+=f/maxF*20;});
-  const maxM=Math.max(...markovScores);if(maxM>0)markovScores.forEach((s,i)=>{votes[i]+=s/maxM*30;});
-  const maxW=Math.max(...weightedScores);if(maxW>0)weightedScores.forEach((s,i)=>{votes[i]+=s/maxW*25;});
-  const maxG=Math.max(...gapScores);if(maxG>0)gapScores.forEach((s,i)=>{votes[i]+=s/maxG*15;});
-  if(streakLen>=2)votes[streakNum]-=10;if(streakLen>=3)votes[streakNum]-=10;
-  if(colorStreakLen>=3){const opp=colorStreakColor.includes('green')?'red':'green';for(let i=0;i<10;i++){if(colorOf(i)===opp)votes[i]+=12;}}
-  if(bigCount>=8){for(let i=0;i<5;i++)votes[i]+=10;}if(10-bigCount>=8){for(let i=5;i<10;i++)votes[i]+=10;}
-  const last5=nums.slice(-5);for(let i=0;i<10;i++){if(!last5.includes(i))votes[i]+=4;}
-
-  const minV=Math.min(...votes),adj=votes.map(v=>v-minV+1),total=adj.reduce((a,b)=>a+b,0);
-  const probs=adj.map(v=>Math.round((v/total)*100));
-  const best=probs.indexOf(Math.max(...probs));
-  const altsAll=probs.map((p,i)=>({n:i,p})).sort((a,b)=>b.p-a.p);
-  const alts=altsAll.filter(x=>x.n!==best).slice(0,3);
-  const gap2=probs[best]-altsAll[1].p;
-  const numConf=Math.min(88,Math.max(28,30+gap2*2+(n>=300?16:n>=200?12:n>=100?8:n>=50?5:0)));
-  let colorConf=42;
-  if(colorStreakLen>=4)colorConf=72;else if(colorStreakLen>=3)colorConf=60;else if(colorStreakLen>=2)colorConf=50;
-  const predColor=colorOf(best);const colFreq={green:0,red:0,violet:0};
-  data.slice(-20).forEach(d=>{const c=String(d.colour).toLowerCase();if(c.includes('green'))colFreq.green++;else if(c.includes('violet'))colFreq.violet++;else colFreq.red++;});
-  const myColCount=colFreq[predColor]||0;if(myColCount<=4)colorConf+=8;else if(myColCount>=14)colorConf-=8;
-  colorConf=Math.min(88,Math.max(28,Math.round(colorConf)));
-  const bsImb=Math.abs(bigCount-5);let bsConf=36+bsImb*4+(n>=300?14:n>=200?10:n>=100?6:0);
-  bsConf=Math.min(88,Math.max(28,Math.round(bsConf)));
-  const reasons=[];
-  if(streakLen>=2)reasons.push(`${streakNum} appeared ${streakLen}x in a row`);
-  if(colorStreakLen>=3)reasons.push(`${colorStreakColor} streak of ${colorStreakLen}`);
-  if(bigCount>=7)reasons.push(`Big heavy (${bigCount}/10), Small likely`);
-  if(10-bigCount>=7)reasons.push(`Small heavy (${10-bigCount}/10), Big likely`);
-  reasons.push(`Hot: ${hot.join(',')} · №${best} leads multi-model vote (${n} records)`);
-  return{predictedNumber:best,predictedColor:predColor,predictedBigSmall:sizeOf(best),numConf:Math.round(numConf),colorConf,bsConf,alternatives:alts.map(a=>({number:a.n,color:colorOf(a.n),bigSmall:sizeOf(a.n),pct:a.p})),reason:reasons.slice(0,2).join('. ')+'.',hot,cold,streakNum,streakLen,colorStreakColor,colorStreakLen,bigCount};
+// ══════════════════════════════════════════════════════
+// STATS / HISTORY
+// ══════════════════════════════════════════════════════
+function updateCorrLabels() {
+  const done = preds.filter(e => e.anyWin !== null), t = done.length;
+  if (!t) { ['corrN','corrC','corrB'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = '--'; el.style.color = 'var(--mut)'; } }); return; }
+  const wN = done.filter(e => e.winNum).length, wC = done.filter(e => e.winColor).length, wB = done.filter(e => e.winBS).length;
+  function sc(id, w, t2) { const pct = Math.round((w/t2)*100); const el = document.getElementById(id); if (!el) return; el.textContent = `${w}/${t2}·${pct}%`; el.style.color = pct >= 50 ? 'var(--g)' : pct >= 30 ? 'var(--y)' : 'var(--r)'; }
+  sc('corrN', wN, t); sc('corrC', wC, t); sc('corrB', wB, t);
 }
 
-function doPredict(){
-  if(buf.length<10||!isKeyVerified)return;
-  document.getElementById('aiStat').textContent='BUSY';
-  document.getElementById('predLbl').textContent=`ANALYZING (${buf.length} records)...`;
-  const seq=[...buf].reverse();
-  const R=analyzeAndPredict(seq);
-  const{predictedNumber:pn,predictedColor:pc,predictedBigSmall:pbs,numConf,colorConf,bsConf,alternatives:alts,reason,hot,cold,streakNum,streakLen,colorStreakColor,colorStreakLen,bigCount}=R;
-  document.getElementById('predNum').textContent=String(pn);
-  document.getElementById('predNum').style.color=numCss(pn);
-  document.getElementById('predNum').style.textShadow=`0 0 30px ${numCss(pn)},0 0 60px ${numCss(pn)}44`;
-  document.getElementById('predLbl').textContent=`NEXT NUMBER (${buf.length} records)`;
-  document.getElementById('predBadges').innerHTML=colorBadge(pc)+' '+sizeBadge(pbs);
-  document.getElementById('predReason').textContent=reason;
-  document.getElementById('confSection').style.display='block';
-  document.getElementById('barN').style.width=numConf+'%';document.getElementById('pctN').textContent=numConf+'%';document.getElementById('pctN').style.color=numConf>=65?'var(--g)':numConf>=40?'var(--y)':'var(--r)';
-  document.getElementById('barC').style.width=colorConf+'%';document.getElementById('pctC').textContent=colorConf+'%';document.getElementById('pctC').style.color=colorConf>=65?'var(--v)':colorConf>=40?'var(--y)':'var(--r)';
-  document.getElementById('barB').style.width=bsConf+'%';document.getElementById('pctB').textContent=bsConf+'%';document.getElementById('pctB').style.color=bsConf>=65?'var(--c)':bsConf>=40?'var(--y)':'var(--r)';
-  updateCorrLabels();
-  const ae=document.getElementById('predAlts');ae.innerHTML='';
-  alts.forEach(a=>{const d=document.createElement('div');d.className='alt-chip';d.innerHTML=`№${a.number} <b>${a.pct}%</b> <span style="font-size:8px;opacity:.6">${String(a.color).charAt(0).toUpperCase()}</span>`;ae.appendChild(d);});
-  document.getElementById('analysisBox').style.display='block';
-  document.getElementById('aHot').textContent=hot.join(', ');document.getElementById('aCold').textContent=cold.join(', ');
-  document.getElementById('aStreak').textContent=`${streakNum} x${streakLen}`;document.getElementById('aColorRun').textContent=`${colorStreakColor} x${colorStreakLen}`;
-  document.getElementById('aBSR').textContent=`Big ${bigCount}/10 · Small ${10-bigCount}/10`;
-  const entry={id:Date.now(),time:ts(),afterPeriod:buf[0]?.period||'--',predictedNum:pn,predictedColor:pc,predictedBS:pbs,numConf,colorConf,bsConf,actualNum:null,actualColor:null,actualBS:null,winNum:null,winColor:null,winBS:null,anyWin:null};
-  preds.unshift(entry);if(preds.length>200)preds=preds.slice(0,200);
-  pending={id:entry.id,num:pn,color:pc,bs:pbs};
-  updateHistTable();updateStats();savePreds();
-  document.getElementById('aiStat').textContent='READY';
-}
-
-function updateCorrLabels(){
-  const done=preds.filter(e=>e.anyWin!==null),t=done.length;
-  if(!t){['corrN','corrC','corrB'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='--';el.style.color='var(--mut)';}});return;}
-  const wN=done.filter(e=>e.winNum).length,wC=done.filter(e=>e.winColor).length,wB=done.filter(e=>e.winBS).length;
-  function sc(id,w,t2){const pct=Math.round((w/t2)*100);const el=document.getElementById(id);if(!el)return;el.textContent=`${w}/${t2}·${pct}%`;el.style.color=pct>=50?'var(--g)':pct>=30?'var(--y)':'var(--r)';}
-  sc('corrN',wN,t);sc('corrC',wC,t);sc('corrB',wB,t);
-}
-
-function updateHistTable(){
-  document.getElementById('histTitle').textContent=`PREDICTION HISTORY (${preds.length})`;
-  const tb=document.getElementById('histBody');
-  if(!preds.length){tb.innerHTML='<tr><td colspan="15" class="empty-msg">// No predictions yet...</td></tr>';return;}
-  tb.innerHTML='';
-  preds.forEach((e,i)=>{
-    const tr=document.createElement('tr');
-    const isPend=e.anyWin===null;
-    if(!isPend){tr.style.background=e.anyWin?'rgba(0,255,65,.03)':'rgba(255,0,64,.03)';}
-    const chk=v=>isPend?'⏳':v?'✅':'❌';
-    const res=isPend?`<span class="bpend">⏳</span>`:e.anyWin?`<span class="bwin">WIN</span>`:`<span class="bloss">MISS</span>`;
-    const aN=e.actualNum!==null?`<span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:${numCss(e.actualNum)}">${e.actualNum}</span>`:`<span style="color:var(--mut)">--</span>`;
-    const aC=e.actualColor?colorBadge(e.actualColor):`<span style="color:var(--mut)">--</span>`;
-    const ncc=e.numConf>=65?'var(--g)':e.numConf>=40?'var(--y)':'var(--r)';
-    const ccc=e.colorConf>=65?'var(--v)':e.colorConf>=40?'var(--y)':'var(--r)';
-    const bcc=e.bsConf>=65?'var(--c)':e.bsConf>=40?'var(--y)':'var(--r)';
-    tr.innerHTML=`
+function updateHistTable() {
+  document.getElementById('histTitle').textContent = `PREDICTION HISTORY (${preds.length})`;
+  const tb = document.getElementById('histBody');
+  if (!preds.length) { tb.innerHTML = '<tr><td colspan="15" class="empty-msg">// No predictions yet...</td></tr>'; return; }
+  tb.innerHTML = '';
+  preds.forEach((e, i) => {
+    const tr = document.createElement('tr');
+    const isPend = e.anyWin === null;
+    if (!isPend) tr.style.background = e.anyWin ? 'rgba(0,255,65,.03)' : 'rgba(255,0,64,.03)';
+    const chk = v => isPend ? '⏳' : v ? '✅' : '❌';
+    const res = isPend ? `<span class="bpend">⏳</span>` : e.anyWin ? `<span class="bwin">WIN</span>` : `<span class="bloss">MISS</span>`;
+    const aN = e.actualNum !== null ? `<span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:${numCss(e.actualNum)}">${e.actualNum}</span>` : `<span style="color:var(--mut)">--</span>`;
+    const aC = e.actualColor ? colorBadge(e.actualColor) : `<span style="color:var(--mut)">--</span>`;
+    const ncc = e.numConf >= 65 ? 'var(--g)' : e.numConf >= 40 ? 'var(--y)' : 'var(--r)';
+    const ccc = e.colorConf >= 65 ? 'var(--v)' : e.colorConf >= 40 ? 'var(--y)' : 'var(--r)';
+    const bcc = e.bsConf >= 65 ? 'var(--c)' : e.bsConf >= 40 ? 'var(--y)' : 'var(--r)';
+    tr.innerHTML = `
       <td style="color:var(--mut)">#${i+1}</td>
       <td style="color:var(--mut);font-size:7px">${e.time}</td>
       <td style="color:var(--c);font-size:7px">${sp(e.afterPeriod)}</td>
@@ -975,112 +1108,200 @@ function updateHistTable(){
   });
 }
 
-function updateStats(){
-  const done=preds.filter(e=>e.anyWin!==null),t=done.length;
-  const anyW=done.filter(e=>e.anyWin).length,anyL=t-anyW,anyA=t?Math.round((anyW/t)*100):null;
-  const numW=done.filter(e=>e.winNum).length,colW=done.filter(e=>e.winColor).length,bsW=done.filter(e=>e.winBS).length;
-  const numA=t?Math.round((numW/t)*100):null,colA=t?Math.round((colW/t)*100):null,bsA=t?Math.round((bsW/t)*100):null;
-  const pendCount=preds.filter(e=>e.anyWin===null).length;
-  document.getElementById('stT').textContent=preds.length;document.getElementById('stW').textContent=anyW;
-  document.getElementById('stL').textContent=anyL;document.getElementById('stA').textContent=anyA!==null?anyA+'%':'--%';
-  document.getElementById('stNW').textContent=numW;document.getElementById('stNA').textContent=numA!==null?numA+'% acc':'--% acc';
-  document.getElementById('stCW').textContent=colW;document.getElementById('stCA').textContent=colA!==null?colA+'% acc':'--% acc';
-  document.getElementById('stBW').textContent=bsW;document.getElementById('stBA').textContent=bsA!==null?bsA+'% acc':'--% acc';
-  document.getElementById('stP').textContent=pendCount;
+function updateStats() {
+  const done = preds.filter(e => e.anyWin !== null), t = done.length;
+  const anyW = done.filter(e => e.anyWin).length;
+  const anyL = t - anyW;
+  const anyA = t ? Math.round((anyW/t)*100) : null;
+  const numW = done.filter(e => e.winNum).length, colW = done.filter(e => e.winColor).length, bsW = done.filter(e => e.winBS).length;
+  const numA = t ? Math.round((numW/t)*100) : null, colA = t ? Math.round((colW/t)*100) : null, bsA = t ? Math.round((bsW/t)*100) : null;
+  const pendCount = preds.filter(e => e.anyWin === null).length;
+  document.getElementById('stT').textContent = preds.length;
+  document.getElementById('stW').textContent = anyW;
+  document.getElementById('stL').textContent = anyL;
+  document.getElementById('stA').textContent = anyA !== null ? anyA + '%' : '--%';
+  document.getElementById('stNW').textContent = numW;
+  document.getElementById('stNA').textContent = numA !== null ? numA + '% acc' : '--% acc';
+  document.getElementById('stCW').textContent = colW;
+  document.getElementById('stCA').textContent = colA !== null ? colA + '% acc' : '--% acc';
+  document.getElementById('stBW').textContent = bsW;
+  document.getElementById('stBA').textContent = bsA !== null ? bsA + '% acc' : '--% acc';
+  document.getElementById('stP').textContent = pendCount;
   updateCorrLabels();
 }
 
-function clearHist(){if(!confirm('Clear prediction history?'))return;preds=[];pending=null;updateHistTable();updateStats();savePreds();}
-function toggleAuto(){
-  autoOn=!autoOn;
-  const btn=document.getElementById('autoBtn'),dot=document.getElementById('autoDot');
-  if(autoOn){btn.textContent='⏸ PAUSE';btn.className='btn btn-c';dot.className='dot dot-g';document.getElementById('autoStat').textContent='ON';}
-  else{btn.textContent='▶ RESUME';btn.className='btn btn-y';dot.style.cssText='width:5px;height:5px;border-radius:50%;background:var(--y);flex-shrink:0;';document.getElementById('autoStat').textContent='PAUSED';}
+function clearHist() {
+  if (!confirm('Clear prediction history?')) return;
+  preds = []; pending = null;
+  sessionStorage.removeItem(LS_PREDS);
+  updateHistTable(); updateStats();
 }
 
-// ── AI CHAT ───────────────────────────────────────
-function openChat(){
-  document.getElementById('chatPanel').style.display='flex';
-  updateQCount();
-  if(!chatHistory.length){
-    addChatMessage('ai','👋 Namaste! Main ANASHRAW WINGO AI hoon. Main WinGo ke patterns analyze karke predictions deta hoon. Koi bhi question puchho!');
+function toggleAuto() {
+  autoOn = !autoOn;
+  const btn = document.getElementById('autoBtn'), dot = document.getElementById('autoDot');
+  if (autoOn) {
+    btn.textContent = '⏸ PAUSE'; btn.className = 'btn btn-c';
+    dot.className = 'dot dot-g';
+    document.getElementById('autoStat').textContent = 'ON';
+  } else {
+    btn.textContent = '▶ RESUME'; btn.className = 'btn btn-y';
+    dot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:var(--y);flex-shrink:0;';
+    document.getElementById('autoStat').textContent = 'PAUSED';
   }
-  setTimeout(()=>{const msgs=document.getElementById('chatMessages');msgs.scrollTop=msgs.scrollHeight;},100);
 }
 
-function closeChat(){document.getElementById('chatPanel').style.display='none';}
-
-function addChatMessage(role,text){
-  const msgs=document.getElementById('chatMessages');
-  const div=document.createElement('div');div.className='msg '+role;
-  div.innerHTML=`<div class="msg-avatar">${role==='ai'?'🤖':'👤'}</div><div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>`;
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-  if(role==='ai')chatHistory.push({role:'assistant',content:text});
-  else chatHistory.push({role:'user',content:text});
-}
-
-function showTyping(){
-  const msgs=document.getElementById('chatMessages');
-  const div=document.createElement('div');div.className='msg ai';div.id='typingIndicator';
-  div.innerHTML=`<div class="msg-avatar">🤖</div><div class="msg-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-}
-function removeTyping(){const t=document.getElementById('typingIndicator');if(t)t.remove();}
-
-function showPaymentInChat(){
-  const msgs=document.getElementById('chatMessages');
-  const div=document.createElement('div');div.className='msg ai';
-  let qrHtml=paymentSettings.qrImageUrl?`<img class="payment-qr" src="${paymentSettings.qrImageUrl}" alt="QR Code"/>`:'';
-  div.innerHTML=`<div class="msg-avatar">🤖</div><div class="msg-bubble" style="max-width:90%"><div class="payment-card"><div class="payment-title">⚡ DAILY QUESTIONS KHATAM!</div>${qrHtml}<div class="payment-text">${paymentSettings.paymentText}</div><div style="font-size:9px;color:var(--mut);margin-top:8px">🔄 Kal raat 12 baje phir ${qMax} questions milenge</div></div></div>`;
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-}
-
-async function sendChat(){
-  if(!isKeyVerified)return;
-  const input=document.getElementById('chatInputEl');
-  const msg=input.value.trim();
-  if(!msg)return;
-  if(qRemaining<=0){showPaymentInChat();return;}
-  input.value='';input.style.height='auto';
-  addChatMessage('user',msg);
-  qRemaining--;
+// ══════════════════════════════════════════════════════
+// AI CHAT (via worker — no direct Groq calls)
+// ══════════════════════════════════════════════════════
+function openChat() {
+  document.getElementById('chatPanel').style.display = 'flex';
   updateQCount();
-  saveQRemaining(currentKey);
-  if(qRemaining<=0){setTimeout(showPaymentInChat,1500);}
+  if (!chatHistory.length) {
+    addChatMsg('ai', '👋 Namaste! Main ANASHRAW WINGO AI hoon. WinGo patterns analyze karke predictions deta hoon.\n\nAaj ke liye aapke paas <b>' + qRemaining + '</b> questions hain. Kuch bhi puchho!');
+  }
+  setTimeout(() => { const msgs = document.getElementById('chatMessages'); msgs.scrollTop = msgs.scrollHeight; }, 100);
+}
+
+function closeChat() { document.getElementById('chatPanel').style.display = 'none'; }
+
+function addChatMsg(role, text) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div'); div.className = 'msg ' + role;
+  div.innerHTML = `<div class="msg-avatar">${role === 'ai' ? '🤖' : '👤'}</div><div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  if (role === 'ai') chatHistory.push({ role: 'assistant', content: text });
+  else chatHistory.push({ role: 'user', content: text });
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div'); div.className = 'msg ai'; div.id = 'typingIndicator';
+  div.innerHTML = `<div class="msg-avatar">🤖</div><div class="msg-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { const t = document.getElementById('typingIndicator'); if (t) t.remove(); }
+
+function showPayInChat() {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div'); div.className = 'msg ai';
+  const qrHtml = paymentSettings.qrImageUrl ? `<img class="payment-qr" src="${paymentSettings.qrImageUrl}" alt="QR"/>` : '';
+  div.innerHTML = `<div class="msg-avatar">🤖</div><div class="msg-bubble" style="max-width:90%"><div class="payment-card"><div class="payment-title">⚡ QUESTIONS KHATAM!</div>${qrHtml}<div class="payment-text">${paymentSettings.paymentText}</div><div style="font-size:9px;color:var(--mut);margin-top:8px">🔄 Kal raat 12 baje phir ${qMax} questions milenge</div></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function sendChat() {
+  if (!isKeyVerified) return;
+  const input = document.getElementById('chatInputEl');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  if (qRemaining <= 0) { showPayInChat(); return; }
+
+  input.value = ''; input.style.height = 'auto';
+  addChatMsg('user', msg);
   showTyping();
-  const last20=buf.slice(0,20).map(r=>`Period ${sp(r.period)}: №${r.number} ${r.colour} ${r.bigSmall}`).join(', ');
-  const systemPrompt=`You are ANASHRAW WINGO AI, an expert WinGo game analyst and predictor. Current live data (last 20 results, newest first): ${last20}. Current prediction: ${document.getElementById('predNum').textContent}. Always respond in the language the user writes in (Hindi/English). Be concise, helpful, and analytical. Focus on patterns, predictions, and game strategy.`;
-  try{
-    const response=await fetch(GROQ_URL,{method:'POST',headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'},body:JSON.stringify({model:GROQ_MODEL,messages:[{role:'system',content:systemPrompt},...chatHistory.slice(-8),{role:'user',content:msg}],max_tokens:300,temperature:0.7})});
-    const data=await response.json();
+
+  try {
+    const resp = await fetch(`${WORKER_URL}/ai-chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        key: currentKey,
+        message: msg,
+        history: chatHistory.slice(-8).filter(m => m.role !== undefined)
+      })
+    });
+
+    const data = await resp.json();
     removeTyping();
-    const reply=data.choices?.[0]?.message?.content||'Sorry, response nahi aaya. Please retry.';
-    addChatMessage('ai',reply);
-  }catch(e){removeTyping();addChatMessage('ai','Network error. Please check connection and retry.');}
+
+    if (resp.status === 401) {
+      addChatMsg('ai', '❌ Key invalid or expired. Please re-login.');
+      return;
+    }
+    if (resp.status === 429) {
+      qRemaining = 0; updateQCount();
+      showPayInChat();
+      return;
+    }
+    if (resp.status === 503) {
+      addChatMsg('ai', '🔧 ' + (data.error || 'System maintenance.'));
+      return;
+    }
+    if (!resp.ok) {
+      addChatMsg('ai', '⚠️ Error: ' + (data.error || 'Unknown error. Please retry.'));
+      return;
+    }
+
+    const reply = data.reply || 'No response received.';
+    addChatMsg('ai', reply);
+
+    // Update quota from response
+    if (data.remaining !== undefined) {
+      qRemaining = data.remaining;
+      updateQCount();
+    }
+    if (qRemaining <= 0) setTimeout(showPayInChat, 1500);
+
+  } catch (e) {
+    removeTyping();
+    addChatMsg('ai', '⚠️ Network error. Please check connection and retry.');
+  }
 }
 
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,80)+'px';}
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px'; }
 
-// ── TIMER ─────────────────────────────────────────
-setInterval(()=>{
-  if(autoOn&&cdSec>0){cdSec--;document.getElementById('cdBar').style.width=((cdSec/60)*100)+'%';document.getElementById('cdNum').textContent=cdSec+'s';}
-  else if(!autoOn){document.getElementById('cdBar').style.width='0%';document.getElementById('cdNum').textContent='--';}
-  if(autoOn){tickCount++;if(tickCount>=2){tickCount=0;silentFetch();}}
-  // Update reset countdown every minute
-  if(isKeyVerified){const n=new Date();if(n.getSeconds()===0)updateQCount();}
-},1000);
+// ══════════════════════════════════════════════════════
+// TIMER (countdown + polling indicator)
+// ══════════════════════════════════════════════════════
+setInterval(() => {
+  if (autoOn && cdSec > 0) {
+    cdSec--;
+    document.getElementById('cdBar').style.width = ((cdSec / 60) * 100) + '%';
+    document.getElementById('cdNum').textContent = cdSec + 's';
+  } else if (!autoOn) {
+    document.getElementById('cdBar').style.width = '0%';
+    document.getElementById('cdNum').textContent = '--';
+  }
+  if (autoOn) {
+    tickCount++;
+    if (tickCount >= 2) {
+      tickCount = 0;
+      document.getElementById('pollBar').style.width = '100%';
+      setTimeout(() => { document.getElementById('pollBar').style.width = '0%'; }, 400);
+    }
+  }
+  // Refresh quota at midnight
+  if (isKeyVerified) {
+    const n = new Date();
+    if (n.getHours() === 0 && n.getMinutes() === 0 && n.getSeconds() === 0) loadQuota();
+    if (n.getSeconds() === 0) updateQCount();
+  }
+}, 1000);
 
-// ── INIT ──────────────────────────────────────────
-loadPaymentSettings();
-loadFromFirebase();
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+async function init() {
+  await loadSettings();
+  loadFromFirebase();
 
-const savedKey=localStorage.getItem(LS_KEY);
-if(savedKey){
-  checkKey(savedKey).then(r=>{
-    if(r.ok){document.getElementById('keyOverlay').style.display='none';unlockPredictions(savedKey,r.data,r.docId);}
-    else{localStorage.removeItem(LS_KEY);}
-  });
+  // Auto-login from session
+  const savedKey = sessionStorage.getItem(LS_KEY);
+  if (savedKey) {
+    checkKey(savedKey).then(r => {
+      if (r.ok) {
+        document.getElementById('keyOverlay').style.display = 'none';
+        unlockPredictions(savedKey, r.data, r.docId);
+      } else {
+        sessionStorage.removeItem(LS_KEY);
+      }
+    });
+  }
 }
+
+init();
 </script>
 </body>
 </html>
