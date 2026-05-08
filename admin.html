@@ -649,12 +649,12 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 <script>
 // ── FIREBASE ──────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyCrhsY2aLZaos19ULooCbQJZh4AxMZV9wQ",
-  authDomain: "anashrawwingokey.firebaseapp.com",
-  projectId: "anashrawwingokey",
-  storageBucket: "anashrawwingokey.firebasestorage.app",
-  messagingSenderId: "515715007863",
-  appId: "1:515715007863:web:bdebab42892be2d1bc0d72"
+  apiKey: "AIzaSyBYwuezKZPXU3pcM6hVi2hkD1EWKX9_5B8",
+  authDomain: "newwingoaikey.firebaseapp.com",
+  projectId: "newwingoaikey",
+  storageBucket: "newwingoaikey.firebasestorage.app",
+  messagingSenderId: "887881948342",
+  appId: "1:887881948342:web:4d9d9cd37a5911d500da17"
 };
 const WORKER = 'https://anashraw-predictor.anashrawdixit191.workers.dev';
 const DEFAULT_PW_KEY = 'anashraw_admin_pw';
@@ -1437,6 +1437,10 @@ async function saveApiKey(){
   const newKey = document.getElementById('newApiKey').value.trim();
   if(!newKey){ toast('Enter a new API key','warn'); return; }
   if(!newKey.startsWith('gsk_')&&!confirm('Key does not start with gsk_ — save anyway?')) return;
+  
+  let saved = false;
+  
+  // Method 1: Try via Worker (preferred)
   try{
     const resp = await fetch(`${WORKER}/admin/update-api-key`,{
       method:'POST',
@@ -1444,25 +1448,24 @@ async function saveApiKey(){
       body:JSON.stringify({apiKey:newKey, service:'groq'})
     });
     const data = await resp.json();
-    if(data.ok||resp.ok){
-      document.getElementById('apiKeyLast8').textContent = newKey.slice(-8);
-      document.getElementById('newApiKey').value='';
-      toast('✅ API key updated');
-    } else {
-      // Fallback: write directly to Firebase
-      await db.collection('settings').doc('apiKeys').set({groqKey:newKey,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-      document.getElementById('apiKeyLast8').textContent = newKey.slice(-8);
-      document.getElementById('newApiKey').value='';
-      toast('✅ API key saved to Firebase');
-    }
-  }catch(e){
-    // Worker may not have this endpoint — write to Firebase directly
+    if(data.ok || resp.ok){ saved = true; }
+  } catch(e){ console.log('Worker update-api-key failed, trying Firebase direct'); }
+
+  // Method 2: Write directly to Firebase (fallback - works with new open rules)
+  if(!saved){
     try{
-      await db.collection('settings').doc('apiKeys').set({groqKey:newKey,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-      document.getElementById('apiKeyLast8').textContent = newKey.slice(-8);
-      document.getElementById('newApiKey').value='';
-      toast('✅ API key saved to Firebase');
-    }catch(e2){ toast('Error: '+e2.message,'err'); }
+      await db.collection('settings').doc('apiKeys').set(
+        { groqKey: newKey, service: 'groq', updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+      saved = true;
+    } catch(e2){ toast('❌ Error: ' + e2.message, 'err'); return; }
+  }
+
+  if(saved){
+    document.getElementById('apiKeyLast8').textContent = newKey.slice(-8);
+    document.getElementById('newApiKey').value = '';
+    toast('✅ Groq API key updated successfully!');
   }
 }
 
