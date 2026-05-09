@@ -694,15 +694,17 @@ function normalizeResult(item){
 }
 
 async function fetchWinGoAPI(){
+  // Browser se direct API hit nahi hoti (CORS) — proxy use karo
+  const wingoUrl = 'https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts='+Date.now();
   const urls=[
-    `https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts=${Date.now()}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts='+Date.now())}`
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(wingoUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(wingoUrl)}`
   ];
   for(const url of urls){
     try{
-      const resp=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0 (Linux; Android 12) Chrome/112.0','Accept':'application/json,*/*','Referer':'https://draw.ar-lottery01.com/','Origin':'https://draw.ar-lottery01.com'}});
+      const resp=await fetch(url);
       if(!resp.ok)continue;
-      const text=await resp.text(); if(text.trim().startsWith('<'))continue;
+      const text=await resp.text(); if(!text||text.trim().startsWith('<'))continue;
       const json=JSON.parse(text);
       let list=[];
       if(json.data?.list)list=json.data.list;
@@ -711,7 +713,8 @@ async function fetchWinGoAPI(){
       else if(json.list)list=json.list;
       else{ for(const k of Object.keys(json||{})){ if(Array.isArray(json[k])&&json[k].length){list=json[k];break;} } }
       if(!list.length)continue;
-      return list.map(normalizeResult).filter(x=>!isNaN(x.number)&&x.number>=0&&x.number<=9&&x.period>0);
+      const results=list.map(normalizeResult).filter(x=>!isNaN(x.number)&&x.number>=0&&x.number<=9&&x.period>0);
+      if(results.length)return results;
     }catch(e){continue;}
   }
   return null;
