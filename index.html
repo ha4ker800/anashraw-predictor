@@ -619,25 +619,15 @@ const FB_CONFIG = {
   appId: "1:887881948342:web:4d9d9cd37a5911d500da17"
 };
 const WORKER = 'https://anashraw-predictor.anashrawdixit191.workers.dev';
-const WINGO_API = 'https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts=';
-const WINGO_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // ── STATE ────────────────────────────────────────────────
-let db;
-let userKey = null, keyData = null;
-let feedPaused = false;
-let mergedFeedMap = {}; // period(string) => result object
-let apiPollInterval = null, clockInterval = null;
-let heartbeatInterval = null;
-let predHistory = [];
-let aiChatHistory = [], aiRemaining = 0;
-let adminChatUnsub = null, adminChatId = null;
-let keyUnsub = null;
-let settingsCache = {};
-let loginChatName = null, loginChatUnsub = null;
-let lastSeenPeriod = null;
-let countdownSec = 60;
-let countdownInterval = null;
+let db, userKey=null, keyData=null;
+let feedPaused=false, mergedFeedMap={};
+let apiPollInterval=null, clockInterval=null, heartbeatInterval=null, countdownInterval=null;
+let predHistory=[], aiChatHistory=[], aiRemaining=0;
+let adminChatUnsub=null, adminChatId=null, keyUnsub=null;
+let settingsCache={}, loginChatName=null, loginChatUnsub=null;
+let lastSeenPeriod=null, countdownSec=60;
 
 // ── FIREBASE INIT ────────────────────────────────────────
 firebase.initializeApp(FB_CONFIG);
@@ -645,858 +635,32 @@ db = firebase.firestore();
 
 // ── MATRIX RAIN ──────────────────────────────────────────
 (function(){
-  const cv = document.getElementById('mc');
-  const ctx = cv.getContext('2d');
-  let cols, drops = [];
-  const chars = 'アイウエオカキクケコ0123456789ABCDEF!@#$%^&*ANASHRAW';
-  function resize(){
-    cv.width = window.innerWidth; cv.height = window.innerHeight;
-    cols = Math.floor(cv.width / 14);
-    drops = Array(cols).fill(1);
-  }
-  resize();
-  window.addEventListener('resize', resize);
+  const cv=document.getElementById('mc'), ctx=cv.getContext('2d');
+  let cols, drops=[];
+  const chars='アイウエオ0123456789ABCDEF!@#$%ANASHRAW';
+  function resize(){ cv.width=window.innerWidth; cv.height=window.innerHeight; cols=Math.floor(cv.width/14); drops=Array(cols).fill(1); }
+  resize(); window.addEventListener('resize',resize);
   setInterval(()=>{
-    ctx.fillStyle = 'rgba(0,0,0,.05)';
-    ctx.fillRect(0,0,cv.width,cv.height);
-    ctx.fillStyle = '#00ff41';
-    ctx.font = '12px Share Tech Mono';
-    drops.forEach((y,i)=>{
-      const ch = chars[Math.floor(Math.random()*chars.length)];
-      ctx.fillText(ch, i*14, y*14);
-      if(y*14>cv.height && Math.random()>.975) drops[i]=0;
-      drops[i]++;
-    });
+    ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#00ff41'; ctx.font='12px Share Tech Mono';
+    drops.forEach((y,i)=>{ ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*14,y*14); if(y*14>cv.height&&Math.random()>.975)drops[i]=0; drops[i]++; });
   },50);
 })();
 
 // ── UTILS ────────────────────────────────────────────────
-function toast(msg, type=''){
-  const el = document.createElement('div');
-  el.className = 'toast-item'+(type?' '+type:'');
-  el.textContent = msg;
-  document.getElementById('toast').appendChild(el);
-  setTimeout(()=>el.remove(), 3200);
+function toast(msg,type=''){
+  const el=document.createElement('div'); el.className='toast-item'+(type?' '+type:''); el.textContent=msg;
+  document.getElementById('toast').appendChild(el); setTimeout(()=>el.remove(),3200);
 }
-
-function colorOf(n){
-  if(n===0||n===5) return 'violet';
-  if([1,3,7,9].includes(n)) return 'green';
-  return 'red';
-}
-function colorCss(c){
-  if(c==='green') return '#00ff41';
-  if(c==='violet') return '#bf7fff';
-  return '#ff0040';
-}
-function fmtPeriod(p){ return 'P'+String(p||'').slice(-6); }
-
-function toggleSec(bodyId, toggleId){
-  const el = document.getElementById(bodyId);
-  const icon = document.getElementById(toggleId);
-  if(!el) return;
-  const collapsed = el.classList.toggle('sec-collapsed');
-  if(icon) icon.textContent = collapsed ? '▼' : '▲';
-}
-
-// ── CLOCK ────────────────────────────────────────────────
-function startClock(){
-  function tick(){
-    const now = new Date();
-    document.getElementById('clk').textContent = now.toTimeString().split(' ')[0];
-    const opts = {weekday:'short',month:'short',day:'numeric'};
-    document.getElementById('clkd').textContent = now.toLocaleDateString('en-US',opts).toUpperCase();
-    // Countdown: WinGo 1-min periods
-    const sec = now.getSeconds();
-    const remaining = 60 - sec;
-    document.getElementById('cdTime').textContent = remaining+'s';
-    document.getElementById('cdFill').style.width = ((remaining/60)*100)+'%';
-  }
-  tick();
-  clockInterval = setInterval(tick, 1000);
-}
-
-// ── SETTINGS ─────────────────────────────────────────────
-async function loadSettings(){
-  try {
-    const [globalSnap, paySnap] = await Promise.all([
-      db.collection('settings').doc('global').get(),
-      db.collection('settings').doc('payment').get()
-    ]);
-    const g = globalSnap.exists ? globalSnap.data() : {};
-    const p = paySnap.exists ? paySnap.data() : {};
-    settingsCache = {...g, payment: p};
-
-    if(g.maintenanceMode){
-      document.getElementById('maintMsg').textContent = g.maintenanceMessage || 'System under maintenance.';
-      showOverlay('ovMaintenance');
-      return false;
-    }
-    // Payment UI
-    if(p.qrImageUrl){
-      ['premQr','keyQr'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(el){ el.src = p.qrImageUrl; el.classList.remove('hidden'); }
-      });
-    }
-    if(p.paymentText){
-      const pt = document.getElementById('premTxt');
-      const kp = document.getElementById('keyPayTxt');
-      if(pt) pt.textContent = p.paymentText;
-      if(kp) kp.textContent = p.paymentText;
-    }
-    if(g.premiumLockMode){
-      showOverlay('ovPremium');
-    } else {
-      showOverlay('ovKey');
-    }
-    return true;
-  } catch(e){
-    console.error('Settings load error:', e);
-    showOverlay('ovKey');
-    return true;
-  }
-}
-
-function showOverlay(id){
-  ['ovMaintenance','ovPremium','ovKey','ovKicked'].forEach(ov=>{
-    document.getElementById(ov).classList.toggle('hidden', ov !== id);
-  });
-}
-function hideAllOverlays(){
-  ['ovMaintenance','ovPremium','ovKey','ovKicked'].forEach(ov=>{
-    document.getElementById(ov).classList.add('hidden');
-  });
-}
-
-// ── SESSION MANAGEMENT (Firebase-based) ──────────────────
-// Session stored in Firebase sessions/{KEY} collection
-// On page load: check if session exists and key still valid
-
-async function checkExistingSession(){
-  // Try to find an active session — we store the key in sessionStorage only temporarily
-  // but the source of truth is always Firebase
-  const cachedKey = sessionStorage.getItem('aw_session_key');
-  if(!cachedKey) return false;
-  // Revalidate against Worker (not just Firebase)
-  try {
-    const resp = await fetch(`${WORKER}/validate-key`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({key: cachedKey})
-    });
-    const data = await resp.json();
-    if(data.ok){
-      userKey = cachedKey;
-      keyData = data.data || {};
-      onKeyVerified(data, true);
-      return true;
-    } else {
-      sessionStorage.removeItem('aw_session_key');
-      return false;
-    }
-  } catch(e){
-    console.error('Session revalidate error:', e);
-    return false;
-  }
-}
-
-// ── KEY VERIFICATION ─────────────────────────────────────
-async function verifyKey(k){
-  k = (k||'').trim().toUpperCase();
-  if(!k){ setKeyErr('Enter your access key'); return; }
-  setKeyErr('');
-  setBtnLoading(true);
-  try {
-    const resp = await fetch(`${WORKER}/validate-key`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({key: k})
-    });
-    const data = await resp.json();
-    if(data.ok){
-      userKey = k;
-      keyData = data.data || {};
-      // Store key in sessionStorage (temporary, tab-only)
-      // Real session stored in Firebase by heartbeat
-      sessionStorage.setItem('aw_session_key', k);
-      onKeyVerified(data, false);
-    } else {
-      setKeyErr(data.error || 'Invalid key');
-    }
-  } catch(e){
-    setKeyErr('Connection error — try again');
-  }
-  setBtnLoading(false);
-}
-
-function setKeyErr(msg){
-  ['keyErr','premErr'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.textContent = msg;
-  });
-}
-function setBtnLoading(v){
-  const btn = document.getElementById('keyVerifyBtn');
-  if(btn) btn.textContent = v ? '⏳ VERIFYING...' : '🔓 VERIFY KEY';
-}
-
-function onKeyVerified(resp, isRestore){
-  hideAllOverlays();
-  document.getElementById('app').classList.remove('hidden');
-  document.getElementById('chatBtn').classList.remove('hidden');
-  document.getElementById('adminChatBtn').classList.remove('hidden');
-
-  // Key bar
-  document.getElementById('keyLabel').textContent = keyData.label || userKey.slice(0,8);
-  document.getElementById('keyTier').textContent = (keyData.tier || 'BASIC').toUpperCase();
-  updateAIRemaining(resp.remaining, resp.max);
-
-  if(keyData.expiresAt && !keyData.lifetime){
-    const exp = keyData.expiresAt.toDate ? keyData.expiresAt.toDate() : new Date(keyData.expiresAt);
-    document.getElementById('keyExp').textContent = 'EXP: '+exp.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  } else if(keyData.lifetime){
-    document.getElementById('keyExp').textContent = 'EXP: LIFETIME ♾️';
-  }
-
-  // Unlock sections
-  document.getElementById('predLock').classList.add('hidden');
-  document.getElementById('predContent').classList.remove('hidden');
-  document.getElementById('histLock').classList.add('hidden');
-  document.getElementById('histContent').classList.remove('hidden');
-  document.getElementById('statsLock').classList.add('hidden');
-  document.getElementById('statsContent').classList.remove('hidden');
-
-  if(!isRestore) toast('✅ Access granted: '+userKey.slice(0,8));
-
-  startClock();
-  startHeartbeat();
-  watchSession();
-  loadFeed();
-  loadPrediction();
-  loadHistory();
-  startAutoRefresh();
-  initAdminChat();
-}
-
-function updateAIRemaining(rem, max){
-  aiRemaining = rem || 0;
-  document.getElementById('aiRemaining').textContent = `${rem||0}/${max||5}`;
-}
-
-// ── HEARTBEAT — keeps session alive in Firebase ──────────
-function startHeartbeat(){
-  async function beat(){
-    if(!userKey) return;
-    try {
-      await fetch(`${WORKER}/heartbeat`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({key: userKey})
-      });
-    } catch(e){ console.warn('Heartbeat failed:', e); }
-  }
-  beat();
-  heartbeatInterval = setInterval(beat, 30000);
-}
-
-// ── WATCH SESSION — detect kicked/blocked from Firebase ──
-function watchSession(){
-  if(!userKey) return;
-  if(keyUnsub) keyUnsub();
-  // Watch the key document for kicked/blocked status
-  keyUnsub = db.collection('keys')
-    .where('key','==', userKey)
-    .onSnapshot(snap=>{
-      if(snap.empty) return;
-      const d = snap.docs[0].data();
-      if(d.kicked === true){
-        clearIntervals();
-        sessionStorage.removeItem('aw_session_key');
-        document.getElementById('kickedMsg').textContent = d.kickReason || 'Your access key has been revoked by the administrator.';
-        showOverlay('ovKicked');
-      }
-      if(d.status === 'blocked'){
-        clearIntervals();
-        sessionStorage.removeItem('aw_session_key');
-        document.getElementById('kickedMsg').textContent = 'Key blocked by administrator.';
-        showOverlay('ovKicked');
-      }
-    }, err=> console.warn('Session watch error:', err));
-}
-
-function clearIntervals(){
-  if(heartbeatInterval) clearInterval(heartbeatInterval);
-  if(autoRefreshInterval) clearInterval(autoRefreshInterval);
-  if(clockInterval) clearInterval(clockInterval);
-  if(keyUnsub) keyUnsub();
-  if(adminChatUnsub) adminChatUnsub();
-  if(sessionUnsub) sessionUnsub();
-}
-
-function logout(){
-  clearIntervals();
-  sessionStorage.removeItem('aw_session_key');
-  userKey = null; keyData = null;
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('chatBtn').classList.add('hidden');
-  document.getElementById('adminChatBtn').classList.add('hidden');
-  // Reset sections
-  document.getElementById('predLock').classList.remove('hidden');
-  document.getElementById('predContent').classList.add('hidden');
-  document.getElementById('histLock').classList.remove('hidden');
-  document.getElementById('histContent').classList.add('hidden');
-  document.getElementById('statsLock').classList.remove('hidden');
-  document.getElementById('statsContent').classList.add('hidden');
-  loadSettings();
-  toast('Logged out');
-}
-
-// ── LIVE FEED ─────────────────────────────────────────────
-// Strategy:
-// 1. Every 2sec: fetch WinGo API (last 10 results directly)
-// 2. On page load: also fetch Firebase/Worker results (up to 100)
-// 3. Merge both by period — no duplicates, max 100 shown
-// 4. New period detected → reset countdown to 60s
-
-function colorOf(n){
-  if(n===0||n===5) return 'violet';
-  if([1,3,7,9].includes(n)) return 'green';
-  return 'red';
-}
-function colorCss(c){
-  if(c==='green') return '#00ff41';
-  if(c==='violet') return '#bf7fff';
-  return '#ff0040';
-}
-function fmtPeriod(p){ return 'P'+String(p||'').slice(-6); }
+function colorOf(n){ if(n===0||n===5)return'violet'; if([1,3,7,9].includes(n))return'green'; return'red'; }
+function colorCss(c){ if(c==='green')return'#00ff41'; if(c==='violet')return'#bf7fff'; return'#ff0040'; }
 function sizeOf(n){ return n>=5?'BIG':'SMALL'; }
-
-function normalizeResult(item){
-  const num = parseInt(item.openNum ?? item.number ?? item.num ?? 99);
-  const period = parseInt(item.issue ?? item.issueNumber ?? item.period ?? item.id ?? 0);
-  const periodStr = String(item.issueNumber ?? item.periodStr ?? item.period ?? item.issue ?? period);
-  let col = String(item.colour ?? item.color ?? '').toLowerCase();
-  if(!col) col = colorOf(num);
-  let bs = String(item.bigSmall ?? item.BigSmall ?? '').toUpperCase();
-  if(!bs) bs = sizeOf(num);
-  return { period, periodStr, number: num, colour: col, bigSmall: bs };
-}
-
-// Fetch directly from WinGo API (last 10)
-async function fetchWinGoAPI(){
-  const urls = [
-    `https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts=${Date.now()}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts='+Date.now())}`
-  ];
-  for(const url of urls){
-    try {
-      const resp = await fetch(url, {
-        headers: {
-          'User-Agent':'Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 Chrome/112.0 Mobile Safari/537.36',
-          'Accept':'application/json,*/*',
-          'Referer':'https://draw.ar-lottery01.com/',
-          'Origin':'https://draw.ar-lottery01.com'
-        }
-      });
-      if(!resp.ok) continue;
-      const text = await resp.text();
-      if(text.trim().startsWith('<')) continue;
-      const json = JSON.parse(text);
-      let list = [];
-      if(json.data?.list) list = json.data.list;
-      else if(json.data && Array.isArray(json.data)) list = json.data;
-      else if(Array.isArray(json)) list = json;
-      else if(json.list) list = json.list;
-      else {
-        for(const k of Object.keys(json||{})){
-          if(Array.isArray(json[k])&&json[k].length){list=json[k];break;}
-          if(json[k]&&typeof json[k]==='object'){
-            for(const k2 of Object.keys(json[k]||{})){
-              if(Array.isArray(json[k][k2])&&json[k][k2].length){list=json[k][k2];break;}
-            }
-            if(list.length) break;
-          }
-        }
-      }
-      if(!list.length) continue;
-      return list
-        .map(normalizeResult)
-        .filter(x=>!isNaN(x.number)&&x.number>=0&&x.number<=9&&x.period>0);
-    } catch(e){ continue; }
-  }
-  return null;
-}
-
-// Fetch Firebase/Worker results (bulk, up to 100)
-async function fetchWorkerResults(){
-  try {
-    const resp = await fetch(`${WORKER}/results?limit=100`);
-    if(!resp.ok) return [];
-    const data = await resp.json();
-    return (data.results||[]).map(normalizeResult).filter(x=>x.period>0);
-  } catch(e){ return []; }
-}
-
-// Merge results into mergedFeedMap, return sorted array
-function mergeIntoFeed(newItems){
-  let changed = false;
-  for(const item of newItems){
-    const key = String(item.period);
-    if(!mergedFeedMap[key]){
-      mergedFeedMap[key] = item;
-      changed = true;
-    }
-  }
-  return changed;
-}
-
-function getSortedFeed(){
-  return Object.values(mergedFeedMap)
-    .sort((a,b)=>b.period - a.period)
-    .slice(0,100);
-}
-
-// Main poll — runs every 2sec
-async function pollWinGo(){
-  if(feedPaused) return;
-  const apiResults = await fetchWinGoAPI();
-  if(!apiResults || !apiResults.length) return;
-
-  const changed = mergeIntoFeed(apiResults);
-  const sorted = getSortedFeed();
-  const topPeriod = sorted.length ? String(sorted[0].period) : null;
-
-  // Detect new period → reset countdown
-  if(topPeriod && topPeriod !== lastSeenPeriod){
-    lastSeenPeriod = topPeriod;
-    countdownSec = 60;
-    // New period → reload prediction too
-    if(userKey) loadPrediction();
-    // Also reload history occasionally
-    if(userKey && Math.random()<0.3) loadHistory();
-  }
-
-  document.getElementById('fbSync').textContent = new Date().toTimeString().split(' ')[0];
-  document.getElementById('fbCount').textContent = sorted.length;
-
-  if(sorted.length){
-    document.getElementById('cdPeriod').textContent = 'PRD: '+fmtPeriod(sorted[0].period);
-    document.getElementById('predPeriodBadge').textContent = fmtPeriod(parseInt(sorted[0].period)+1);
-  }
-
-  if(changed) renderFeed(sorted);
-  updateFeedPreview(sorted.slice(0,8));
-  document.getElementById('feedCount').textContent = sorted.length;
-}
-
-function renderFeed(results){
-  const box = document.getElementById('feedBox');
-  if(!results.length){
-    box.innerHTML = '<div class="empty">No results yet. Waiting for data...</div>';
-    return;
-  }
-  box.innerHTML = results.map((r,idx)=>{
-    const num = r.number ?? 0;
-    const col = String(r.colour||colorOf(num)).toLowerCase();
-    const bs = String(r.bigSmall||sizeOf(num)).toUpperCase();
-    const prd = r.periodStr || r.period || '';
-    const colClass = col.includes('violet')?'violet':col.includes('green')?'green':'red';
-    const bsBadge = bs==='BIG'?'badge-big':'badge-small';
-    const isNewClass = idx===0?' feed-new':'';
-    return `<div class="feed-row${isNewClass}">
-      <span class="feed-idx">${idx+1}</span>
-      <span class="feed-prd">${fmtPeriod(prd)}</span>
-      <span class="feed-num ${colClass}">${num}</span>
-      <span class="feed-badge badge-${colClass}">${col.toUpperCase()}</span>
-      <span class="feed-badge ${bsBadge}">${bs}</span>
-    </div>`;
-  }).join('');
-}
-
-function updateFeedPreview(results){
-  const preview = document.getElementById('keyFeedPreview');
-  if(!preview) return;
-  if(!results.length){ preview.innerHTML = '<div class="empty">No data yet</div>'; return; }
-  preview.innerHTML = results.map((r,idx)=>{
-    const num = r.number??0;
-    const col = String(r.colour||colorOf(num)).toLowerCase();
-    const colClass = col.includes('violet')?'violet':col.includes('green')?'green':'red';
-    return `<div class="feed-row">
-      <span class="feed-idx" style="font-size:7px;">${idx+1}</span>
-      <span class="feed-num ${colClass}" style="font-size:13px;">${num}</span>
-      <span class="feed-badge badge-${colClass}" style="font-size:6px;">${col.toUpperCase()}</span>
-    </div>`;
-  }).join('');
-}
-
-// Initial load: get Firebase results first (bulk history), then start API polling
-async function initFeed(){
-  document.getElementById('feedBox').innerHTML = '<div class="empty">⏳ Loading...</div>';
-  // Load bulk from Worker (Firebase-stored results)
-  const workerResults = await fetchWorkerResults();
-  if(workerResults.length){
-    mergeIntoFeed(workerResults);
-    const sorted = getSortedFeed();
-    renderFeed(sorted);
-    updateFeedPreview(sorted.slice(0,8));
-    document.getElementById('feedCount').textContent = sorted.length;
-    document.getElementById('fbCount').textContent = sorted.length;
-    if(sorted.length){
-      lastSeenPeriod = String(sorted[0].period);
-      document.getElementById('cdPeriod').textContent = 'PRD: '+fmtPeriod(sorted[0].period);
-      document.getElementById('predPeriodBadge').textContent = fmtPeriod(parseInt(sorted[0].period)+1);
-    }
-  }
-  // Now start live API polling every 2sec
-  if(apiPollInterval) clearInterval(apiPollInterval);
-  apiPollInterval = setInterval(pollWinGo, 2000);
-  // First poll immediately
-  pollWinGo();
-}
-
-// Also init feed preview on login page (no key needed)
-async function initLoginFeedPreview(){
-  const workerResults = await fetchWorkerResults();
-  if(workerResults.length) updateFeedPreview(workerResults.slice(0,8));
-  // Also poll API for preview
-  const apiRes = await fetchWinGoAPI();
-  if(apiRes&&apiRes.length) updateFeedPreview(apiRes.slice(0,8));
-}
-
-function togglePause(){
-  feedPaused = !feedPaused;
-  const btn = document.getElementById('pauseBtn');
-  btn.textContent = feedPaused ? '▶ RESUME' : '⏸ PAUSE';
-  btn.className = feedPaused ? 'btn btn-sm btn-y' : 'btn btn-sm btn-r';
-}
-
-// ── COUNTDOWN — resets when new period detected ───────────
-function startCountdown(){
-  if(countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(()=>{
-    if(countdownSec > 0) countdownSec--;
-    document.getElementById('cdTime').textContent = countdownSec+'s';
-    const pct = (countdownSec/60)*100;
-    document.getElementById('cdFill').style.width = pct+'%';
-  }, 1000);
-}
-
-// ── PREDICTION — from Firebase directly ──────────────────
-async function loadPrediction(){
-  if(!userKey) return;
-  try {
-    const tier = keyData?.tier || 'basic';
-    let metaDocId = 'latestPrediction'; // premium/high
-    if(tier === 'vip') metaDocId = 'latestPrediction_vip';
-    else if(tier === 'basic') metaDocId = 'latestPrediction_normal';
-
-    const snap = await db.collection('meta').doc(metaDocId).get();
-    if(!snap.exists){
-      document.getElementById('predNumDisplay').innerHTML = '<div class="empty">No prediction yet — waiting for data...</div>';
-      return;
-    }
-    renderPrediction(snap.data());
-  } catch(e){
-    console.error('Prediction error:', e);
-  }
-}
-
-function renderPrediction(pred){
-  if(!pred) return;
-  const num = pred.predictedNum ?? pred.number ?? '?';
-  const col = String(pred.predictedColor ?? pred.colour ?? 'green').toLowerCase();
-  const bs = String(pred.predictedBS ?? pred.bigSmall ?? 'BIG').toUpperCase();
-  const numConf = pred.numConf ?? pred.numberConfidence ?? 0;
-  const colConf = pred.colorConf ?? 0;
-  const bsConf = pred.bsConf ?? 0;
-  const colClass = col.includes('violet')?'violet':col.includes('green')?'green':'red';
-
-  document.getElementById('predBigNum').textContent = num;
-  document.getElementById('predBigNum').style.color = colorCss(colClass);
-
-  const colBadge = document.getElementById('predColBadge');
-  colBadge.textContent = col.toUpperCase();
-  colBadge.style.borderColor = colorCss(colClass);
-  colBadge.style.color = colorCss(colClass);
-
-  const bsBadge = document.getElementById('predBsBadge');
-  bsBadge.textContent = bs;
-  bsBadge.style.borderColor = bs==='BIG'?'#00ffea':'#ffe000';
-  bsBadge.style.color = bs==='BIG'?'#00ffea':'#ffe000';
-
-  document.getElementById('confNumPct').textContent = numConf+'%';
-  document.getElementById('confNumBar').style.width = numConf+'%';
-  document.getElementById('confColPct').textContent = colConf+'%';
-  document.getElementById('confColBar').style.width = colConf+'%';
-  document.getElementById('confBsPct').textContent = bsConf+'%';
-  document.getElementById('confBsBar').style.width = bsConf+'%';
-
-  const alts = pred.alternatives||[];
-  if(alts.length){
-    document.getElementById('altsRow').innerHTML = alts.slice(0,4).map(a=>{
-      const ac = String(a.colour||colorOf(a.number)).toLowerCase();
-      const acClass = ac.includes('violet')?'violet':ac.includes('green')?'green':'red';
-      return `<div class="alt-item">
-        <div class="alt-num" style="color:${colorCss(acClass)}">${a.number}</div>
-        <div class="alt-prob">${a.probability||0}%</div>
-      </div>`;
-    }).join('');
-  }
-
-  if(pred.reasoning){
-    document.getElementById('reasoningText').textContent = pred.reasoning;
-    document.getElementById('reasoningBox').classList.remove('hidden');
-  }
-
-  const hot = (pred.hot||pred.hotNumbers||[]).join(',') || '--';
-  const cold = (pred.cold||pred.coldNumbers||[]).join(',') || '--';
-  const streak = pred.streakInfo||pred.streak||'--';
-  const colorRun = pred.colorRun||'--';
-  const bsRatio = pred.bsRatio||'--';
-  document.getElementById('analysisChips').innerHTML = `
-    <span class="ana-chip hot">🔥 HOT: ${hot}</span>
-    <span class="ana-chip cold">❄️ COLD: ${cold}</span>
-    <span class="ana-chip streak">⚡ STREAK: ${streak}</span>
-    <span class="ana-chip colrun">🎨 COLOR RUN: ${colorRun}</span>
-    <span class="ana-chip neutral">📊 B/S: ${bsRatio}</span>
-  `;
-  document.getElementById('predPeriodBadge').textContent = fmtPeriod(pred.period||'');
-}
-
-// ── HISTORY ───────────────────────────────────────────────
-async function loadHistory(){
-  if(!userKey) return;
-  try {
-    let snap;
-    try {
-      snap = await db.collection('predictions')
-        .where('resolved','==',true)
-        .orderBy('period','desc')
-        .limit(50).get();
-    } catch(e){
-      snap = await db.collection('predictions')
-        .where('resolved','==',true)
-        .limit(50).get();
-    }
-    predHistory = snap.docs.map(d=>d.data())
-      .sort((a,b)=>String(b.period).localeCompare(String(a.period)));
-    renderHistory();
-    updateStats();
-  } catch(e){ console.error('History error:',e); }
-}
-
-function renderHistory(){
-  const tbody = document.getElementById('histTbody');
-  const count = document.getElementById('histCount');
-  if(!predHistory.length){
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">No resolved predictions yet</td></tr>';
-    count.textContent = '0'; return;
-  }
-  count.textContent = predHistory.length;
-  tbody.innerHTML = predHistory.map(p=>{
-    const winNum = p.winNum===true;
-    const winCol = p.winColor===true;
-    const winBS  = p.winBS===true;
-    const anyWin = p.anyWin===true;
-    const rowClass = p.resolved?(anyWin?'win-row':'loss-row'):'';
-    const mk = (v) => v?'<span class="win-badge">✓</span>':'<span class="loss-badge">✗</span>';
-    const pend = '<span class="pend-badge">⏳</span>';
-    return `<tr class="${rowClass}">
-      <td>${fmtPeriod(p.period||p.forPeriod||'')}</td>
-      <td>${p.predictedNum??p.number??'?'}</td>
-      <td>${String(p.predictedColor??p.colour??'').toUpperCase()}</td>
-      <td>${String(p.predictedBS??p.bigSmall??'').toUpperCase()}</td>
-      <td>${p.resolved?(p.actualNum??'?'):'-'}</td>
-      <td>${p.resolved?String(p.actualColor??'').toUpperCase():'-'}</td>
-      <td>${p.resolved?mk(winNum):pend}</td>
-      <td>${p.resolved?mk(winCol):pend}</td>
-      <td>${p.resolved?mk(winBS):pend}</td>
-    </tr>`;
-  }).join('');
-}
-
-function updateStats(){
-  const resolved = predHistory.filter(p=>p.resolved===true);
-  const total = resolved.length;
-  const wins    = resolved.filter(p=>p.winNum===true).length;
-  const colWins = resolved.filter(p=>p.winColor===true).length;
-  const bsWins  = resolved.filter(p=>p.winBS===true).length;
-  const anyWins = resolved.filter(p=>p.anyWin===true).length;
-  const pending = predHistory.filter(p=>!p.resolved).length;
-  let streak = 0;
-  for(const p of resolved){ if(p.anyWin===true) streak++; else break; }
-  const pct    = total?Math.round((anyWins/total)*100):0;
-  const numPct = total?Math.round((wins/total)*100):0;
-  const colPct = total?Math.round((colWins/total)*100):0;
-  const bsPct  = total?Math.round((bsWins/total)*100):0;
-  document.getElementById('stTotal').textContent   = total;
-  document.getElementById('stWins').textContent    = anyWins;
-  document.getElementById('stLoss').textContent    = total-anyWins;
-  document.getElementById('stPct').textContent     = pct+'%';
-  document.getElementById('stPend').textContent    = pending;
-  document.getElementById('stColAcc').textContent  = colPct+'%';
-  document.getElementById('stNumAcc').textContent  = numPct+'%';
-  document.getElementById('stBsAcc').textContent   = bsPct+'%';
-  document.getElementById('stStreak').textContent  = streak;
-  document.getElementById('confNumDetail').textContent = `${wins}/${total} correct`;
-  document.getElementById('confColDetail').textContent = `${colWins}/${total} correct`;
-  document.getElementById('confBsDetail').textContent  = `${bsWins}/${total} correct`;
-}
-
-// ── AI CHAT ───────────────────────────────────────────────
-async function sendAIMsg(){
-  const input = document.getElementById('aiInput');
-  const msg = (input.value||'').trim();
-  if(!msg) return;
-  if(aiRemaining<=0){ addChatMsg('aiMsgs','❌ Daily question limit reached. Contact admin to increase.','ai'); return; }
-  input.value = '';
-  addChatMsg('aiMsgs',msg,'user');
-  aiChatHistory.push({role:'user',content:msg});
-  document.getElementById('aiTyping').classList.remove('hidden');
-  scrollChat('aiMsgs');
-  try {
-    const resp = await fetch(`${WORKER}/ai-chat`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:userKey,message:msg,history:aiChatHistory.slice(-8)})
-    });
-    const data = await resp.json();
-    document.getElementById('aiTyping').classList.add('hidden');
-    if(data.ok){
-      addChatMsg('aiMsgs',data.reply,'ai');
-      aiChatHistory.push({role:'assistant',content:data.reply});
-      updateAIRemaining(data.remaining,data.max);
-    } else { addChatMsg('aiMsgs','❌ '+(data.error||'Error'),'ai'); }
-  } catch(e){
-    document.getElementById('aiTyping').classList.add('hidden');
-    addChatMsg('aiMsgs','❌ Connection error','ai');
-  }
-}
-
-// ── ADMIN CHAT ────────────────────────────────────────────
-function initAdminChat(){
-  if(!userKey) return;
-  adminChatId = userKey.toUpperCase();
-  if(adminChatUnsub) adminChatUnsub();
-  adminChatUnsub = db.collection('adminChat').doc(adminChatId)
-    .onSnapshot(snap=>{
-      if(!snap.exists) return;
-      renderAdminChat(snap.data().messages||[]);
-    }, err=>console.warn('Admin chat error:',err));
-}
-
-function renderAdminChat(msgs){
-  const container = document.getElementById('adminMsgs');
-  const panel = document.getElementById('adminChatPanel');
-  if(!panel.classList.contains('open') && msgs.filter(m=>m.role==='admin').length)
-    document.getElementById('adminNotifDot').style.display = 'block';
-  container.innerHTML = `<div class="chat-msg ai" style="border-color:#006060;">
-    <div>Support chat connected.</div><div class="chat-msg-time">SYSTEM</div></div>`;
-  msgs.forEach(m=>{
-    const cls = m.role==='admin'?'admin-msg':'user';
-    const timeStr = m.timestamp?new Date(m.timestamp).toTimeString().split(' ')[0]:'';
-    const div = document.createElement('div');
-    div.className = 'chat-msg '+cls;
-    div.innerHTML = `<div>${escapeHtml(m.content)}</div><div class="chat-msg-time">${m.role==='admin'?'ADMIN':m.senderName||'YOU'} ${timeStr}</div>`;
-    container.appendChild(div);
-  });
-  scrollChat('adminMsgs');
-}
-
-async function sendAdminMsg(){
-  const input = document.getElementById('adminInput');
-  const msg = (input.value||'').trim();
-  if(!msg||!userKey) return;
-  input.value = '';
-  try {
-    await fetch(`${WORKER}/save-chat`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:userKey,role:'user',content:msg,chatId:adminChatId,senderName:keyData?.label||userKey.slice(0,8)})
-    });
-  } catch(e){ toast('Send failed','err'); }
-}
-
-function addChatMsg(id,text,role){
-  const c = document.getElementById(id);
-  const div = document.createElement('div');
-  div.className = 'chat-msg '+role;
-  div.innerHTML = `<div>${escapeHtml(text)}</div><div class="chat-msg-time">${role==='user'?'YOU':'AI'} ${new Date().toTimeString().split(' ')[0]}</div>`;
-  c.appendChild(div);
-  scrollChat(id);
-}
-
-function scrollChat(id){ const el=document.getElementById(id); if(el) el.scrollTop=el.scrollHeight; }
+function fmtPeriod(p){ return 'P'+String(p||'').slice(-6); }
 function escapeHtml(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function toggleChat(type){
-  const ai = document.getElementById('aiChatPanel');
-  const adm = document.getElementById('adminChatPanel');
-  if(type==='ai'){
-    ai.classList.toggle('open'); adm.classList.remove('open');
-    if(ai.classList.contains('open')) scrollChat('aiMsgs');
-  } else {
-    adm.classList.toggle('open'); ai.classList.remove('open');
-    if(adm.classList.contains('open')){
-      document.getElementById('adminNotifDot').style.display='none';
-      scrollChat('adminMsgs');
-    }
-  }
-}
-
-// ── LOGIN CHAT ────────────────────────────────────────────
-function toggleLoginChat(){
-  const body = document.getElementById('loginChatBody');
-  const icon = document.getElementById('loginChatToggleIcon');
-  const isOpen = body.style.display !== 'none';
-  body.style.display = isOpen?'none':'block';
-  icon.textContent = isOpen?'▼':'▲';
-  if(!isOpen&&!loginChatName) document.getElementById('loginChatNameRow').style.display='flex';
-}
-
-function setLoginChatName(){
-  const n = (document.getElementById('loginChatName').value||'').trim();
-  if(!n) return;
-  loginChatName = n;
-  document.getElementById('loginChatNameRow').style.display='none';
-  toast('Name set: '+n);
-  startLoginChatListen();
-}
-
-function startLoginChatListen(){
-  if(!loginChatName) return;
-  const guestId = 'GUEST_'+loginChatName.toUpperCase().replace(/\s/g,'_');
-  if(loginChatUnsub) loginChatUnsub();
-  loginChatUnsub = db.collection('adminChat').doc(guestId).onSnapshot(snap=>{
-    if(!snap.exists) return;
-    const msgs = snap.data().messages||[];
-    const container = document.getElementById('loginChatMsgs');
-    container.innerHTML='';
-    msgs.forEach(m=>{
-      const div=document.createElement('div');
-      div.className='chat-msg '+(m.role==='admin'?'admin-msg':'user');
-      div.style.maxWidth='100%';
-      div.innerHTML=`<div style="font-size:9px;">${escapeHtml(m.content)}</div>`;
-      container.appendChild(div);
-    });
-    container.scrollTop=container.scrollHeight;
-    if(msgs.filter(m=>m.role==='admin').length)
-      document.getElementById('loginChatNotifDot').style.display='block';
-  },()=>{});
-}
-
-async function sendLoginChatMsg(){
-  const input = document.getElementById('loginChatInput');
-  const msg = (input.value||'').trim();
-  if(!msg) return;
-  if(!loginChatName){ toast('Set your name first','warn'); return; }
-  input.value='';
-  const guestId='GUEST_'+loginChatName.toUpperCase().replace(/\s/g,'_');
-  try {
-    await fetch(`${WORKER}/save-chat`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:guestId,role:'user',content:msg,chatId:guestId,senderName:loginChatName,isGuest:true})
-    });
-  } catch(e){ toast('Send failed','err'); }
+function scrollChat(id){ const el=document.getElementById(id); if(el)el.scrollTop=el.scrollHeight; }
+function toggleSec(bodyId,toggleId){
+  const el=document.getElementById(bodyId), icon=document.getElementById(toggleId);
+  if(!el)return; const c=el.classList.toggle('sec-collapsed'); if(icon)icon.textContent=c?'▼':'▲';
 }
 
 // ── CLOCK ────────────────────────────────────────────────
@@ -1504,166 +668,385 @@ function startClock(){
   function tick(){
     const now=new Date();
     document.getElementById('clk').textContent=now.toTimeString().split(' ')[0];
-    const opts={weekday:'short',month:'short',day:'numeric'};
-    document.getElementById('clkd').textContent=now.toLocaleDateString('en-US',opts).toUpperCase();
+    document.getElementById('clkd').textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
   }
-  tick();
-  if(clockInterval) clearInterval(clockInterval);
-  clockInterval=setInterval(tick,1000);
+  tick(); if(clockInterval)clearInterval(clockInterval); clockInterval=setInterval(tick,1000);
 }
 
-function toggleSec(bodyId,toggleId){
-  const el=document.getElementById(bodyId);
-  const icon=document.getElementById(toggleId);
-  if(!el) return;
-  const collapsed=el.classList.toggle('sec-collapsed');
-  if(icon) icon.textContent=collapsed?'▼':'▲';
+// ── COUNTDOWN — resets on new period ─────────────────────
+function startCountdown(){
+  if(countdownInterval)clearInterval(countdownInterval);
+  countdownInterval=setInterval(()=>{
+    if(countdownSec>0)countdownSec--;
+    document.getElementById('cdTime').textContent=countdownSec+'s';
+    document.getElementById('cdFill').style.width=((countdownSec/60)*100)+'%';
+  },1000);
+}
+
+// ── WINGO API FETCH (direct) ──────────────────────────────
+function normalizeResult(item){
+  const num=parseInt(item.openNum??item.number??item.num??99);
+  const period=parseInt(item.issue??item.issueNumber??item.period??item.id??0);
+  const periodStr=String(item.issueNumber??item.periodStr??item.period??item.issue??period);
+  let col=String(item.colour??item.color??'').toLowerCase(); if(!col)col=colorOf(num);
+  let bs=String(item.bigSmall??item.BigSmall??'').toUpperCase(); if(!bs)bs=sizeOf(num);
+  return {period,periodStr,number:num,colour:col,bigSmall:bs};
+}
+
+async function fetchWinGoAPI(){
+  const urls=[
+    `https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts=${Date.now()}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts='+Date.now())}`
+  ];
+  for(const url of urls){
+    try{
+      const resp=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0 (Linux; Android 12) Chrome/112.0','Accept':'application/json,*/*','Referer':'https://draw.ar-lottery01.com/','Origin':'https://draw.ar-lottery01.com'}});
+      if(!resp.ok)continue;
+      const text=await resp.text(); if(text.trim().startsWith('<'))continue;
+      const json=JSON.parse(text);
+      let list=[];
+      if(json.data?.list)list=json.data.list;
+      else if(json.data&&Array.isArray(json.data))list=json.data;
+      else if(Array.isArray(json))list=json;
+      else if(json.list)list=json.list;
+      else{ for(const k of Object.keys(json||{})){ if(Array.isArray(json[k])&&json[k].length){list=json[k];break;} } }
+      if(!list.length)continue;
+      return list.map(normalizeResult).filter(x=>!isNaN(x.number)&&x.number>=0&&x.number<=9&&x.period>0);
+    }catch(e){continue;}
+  }
+  return null;
+}
+
+async function fetchWorkerResults(){
+  try{
+    const resp=await fetch(`${WORKER}/results?limit=100`); if(!resp.ok)return[];
+    const data=await resp.json(); return (data.results||[]).map(normalizeResult).filter(x=>x.period>0);
+  }catch(e){return[];}
+}
+
+// ── MERGE + RENDER FEED ───────────────────────────────────
+function mergeIntoFeed(items){
+  let changed=false;
+  for(const item of items){ const k=String(item.period); if(!mergedFeedMap[k]){mergedFeedMap[k]=item;changed=true;} }
+  return changed;
+}
+function getSortedFeed(){ return Object.values(mergedFeedMap).sort((a,b)=>b.period-a.period).slice(0,100); }
+
+function renderFeed(results){
+  const box=document.getElementById('feedBox');
+  if(!results.length){box.innerHTML='<div class="empty">No results yet...</div>';return;}
+  box.innerHTML=results.map((r,idx)=>{
+    const num=r.number??0, col=String(r.colour||colorOf(num)).toLowerCase(), bs=String(r.bigSmall||sizeOf(num)).toUpperCase();
+    const cc=col.includes('violet')?'violet':col.includes('green')?'green':'red';
+    return `<div class="feed-row${idx===0?' feed-new':''}">
+      <span class="feed-idx">${idx+1}</span>
+      <span class="feed-prd">${fmtPeriod(r.periodStr||r.period)}</span>
+      <span class="feed-num ${cc}">${num}</span>
+      <span class="feed-badge badge-${cc}">${col.toUpperCase()}</span>
+      <span class="feed-badge ${bs==='BIG'?'badge-big':'badge-small'}">${bs}</span>
+    </div>`;
+  }).join('');
+}
+
+function updateFeedPreview(results){
+  const p=document.getElementById('keyFeedPreview'); if(!p)return;
+  if(!results.length){p.innerHTML='<div class="empty">No data yet</div>';return;}
+  p.innerHTML=results.slice(0,8).map((r,i)=>{
+    const num=r.number??0, col=String(r.colour||colorOf(num)).toLowerCase();
+    const cc=col.includes('violet')?'violet':col.includes('green')?'green':'red';
+    return `<div class="feed-row"><span class="feed-idx" style="font-size:7px">${i+1}</span><span class="feed-num ${cc}" style="font-size:13px">${num}</span><span class="feed-badge badge-${cc}" style="font-size:6px">${col.toUpperCase()}</span></div>`;
+  }).join('');
+}
+
+// ── POLL — every 2sec ─────────────────────────────────────
+async function pollWinGo(){
+  if(feedPaused)return;
+  const apiResults=await fetchWinGoAPI();
+  if(!apiResults||!apiResults.length)return;
+  const changed=mergeIntoFeed(apiResults);
+  const sorted=getSortedFeed();
+  const topPeriod=sorted.length?String(sorted[0].period):null;
+
+  // New period detected → reset countdown + reload prediction
+  if(topPeriod&&topPeriod!==lastSeenPeriod){
+    lastSeenPeriod=topPeriod; countdownSec=60;
+    if(userKey)loadPrediction();
+    if(userKey&&Math.random()<0.3)loadHistory();
+  }
+
+  document.getElementById('fbSync').textContent=new Date().toTimeString().split(' ')[0];
+  document.getElementById('fbCount').textContent=sorted.length;
+  if(sorted.length){
+    document.getElementById('cdPeriod').textContent='PRD: '+fmtPeriod(sorted[0].period);
+    document.getElementById('predPeriodBadge').textContent=fmtPeriod(parseInt(sorted[0].period)+1);
+  }
+  if(changed)renderFeed(sorted);
+  updateFeedPreview(sorted);
+  document.getElementById('feedCount').textContent=sorted.length;
+}
+
+// ── INIT FEED — bulk load first, then 2sec poll ───────────
+async function initFeed(){
+  document.getElementById('feedBox').innerHTML='<div class="empty">⏳ Loading...</div>';
+  const workerResults=await fetchWorkerResults();
+  if(workerResults.length){
+    mergeIntoFeed(workerResults);
+    const sorted=getSortedFeed();
+    renderFeed(sorted); updateFeedPreview(sorted);
+    document.getElementById('feedCount').textContent=sorted.length;
+    document.getElementById('fbCount').textContent=sorted.length;
+    if(sorted.length){ lastSeenPeriod=String(sorted[0].period); document.getElementById('cdPeriod').textContent='PRD: '+fmtPeriod(sorted[0].period); document.getElementById('predPeriodBadge').textContent=fmtPeriod(parseInt(sorted[0].period)+1); }
+  }
+  if(apiPollInterval)clearInterval(apiPollInterval);
+  apiPollInterval=setInterval(pollWinGo,2000);
+  pollWinGo(); // immediate first poll
+}
+
+function togglePause(){
+  feedPaused=!feedPaused;
+  const btn=document.getElementById('pauseBtn');
+  btn.textContent=feedPaused?'▶ RESUME':'⏸ PAUSE';
+  btn.className=feedPaused?'btn btn-sm btn-y':'btn btn-sm btn-r';
+}
+
+// ── PREDICTION ────────────────────────────────────────────
+async function loadPrediction(){
+  if(!userKey)return;
+  try{
+    const tier=keyData?.tier||'basic';
+    const metaDocId=tier==='vip'?'latestPrediction_vip':tier==='basic'?'latestPrediction_normal':'latestPrediction';
+    const snap=await db.collection('meta').doc(metaDocId).get();
+    if(!snap.exists){document.getElementById('predNumDisplay').innerHTML='<div class="empty">No prediction yet — need more data</div>';return;}
+    renderPrediction(snap.data());
+  }catch(e){console.error('Prediction error:',e);}
+}
+
+function renderPrediction(pred){
+  if(!pred)return;
+  const num=pred.predictedNum??pred.number??'?';
+  const col=String(pred.predictedColor??pred.colour??'green').toLowerCase();
+  const bs=String(pred.predictedBS??pred.bigSmall??'BIG').toUpperCase();
+  const numConf=pred.numConf??pred.numberConfidence??0;
+  const colConf=pred.colorConf??0, bsConf=pred.bsConf??0;
+  const cc=col.includes('violet')?'violet':col.includes('green')?'green':'red';
+  document.getElementById('predBigNum').textContent=num;
+  document.getElementById('predBigNum').style.color=colorCss(cc);
+  const cb=document.getElementById('predColBadge'); cb.textContent=col.toUpperCase(); cb.style.borderColor=cb.style.color=colorCss(cc);
+  const bb=document.getElementById('predBsBadge'); bb.textContent=bs; bb.style.borderColor=bb.style.color=bs==='BIG'?'#00ffea':'#ffe000';
+  document.getElementById('confNumPct').textContent=numConf+'%'; document.getElementById('confNumBar').style.width=numConf+'%';
+  document.getElementById('confColPct').textContent=colConf+'%'; document.getElementById('confColBar').style.width=colConf+'%';
+  document.getElementById('confBsPct').textContent=bsConf+'%';  document.getElementById('confBsBar').style.width=bsConf+'%';
+  const alts=pred.alternatives||[];
+  if(alts.length) document.getElementById('altsRow').innerHTML=alts.slice(0,4).map(a=>{
+    const ac=String(a.colour||colorOf(a.number)).toLowerCase(), acc=ac.includes('violet')?'violet':ac.includes('green')?'green':'red';
+    return `<div class="alt-item"><div class="alt-num" style="color:${colorCss(acc)}">${a.number}</div><div class="alt-prob">${a.probability||0}%</div></div>`;
+  }).join('');
+  if(pred.reasoning){document.getElementById('reasoningText').textContent=pred.reasoning; document.getElementById('reasoningBox').classList.remove('hidden');}
+  const hot=(pred.hot||pred.hotNumbers||[]).join(',')|| '--';
+  const cold=(pred.cold||pred.coldNumbers||[]).join(',')|| '--';
+  document.getElementById('analysisChips').innerHTML=`
+    <span class="ana-chip hot">🔥 HOT: ${hot}</span>
+    <span class="ana-chip cold">❄️ COLD: ${cold}</span>
+    <span class="ana-chip streak">⚡ STREAK: ${pred.streakInfo||pred.streak||'--'}</span>
+    <span class="ana-chip colrun">🎨 COLOR RUN: ${pred.colorRun||'--'}</span>
+    <span class="ana-chip neutral">📊 B/S: ${pred.bsRatio||'--'}</span>`;
+  document.getElementById('predPeriodBadge').textContent=fmtPeriod(pred.period||'');
+}
+
+// ── HISTORY ───────────────────────────────────────────────
+async function loadHistory(){
+  if(!userKey)return;
+  try{
+    let snap;
+    try{ snap=await db.collection('predictions').where('resolved','==',true).orderBy('period','desc').limit(50).get(); }
+    catch(e){ snap=await db.collection('predictions').where('resolved','==',true).limit(50).get(); }
+    predHistory=snap.docs.map(d=>d.data()).sort((a,b)=>String(b.period).localeCompare(String(a.period)));
+    renderHistory(); updateStats();
+  }catch(e){console.error('History error:',e);}
+}
+
+function renderHistory(){
+  const tbody=document.getElementById('histTbody'), count=document.getElementById('histCount');
+  if(!predHistory.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No resolved predictions yet</td></tr>';count.textContent='0';return;}
+  count.textContent=predHistory.length;
+  tbody.innerHTML=predHistory.map(p=>{
+    const wN=p.winNum===true, wC=p.winColor===true, wB=p.winBS===true, any=p.anyWin===true;
+    const mk=v=>v?'<span class="win-badge">✓</span>':'<span class="loss-badge">✗</span>';
+    const pend='<span class="pend-badge">⏳</span>';
+    return `<tr class="${p.resolved?(any?'win-row':'loss-row'):''}">
+      <td>${fmtPeriod(p.period||p.forPeriod||'')}</td>
+      <td>${p.predictedNum??p.number??'?'}</td>
+      <td>${String(p.predictedColor??p.colour??'').toUpperCase()}</td>
+      <td>${String(p.predictedBS??p.bigSmall??'').toUpperCase()}</td>
+      <td>${p.resolved?(p.actualNum??'?'):'-'}</td>
+      <td>${p.resolved?String(p.actualColor??'').toUpperCase():'-'}</td>
+      <td>${p.resolved?mk(wN):pend}</td><td>${p.resolved?mk(wC):pend}</td><td>${p.resolved?mk(wB):pend}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats(){
+  const res=predHistory.filter(p=>p.resolved===true), total=res.length;
+  const wins=res.filter(p=>p.winNum===true).length, cw=res.filter(p=>p.winColor===true).length;
+  const bw=res.filter(p=>p.winBS===true).length, any=res.filter(p=>p.anyWin===true).length;
+  const pend=predHistory.filter(p=>!p.resolved).length;
+  let streak=0; for(const p of res){if(p.anyWin===true)streak++;else break;}
+  const pct=total?Math.round((any/total)*100):0;
+  document.getElementById('stTotal').textContent=total; document.getElementById('stWins').textContent=any;
+  document.getElementById('stLoss').textContent=total-any; document.getElementById('stPct').textContent=pct+'%';
+  document.getElementById('stPend').textContent=pend; document.getElementById('stColAcc').textContent=(total?Math.round((cw/total)*100):0)+'%';
+  document.getElementById('stNumAcc').textContent=(total?Math.round((wins/total)*100):0)+'%';
+  document.getElementById('stBsAcc').textContent=(total?Math.round((bw/total)*100):0)+'%';
+  document.getElementById('stStreak').textContent=streak;
+  document.getElementById('confNumDetail').textContent=`${wins}/${total} correct`;
+  document.getElementById('confColDetail').textContent=`${cw}/${total} correct`;
+  document.getElementById('confBsDetail').textContent=`${bw}/${total} correct`;
+}
+
+// ── AI CHAT ───────────────────────────────────────────────
+async function sendAIMsg(){
+  const input=document.getElementById('aiInput'), msg=(input.value||'').trim();
+  if(!msg)return;
+  if(aiRemaining<=0){addChatMsg('aiMsgs','❌ Daily limit reached. Contact admin.','ai');return;}
+  input.value=''; addChatMsg('aiMsgs',msg,'user'); aiChatHistory.push({role:'user',content:msg});
+  document.getElementById('aiTyping').classList.remove('hidden'); scrollChat('aiMsgs');
+  try{
+    const resp=await fetch(`${WORKER}/ai-chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:userKey,message:msg,history:aiChatHistory.slice(-8)})});
+    const data=await resp.json(); document.getElementById('aiTyping').classList.add('hidden');
+    if(data.ok){addChatMsg('aiMsgs',data.reply,'ai');aiChatHistory.push({role:'assistant',content:data.reply});updateAIRemaining(data.remaining,data.max);}
+    else addChatMsg('aiMsgs','❌ '+(data.error||'Error'),'ai');
+  }catch(e){document.getElementById('aiTyping').classList.add('hidden');addChatMsg('aiMsgs','❌ Connection error','ai');}
+}
+
+function addChatMsg(id,text,role){
+  const c=document.getElementById(id), div=document.createElement('div');
+  div.className='chat-msg '+role;
+  div.innerHTML=`<div>${escapeHtml(text)}</div><div class="chat-msg-time">${role==='user'?'YOU':'AI'} ${new Date().toTimeString().split(' ')[0]}</div>`;
+  c.appendChild(div); scrollChat(id);
+}
+function updateAIRemaining(rem,max){aiRemaining=rem||0;document.getElementById('aiRemaining').textContent=`${rem||0}/${max||5}`;}
+
+// ── ADMIN CHAT ────────────────────────────────────────────
+function initAdminChat(){
+  if(!userKey)return; adminChatId=userKey.toUpperCase();
+  if(adminChatUnsub)adminChatUnsub();
+  adminChatUnsub=db.collection('adminChat').doc(adminChatId).onSnapshot(snap=>{
+    if(!snap.exists)return; renderAdminChat(snap.data().messages||[]);
+  },err=>console.warn('Admin chat:',err));
+}
+function renderAdminChat(msgs){
+  const c=document.getElementById('adminMsgs'), panel=document.getElementById('adminChatPanel');
+  if(!panel.classList.contains('open')&&msgs.filter(m=>m.role==='admin').length) document.getElementById('adminNotifDot').style.display='block';
+  c.innerHTML=`<div class="chat-msg ai" style="border-color:#006060;"><div>Support chat connected.</div><div class="chat-msg-time">SYSTEM</div></div>`;
+  msgs.forEach(m=>{
+    const div=document.createElement('div'); div.className='chat-msg '+(m.role==='admin'?'admin-msg':'user');
+    div.innerHTML=`<div>${escapeHtml(m.content)}</div><div class="chat-msg-time">${m.role==='admin'?'ADMIN':m.senderName||'YOU'} ${m.timestamp?new Date(m.timestamp).toTimeString().split(' ')[0]:''}</div>`;
+    c.appendChild(div);
+  }); scrollChat('adminMsgs');
+}
+async function sendAdminMsg(){
+  const input=document.getElementById('adminInput'), msg=(input.value||'').trim();
+  if(!msg||!userKey)return; input.value='';
+  try{await fetch(`${WORKER}/save-chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:userKey,role:'user',content:msg,chatId:adminChatId,senderName:keyData?.label||userKey.slice(0,8)})});}
+  catch(e){toast('Send failed','err');}
+}
+function toggleChat(type){
+  const ai=document.getElementById('aiChatPanel'), adm=document.getElementById('adminChatPanel');
+  if(type==='ai'){ai.classList.toggle('open');adm.classList.remove('open');if(ai.classList.contains('open'))scrollChat('aiMsgs');}
+  else{adm.classList.toggle('open');ai.classList.remove('open');if(adm.classList.contains('open')){document.getElementById('adminNotifDot').style.display='none';scrollChat('adminMsgs');}}
+}
+
+// ── LOGIN CHAT ────────────────────────────────────────────
+function toggleLoginChat(){
+  const body=document.getElementById('loginChatBody'), icon=document.getElementById('loginChatToggleIcon');
+  const isOpen=body.style.display!=='none'; body.style.display=isOpen?'none':'block'; icon.textContent=isOpen?'▼':'▲';
+  if(!isOpen&&!loginChatName)document.getElementById('loginChatNameRow').style.display='flex';
+}
+function setLoginChatName(){
+  const n=(document.getElementById('loginChatName').value||'').trim(); if(!n)return;
+  loginChatName=n; document.getElementById('loginChatNameRow').style.display='none'; toast('Name set: '+n); startLoginChatListen();
+}
+function startLoginChatListen(){
+  if(!loginChatName)return;
+  const gid='GUEST_'+loginChatName.toUpperCase().replace(/\s+/g,'_');
+  if(loginChatUnsub)loginChatUnsub();
+  loginChatUnsub=db.collection('adminChat').doc(gid).onSnapshot(snap=>{
+    if(!snap.exists)return;
+    const msgs=snap.data().messages||[], c=document.getElementById('loginChatMsgs'); c.innerHTML='';
+    msgs.forEach(m=>{const d=document.createElement('div');d.className='chat-msg '+(m.role==='admin'?'admin-msg':'user');d.style.maxWidth='100%';d.innerHTML=`<div style="font-size:9px">${escapeHtml(m.content)}</div>`;c.appendChild(d);});
+    c.scrollTop=c.scrollHeight;
+    if(msgs.filter(m=>m.role==='admin').length)document.getElementById('loginChatNotifDot').style.display='block';
+  },()=>{});
+}
+async function sendLoginChatMsg(){
+  const input=document.getElementById('loginChatInput'), msg=(input.value||'').trim();
+  if(!msg)return; if(!loginChatName){toast('Set your name first','warn');return;}
+  input.value=''; const gid='GUEST_'+loginChatName.toUpperCase().replace(/\s+/g,'_');
+  try{await fetch(`${WORKER}/save-chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:gid,role:'user',content:msg,chatId:gid,senderName:loginChatName,isGuest:true})});}
+  catch(e){toast('Send failed','err');}
 }
 
 // ── SESSION ───────────────────────────────────────────────
 async function checkExistingSession(){
-  const cachedKey = sessionStorage.getItem('aw_session_key');
-  if(!cachedKey) return false;
-  try {
-    const resp = await fetch(`${WORKER}/validate-key`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:cachedKey})
-    });
-    const data = await resp.json();
-    if(data.ok){ userKey=cachedKey; keyData=data.data||{}; onKeyVerified(data,true); return true; }
-    sessionStorage.removeItem('aw_session_key'); return false;
-  } catch(e){ return false; }
-}
-
-// ── SETTINGS ─────────────────────────────────────────────
-async function loadSettings(){
-  try {
-    const [globalSnap,paySnap] = await Promise.all([
-      db.collection('settings').doc('global').get(),
-      db.collection('settings').doc('payment').get()
-    ]);
-    const g=globalSnap.exists?globalSnap.data():{};
-    const p=paySnap.exists?paySnap.data():{};
-    settingsCache={...g,payment:p};
-    if(g.maintenanceMode){
-      document.getElementById('maintMsg').textContent=g.maintenanceMessage||'System under maintenance.';
-      showOverlay('ovMaintenance'); return false;
-    }
-    if(p.qrImageUrl){
-      ['premQr','keyQr'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(el){el.src=p.qrImageUrl;el.classList.remove('hidden');}
-      });
-    }
-    if(p.paymentText){
-      ['premTxt','keyPayTxt'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(el) el.textContent=p.paymentText;
-      });
-    }
-    showOverlay(g.premiumLockMode?'ovPremium':'ovKey');
-    return true;
-  } catch(e){ showOverlay('ovKey'); return true; }
-}
-
-function showOverlay(id){
-  ['ovMaintenance','ovPremium','ovKey','ovKicked'].forEach(ov=>{
-    document.getElementById(ov).classList.toggle('hidden',ov!==id);
-  });
-}
-function hideAllOverlays(){
-  ['ovMaintenance','ovPremium','ovKey','ovKicked'].forEach(ov=>{
-    document.getElementById(ov).classList.add('hidden');
-  });
-}
-
-// ── KEY VERIFY ────────────────────────────────────────────
-async function verifyKey(k){
-  k=(k||'').trim().toUpperCase();
-  if(!k){ setKeyErr('Enter your access key'); return; }
-  setKeyErr(''); setBtnLoading(true);
-  try {
-    const resp=await fetch(`${WORKER}/validate-key`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({key:k})
-    });
+  const cachedKey=sessionStorage.getItem('aw_session_key'); if(!cachedKey)return false;
+  try{
+    const resp=await fetch(`${WORKER}/validate-key`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:cachedKey})});
     const data=await resp.json();
-    if(data.ok){
-      userKey=k; keyData=data.data||{};
-      sessionStorage.setItem('aw_session_key',k);
-      onKeyVerified(data,false);
-    } else { setKeyErr(data.error||'Invalid key'); }
-  } catch(e){ setKeyErr('Connection error — try again'); }
+    if(data.ok){userKey=cachedKey;keyData=data.data||{};onKeyVerified(data,true);return true;}
+    sessionStorage.removeItem('aw_session_key'); return false;
+  }catch(e){return false;}
+}
+
+async function verifyKey(k){
+  k=(k||'').trim().toUpperCase(); if(!k){setKeyErr('Enter your access key');return;}
+  setKeyErr(''); setBtnLoading(true);
+  try{
+    const resp=await fetch(`${WORKER}/validate-key`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})});
+    const data=await resp.json();
+    if(data.ok){userKey=k;keyData=data.data||{};sessionStorage.setItem('aw_session_key',k);onKeyVerified(data,false);}
+    else setKeyErr(data.error||'Invalid key');
+  }catch(e){setKeyErr('Connection error — try again');}
   setBtnLoading(false);
 }
-
-function setKeyErr(msg){
-  ['keyErr','premErr'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=msg;});
-}
-function setBtnLoading(v){
-  const btn=document.getElementById('keyVerifyBtn');
-  if(btn) btn.textContent=v?'⏳ VERIFYING...':'🔓 VERIFY KEY';
-}
+function setKeyErr(msg){['keyErr','premErr'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=msg;});}
+function setBtnLoading(v){const btn=document.getElementById('keyVerifyBtn');if(btn)btn.textContent=v?'⏳ VERIFYING...':'🔓 VERIFY KEY';}
 
 function onKeyVerified(resp,isRestore){
   hideAllOverlays();
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('chatBtn').classList.remove('hidden');
   document.getElementById('adminChatBtn').classList.remove('hidden');
-
-  document.getElementById('keyLabel').textContent = keyData.label||userKey.slice(0,8);
-  document.getElementById('keyTier').textContent = (keyData.tier||'BASIC').toUpperCase();
+  document.getElementById('keyLabel').textContent=keyData.label||userKey.slice(0,8);
+  document.getElementById('keyTier').textContent=(keyData.tier||'BASIC').toUpperCase();
   updateAIRemaining(resp.remaining,resp.max);
-
   if(keyData.expiresAt&&!keyData.lifetime){
     const exp=keyData.expiresAt.toDate?keyData.expiresAt.toDate():new Date(keyData.expiresAt);
     document.getElementById('keyExp').textContent='EXP: '+exp.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  } else if(keyData.lifetime){
-    document.getElementById('keyExp').textContent='EXP: LIFETIME ♾️';
-  }
-
-  // Unlock sections
+  }else if(keyData.lifetime){document.getElementById('keyExp').textContent='EXP: LIFETIME ♾️';}
   ['predLock','histLock','statsLock'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   ['predContent','histContent','statsContent'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
-
-  if(!isRestore) toast('✅ Access granted: '+userKey.slice(0,8));
-
+  if(!isRestore)toast('✅ Access granted: '+userKey.slice(0,8));
   startClock();
   startHeartbeat();
   watchSession();
-  initFeed();          // load Firebase bulk + start 2sec API polling
+  initFeed();       // ← bulk load + start 2sec API poll
   loadPrediction();
   loadHistory();
-  startCountdown();
+  startCountdown(); // ← countdown timer
   initAdminChat();
 }
 
-function updateAIRemaining(rem,max){
-  aiRemaining=rem||0;
-  document.getElementById('aiRemaining').textContent=`${rem||0}/${max||5}`;
-}
-
-// ── HEARTBEAT ─────────────────────────────────────────────
 function startHeartbeat(){
-  async function beat(){
-    if(!userKey) return;
-    try { await fetch(`${WORKER}/heartbeat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:userKey})}); }
-    catch(e){}
-  }
-  beat();
-  heartbeatInterval=setInterval(beat,30000);
+  async function beat(){if(!userKey)return;try{await fetch(`${WORKER}/heartbeat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:userKey})});}catch(e){}}
+  beat(); heartbeatInterval=setInterval(beat,30000);
 }
 
-// ── WATCH SESSION ─────────────────────────────────────────
 function watchSession(){
-  if(!userKey) return;
-  if(keyUnsub) keyUnsub();
+  if(!userKey)return; if(keyUnsub)keyUnsub();
   keyUnsub=db.collection('keys').where('key','==',userKey).onSnapshot(snap=>{
-    if(snap.empty) return;
-    const d=snap.docs[0].data();
+    if(snap.empty)return; const d=snap.docs[0].data();
     if(d.kicked===true||d.status==='blocked'){
-      clearAllIntervals();
-      sessionStorage.removeItem('aw_session_key');
+      clearAllIntervals(); sessionStorage.removeItem('aw_session_key');
       document.getElementById('kickedMsg').textContent=d.kickReason||'Key blocked by administrator.';
       showOverlay('ovKicked');
     }
@@ -1671,36 +1054,51 @@ function watchSession(){
 }
 
 function clearAllIntervals(){
-  if(heartbeatInterval) clearInterval(heartbeatInterval);
-  if(apiPollInterval) clearInterval(apiPollInterval);
-  if(clockInterval) clearInterval(clockInterval);
-  if(countdownInterval) clearInterval(countdownInterval);
-  if(keyUnsub) keyUnsub();
-  if(adminChatUnsub) adminChatUnsub();
+  if(heartbeatInterval)clearInterval(heartbeatInterval);
+  if(apiPollInterval)clearInterval(apiPollInterval);
+  if(clockInterval)clearInterval(clockInterval);
+  if(countdownInterval)clearInterval(countdownInterval);
+  if(keyUnsub)keyUnsub();
+  if(adminChatUnsub)adminChatUnsub();
 }
 
 function logout(){
-  clearAllIntervals();
-  sessionStorage.removeItem('aw_session_key');
-  userKey=null; keyData=null; mergedFeedMap={};
+  clearAllIntervals(); sessionStorage.removeItem('aw_session_key');
+  userKey=null;keyData=null;mergedFeedMap={};
   document.getElementById('app').classList.add('hidden');
   document.getElementById('chatBtn').classList.add('hidden');
   document.getElementById('adminChatBtn').classList.add('hidden');
   ['predLock','histLock','statsLock'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
   ['predContent','histContent','statsContent'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-  loadSettings();
-  toast('Logged out');
+  loadSettings();toast('Logged out');
 }
+
+// ── SETTINGS ─────────────────────────────────────────────
+async function loadSettings(){
+  try{
+    const [gs,ps]=await Promise.all([db.collection('settings').doc('global').get(),db.collection('settings').doc('payment').get()]);
+    const g=gs.exists?gs.data():{}, p=ps.exists?ps.data():{};
+    settingsCache={...g,payment:p};
+    if(g.maintenanceMode){document.getElementById('maintMsg').textContent=g.maintenanceMessage||'System under maintenance.';showOverlay('ovMaintenance');return;}
+    if(p.qrImageUrl){['premQr','keyQr'].forEach(id=>{const el=document.getElementById(id);if(el){el.src=p.qrImageUrl;el.classList.remove('hidden');}});}
+    if(p.paymentText){['premTxt','keyPayTxt'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p.paymentText;});}
+    showOverlay(g.premiumLockMode?'ovPremium':'ovKey');
+  }catch(e){showOverlay('ovKey');}
+}
+function showOverlay(id){['ovMaintenance','ovPremium','ovKey','ovKicked'].forEach(ov=>document.getElementById(ov).classList.toggle('hidden',ov!==id));}
+function hideAllOverlays(){['ovMaintenance','ovPremium','ovKey','ovKicked'].forEach(ov=>document.getElementById(ov).classList.add('hidden'));}
 
 // ── INIT ──────────────────────────────────────────────────
 async function init(){
   startClock();
-  // Show feed preview on login page
-  initLoginFeedPreview();
-  const restored = await checkExistingSession();
-  if(!restored) await loadSettings();
+  // Feed preview on login page
+  try{
+    const r=await fetchWorkerResults(); if(r.length)updateFeedPreview(r);
+    const a=await fetchWinGoAPI(); if(a&&a.length)updateFeedPreview(a);
+  }catch(e){}
+  const restored=await checkExistingSession();
+  if(!restored)await loadSettings();
 }
-
 init();
 </script>
 </body>
