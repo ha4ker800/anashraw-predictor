@@ -402,7 +402,7 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
         <div class="cd-time" id="cdTime">--s</div>
       </div>
       <div class="cd-track"><div class="cd-fill" id="cdFill" style="width:100%"></div></div>
-      <div class="poll-bar"><div class="poll-dot"></div><span>AUTO-REFRESH EVERY 5s</span></div>
+      <div class="poll-bar"><div class="poll-dot"></div><span>AUTO-REFRESH EVERY 2s</span></div>
     </div>
   </header>
 
@@ -420,7 +420,7 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
     </div>
     <div class="sec-body" id="feedBody">
       <div class="feed-controls">
-        <button class="btn btn-sm" onclick="loadFeed()">🔄 RELOAD</button>
+        <button class="btn btn-sm" onclick="initFeed()">🔄 RELOAD</button>
         <button class="btn btn-sm btn-r" id="pauseBtn" onclick="togglePause()">⏸ PAUSE</button>
         <span style="font-size:7px;color:var(--mut);margin-left:auto;">SHOWING MAX 100</span>
       </div>
