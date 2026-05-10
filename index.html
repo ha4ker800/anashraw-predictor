@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ANASHRAW.AI — WinGo Predictor</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK (newwingoaikey project) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
 <style>
 :root{
   --bg:#000;--sur:#050f05;--bdr:#0f2b0f;--dim:#003a0f;
@@ -25,14 +28,18 @@ body{background:var(--bg);color:var(--g);font-family:'Share Tech Mono',monospace
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:9998;}
 #mc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.05;pointer-events:none;}
 
-/* OVERLAYS */
+/* ── OVERLAYS ── */
 .overlay{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.96);}
 .overlay.hidden{display:none!important;}
+
+/* MAINTENANCE */
 #ovMaintenance{z-index:10003;background:#000;flex-direction:column;gap:16px;text-align:center;}
 .maint-icon{font-size:52px;animation:pulse 2s infinite;}
 .maint-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--r);text-shadow:var(--rglow);letter-spacing:.1em;}
 .maint-msg{font-size:12px;color:var(--txt);line-height:1.8;max-width:320px;border:1px solid #330010;border-radius:4px;padding:14px;background:rgba(255,0,64,.05);}
 .maint-sub{font-size:9px;color:var(--mut);letter-spacing:.2em;}
+
+/* PREMIUM LOCK */
 #ovPremium{z-index:10002;flex-direction:column;gap:14px;text-align:center;}
 .prem-box{background:var(--sur);border:1px solid var(--v);border-radius:8px;padding:22px 18px;max-width:340px;width:100%;}
 .prem-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--v);text-shadow:var(--vglow);letter-spacing:.1em;margin-bottom:4px;}
@@ -42,6 +49,8 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .prem-keyrow{display:flex;gap:8px;}
 .prem-key-input{flex:1;padding:11px;background:#000;border:1px solid var(--g3);border-radius:4px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;letter-spacing:.1em;}
 .prem-key-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
+
+/* KEY OVERLAY */
 #ovKey{z-index:10001;flex-direction:column;align-items:center;justify-content:flex-start;padding:0;overflow-y:auto;}
 .key-inner{width:100%;max-width:420px;padding:16px;display:flex;flex-direction:column;gap:14px;}
 .key-brand{text-align:center;padding:20px 0 0;}
@@ -58,12 +67,14 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .key-pay-title{font-size:8px;color:var(--mut);letter-spacing:.22em;margin-bottom:10px;}
 .key-qr{width:140px;height:140px;border:1px solid var(--g3);border-radius:4px;object-fit:contain;background:#050f05;display:block;margin:0 auto 10px;}
 .key-pay-txt{font-size:9px;color:var(--txt);line-height:1.7;}
+
+/* KICKED */
 #ovKicked{z-index:10004;background:#000;flex-direction:column;gap:16px;text-align:center;}
 .kicked-icon{font-size:52px;}
 .kicked-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--r);text-shadow:var(--rglow);letter-spacing:.1em;}
 .kicked-sub{font-size:10px;color:var(--mut);line-height:1.8;}
 
-/* MAIN APP */
+/* ── MAIN APP ── */
 #app{position:relative;z-index:2;max-width:600px;margin:0 auto;padding:0 10px 120px;}
 #app.hidden{display:none;}
 
@@ -89,12 +100,8 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 .chip-dot-off{background:#444;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-@keyframes newfade{from{background:rgba(0,255,65,.15)}to{background:transparent}}
-@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes scanline{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 
-/* KEY BAR */
+/* KEY STATUS BAR */
 .key-bar{display:flex;align-items:center;justify-content:space-between;background:var(--sur);border:1px solid var(--bdr);border-radius:4px;padding:7px 10px;margin:6px 0;flex-wrap:wrap;gap:6px;}
 .key-bar-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .key-badge{padding:2px 8px;border-radius:2px;font-size:8px;background:rgba(0,255,65,.1);border:1px solid var(--g3);color:var(--g);font-family:'Orbitron',monospace;letter-spacing:.12em;}
@@ -105,21 +112,18 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 .fb-bar{display:flex;align-items:center;justify-content:space-between;font-size:8px;color:var(--mut);padding:4px 10px;border:1px solid var(--bdr);border-radius:4px;margin:4px 0;background:rgba(0,10,0,.5);}
 .fb-bar span{color:var(--g);}
 
-/* COUNTDOWN */
-.cd-bar{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;padding:8px 10px;margin:6px 0;overflow:hidden;}
+/* COUNTDOWN BAR */
+.cd-bar{background:var(--sur);border:1px solid var(--bdr);border-radius:4px;padding:8px 10px;margin:6px 0;}
 .cd-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .cd-label{font-size:8px;color:var(--mut);letter-spacing:.18em;}
 .cd-time{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--y);text-shadow:0 0 8px var(--y);}
 .cd-period{font-size:8px;color:var(--mut);}
-.cd-track{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;position:relative;}
-.cd-fill{height:100%;background:linear-gradient(90deg,var(--g3),var(--g));border-radius:2px;transition:width 1s linear;}
-.poll-bar{display:flex;align-items:center;gap:6px;font-size:7px;color:var(--mut);margin-top:6px;}
+.cd-track{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;}
+.cd-fill{height:100%;background:linear-gradient(90deg,var(--g3),var(--g));border-radius:2px;transition:width .5s linear;}
+.poll-bar{display:flex;align-items:center;gap:6px;font-size:7px;color:var(--mut);margin-top:4px;}
 .poll-dot{width:5px;height:5px;border-radius:50%;background:var(--c);animation:blink 2s infinite;}
-/* Refresh scan line — animates on new data */
-.refresh-line{height:2px;background:linear-gradient(90deg,transparent,var(--c),transparent);border-radius:1px;margin-top:4px;opacity:0;transition:opacity .3s;}
-.refresh-line.active{animation:scanline .5s ease;}
 
-/* SECTIONS */
+/* ── SECTIONS ── */
 .section{margin:10px 0;}
 .sec-hdr{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--dim);border:1px solid var(--bdr);border-radius:4px 4px 0 0;cursor:pointer;user-select:none;}
 .sec-dots{display:flex;gap:4px;}
@@ -147,19 +151,16 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 .badge-violet{background:rgba(191,127,255,.12);border:1px solid #5500aa;color:var(--v);}
 .badge-big{background:rgba(0,255,234,.1);border:1px solid #006060;color:var(--c);}
 .badge-small{background:rgba(255,224,0,.1);border:1px solid #7a5500;color:var(--y);}
-.feed-new{animation:newfade 1s ease;}
-/* Bottom refresh indicator */
-.feed-refresh-bar{display:flex;align-items:center;gap:6px;font-size:7px;color:var(--mut);padding:5px 0 0;border-top:1px solid var(--bdr);margin-top:4px;}
-.feed-refresh-dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:blink 2s infinite;}
-.feed-refresh-scan{flex:1;height:1px;background:var(--bdr);border-radius:1px;overflow:hidden;position:relative;}
-.feed-refresh-scan::after{content:'';position:absolute;top:0;left:-100%;width:30%;height:100%;background:linear-gradient(90deg,transparent,var(--g),transparent);animation:scanline 2s linear infinite;}
+.feed-new{animation:newfade .8s ease;}
+@keyframes newfade{from{background:rgba(0,255,65,.12)}to{background:transparent}}
 
 /* PREDICTION */
 .pred-lock{text-align:center;padding:20px;color:var(--mut);font-size:9px;}
 .pred-num-wrap{text-align:center;padding:16px 0 8px;}
-.pred-big-num{font-family:'Orbitron',monospace;font-size:80px;font-weight:900;line-height:1;display:block;text-shadow:var(--glow);transition:color .4s;}
-.badges-row{display:flex;justify-content:center;gap:8px;margin-top:12px;}
-.pred-badge{padding:6px 18px;border-radius:3px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:.15em;border:1px solid;transition:all .4s;}
+.pred-big-num{font-family:'Orbitron',monospace;font-size:80px;font-weight:900;line-height:1;display:block;text-shadow:var(--glow);}
+.pred-num-wrap .badges-row{display:flex;justify-content:center;gap:8px;margin-top:12px;}
+.pred-badge{padding:6px 18px;border-radius:3px;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:.15em;border:1px solid;}
+.pred-analyzing{text-align:center;padding:30px;font-family:'Orbitron',monospace;font-size:14px;color:var(--mut);letter-spacing:.2em;animation:pulse 2s infinite;}
 .conf-bars{margin:12px 0;}
 .conf-row{margin:6px 0;}
 .conf-label{display:flex;justify-content:space-between;font-size:8px;color:var(--mut);margin-bottom:3px;}
@@ -182,14 +183,13 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 .ana-chip.streak{border-color:var(--g3);color:var(--g);}
 .ana-chip.colrun{border-color:#5500aa;color:var(--v);}
 .ana-chip.neutral{border-color:#333;color:#666;}
-.pred-updated{font-size:7px;color:var(--mut);text-align:center;margin-top:6px;}
 
-/* HISTORY TABLE */
-.htbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:360px;overflow-y:auto;}
+/* PREDICTION HISTORY */
+.htbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:320px;overflow-y:auto;}
 .htbl-wrap::-webkit-scrollbar{width:2px;height:2px;}
 .htbl-wrap::-webkit-scrollbar-thumb{background:var(--g3);}
-.htbl{width:100%;border-collapse:collapse;font-size:8px;min-width:440px;}
-.htbl th{padding:5px 6px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;position:sticky;top:0;z-index:1;}
+.htbl{width:100%;border-collapse:collapse;font-size:8px;min-width:420px;}
+.htbl th{padding:5px 6px;background:var(--dim);color:var(--mut);font-size:7px;letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid var(--bdr);text-align:left;font-weight:normal;white-space:nowrap;position:sticky;top:0;}
 .htbl td{padding:5px 6px;border-bottom:1px solid #050f05;white-space:nowrap;vertical-align:middle;}
 .htbl tr.win-row td{background:rgba(0,255,65,.04);}
 .htbl tr.loss-row td{background:rgba(255,0,64,.03);}
@@ -215,7 +215,7 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 .btn-sm{padding:5px 9px;font-size:7px;min-height:30px;}
 .btn-y{border-color:#7a5500;color:var(--y);}
 
-/* CHAT BUTTONS */
+/* CHAT */
 #chatBtn{position:fixed;bottom:20px;right:14px;z-index:500;width:52px;height:52px;border-radius:50%;background:var(--sur);border:2px solid var(--g);color:var(--g);font-size:22px;cursor:pointer;box-shadow:var(--glsm);display:flex;align-items:center;justify-content:center;transition:all .2s;}
 #chatBtn:active{transform:scale(.92);}
 #chatBadge{position:absolute;top:-4px;right:-4px;background:var(--r);color:#fff;font-size:8px;font-family:'Orbitron',monospace;padding:2px 5px;border-radius:10px;min-width:16px;text-align:center;display:none;}
@@ -240,6 +240,8 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 .chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--bdr);flex-shrink:0;}
 .chat-input{flex:1;padding:10px 12px;background:#000;border:1px solid var(--g3);border-radius:4px;color:var(--g);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;resize:none;max-height:100px;}
 .chat-input:focus{border-color:var(--g);box-shadow:var(--glsm);}
+
+/* LOGIN CHAT */
 #loginChatBody{display:none;background:var(--sur);}
 
 /* TOAST */
@@ -247,20 +249,27 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 .toast-item{background:var(--sur);border:1px solid var(--g3);border-radius:4px;padding:8px 14px;font-size:9px;color:var(--g);letter-spacing:.06em;animation:tin .25s ease;box-shadow:var(--glsm);white-space:nowrap;}
 .toast-item.err{border-color:var(--r);color:var(--r);}
 .toast-item.warn{border-color:var(--y);color:var(--y);}
-.toast-item.info{border-color:var(--c);color:var(--c);}
-.hidden{display:none!important;}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scanline{0%{left:-100%}100%{left:100%}}
+
+.divider{height:1px;background:var(--bdr);margin:10px 0;}
 .empty{text-align:center;padding:20px;color:var(--mut);font-size:9px;}
+.loading-spin{display:inline-block;animation:spin 1s linear infinite;margin-right:4px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important;}
 </style>
 </head>
 <body>
 <canvas id="mc"></canvas>
 <div id="toast"></div>
 
+<!-- ═══ OVERLAYS ═══════════════════════════════════════ -->
+
 <!-- MAINTENANCE -->
 <div class="overlay hidden" id="ovMaintenance">
   <div class="maint-icon">🔧</div>
   <div class="maint-title">MAINTENANCE MODE</div>
-  <div class="maint-msg" id="maintMsg">System is currently under maintenance.</div>
+  <div class="maint-msg" id="maintMsg">System is currently under maintenance. Please check back soon.</div>
   <div class="maint-sub">ANASHRAW.AI // SYSTEM STATUS</div>
 </div>
 
@@ -269,11 +278,12 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
   <div class="prem-box">
     <div class="prem-title">🔒 PREMIUM ACCESS</div>
     <div class="prem-sub">ANASHRAW.AI // SUBSCRIPTION REQUIRED</div>
-    <img class="prem-qr hidden" id="premQr" alt="QR" src="">
+    <img class="prem-qr hidden" id="premQr" alt="Payment QR" src="">
     <div class="prem-txt" id="premTxt">Contact admin to unlock premium access.</div>
     <div class="prem-keyrow">
       <input class="prem-key-input" id="premKeyInput" type="text" placeholder="ENTER KEY" maxlength="32"
-        oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')verifyKey(this.value)">
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')verifyKey(this.value)">
       <button class="btn btn-v" onclick="verifyKey(document.getElementById('premKeyInput').value)">VERIFY</button>
     </div>
     <div class="key-err" id="premErr"></div>
@@ -281,33 +291,39 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 </div>
 
 <!-- KEY OVERLAY -->
-<div class="overlay hidden" id="ovKey" style="background:rgba(0,0,0,.9);">
+<div class="overlay hidden" id="ovKey" style="background:rgba(0,0,0,.88);">
   <div class="key-inner">
     <div class="key-brand">
       <div class="key-logo">ANASHRAW<span>.AI</span></div>
       <div class="key-by">BY ANASHRAW DIXIT</div>
     </div>
+
+    <!-- Live feed preview -->
     <div class="key-box" style="padding:10px;">
       <div style="font-size:7px;color:var(--mut);letter-spacing:.18em;margin-bottom:6px;">// LIVE FEED PREVIEW</div>
       <div id="keyFeedPreview" style="height:120px;overflow:hidden;opacity:.6;font-size:9px;">
-        <div class="empty">Loading...</div>
+        <div class="empty">Loading feed...</div>
       </div>
     </div>
+
     <div class="key-box">
       <div class="key-title">🔑 ACCESS KEY REQUIRED</div>
-      <input class="key-input" id="keyInput" type="text" placeholder="ENTER YOUR KEY" maxlength="32"
-        oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')verifyKey(this.value)">
+      <input class="key-input" id="keyInput" type="text" placeholder="ENTER YOUR KEY"
+        maxlength="32" oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')verifyKey(this.value)">
       <div class="key-err" id="keyErr"></div>
       <button class="btn btn-full" id="keyVerifyBtn" onclick="verifyKey(document.getElementById('keyInput').value)">
         🔓 VERIFY KEY
       </button>
     </div>
+
     <div class="key-pay-box">
       <div class="key-pay-title">// PURCHASE ACCESS</div>
-      <img class="key-qr hidden" id="keyQr" alt="QR" src="">
+      <img class="key-qr hidden" id="keyQr" alt="Payment QR" src="">
       <div class="key-pay-txt" id="keyPayTxt">Scan to purchase • Contact admin for key</div>
     </div>
-    <!-- Login Chat -->
+
+    <!-- Login page admin chat -->
     <div class="key-box" style="padding:0;overflow:hidden;">
       <div class="sec-hdr" style="border-radius:4px 4px 0 0;" onclick="toggleLoginChat()">
         <div class="sec-dots">
@@ -326,6 +342,7 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
         <div id="loginChatMsgs" style="height:180px;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:5px;">
           <div style="text-align:center;font-size:8px;color:var(--mut);padding:20px 0;">💬 Ask admin about plans, keys, or support</div>
         </div>
+        <div id="loginAdminTyping" style="display:none;font-size:8px;color:var(--mut);padding:2px 10px;animation:blink 1.5s infinite;">Admin is typing...</div>
         <div style="display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--bdr);">
           <input id="loginChatInput" class="key-input" style="margin:0;padding:8px 10px;font-size:12px;flex:1;" placeholder="Type message..."
             onkeydown="if(event.key==='Enter')sendLoginChatMsg()">
@@ -333,7 +350,7 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
         </div>
       </div>
     </div>
-    <div style="text-align:center;font-size:7px;color:var(--mut);padding-bottom:10px;">ANASHRAW.AI v3 // SECURE SERVER</div>
+    <div style="text-align:center;font-size:7px;color:var(--mut);padding-bottom:10px;">ANASHRAW.AI v2 // FIREBASE: SECURE SERVER</div>
   </div>
 </div>
 
@@ -341,11 +358,11 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
 <div class="overlay hidden" id="ovKicked">
   <div class="kicked-icon">⛔</div>
   <div class="kicked-title">ACCESS REVOKED</div>
-  <div class="kicked-sub" id="kickedMsg">Your access has been revoked by the administrator.</div>
+  <div class="kicked-sub" id="kickedMsg">Your access key has been revoked by the administrator.<br>Please contact support for assistance.</div>
   <button class="btn btn-r" style="margin-top:12px;" onclick="location.reload()">🔄 RELOAD</button>
 </div>
 
-<!-- MAIN APP -->
+<!-- ═══ MAIN APP ═══════════════════════════════════════ -->
 <div id="app" class="hidden">
   <header>
     <div class="hdr-top">
@@ -358,12 +375,12 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
         <div class="clkd" id="clkd">---</div>
       </div>
     </div>
-    <div class="chip-row">
-      <div class="chip chip-ok"><div class="chip-dot chip-dot-ok"></div>SERVER</div>
+    <div class="chip-row" id="chipRow">
+      <div class="chip chip-ok" id="chipServer"><div class="chip-dot chip-dot-ok"></div>SERVER</div>
       <div class="chip chip-warn" id="chipAI"><div class="chip-dot chip-dot-warn"></div>AI</div>
-      <div class="chip chip-ok" id="chipFeed"><div class="chip-dot chip-dot-ok"></div>FEED</div>
-      <div class="chip chip-ok"><div class="chip-dot chip-dot-ok"></div>AUTO</div>
-      <div class="chip chip-ok"><div class="chip-dot chip-dot-ok"></div>PRD</div>
+      <div class="chip chip-off" id="chipBuf"><div class="chip-dot chip-dot-off"></div>BUF</div>
+      <div class="chip chip-ok" id="chipAuto"><div class="chip-dot chip-dot-ok"></div>AUTO</div>
+      <div class="chip chip-ok" id="chipPrd"><div class="chip-dot chip-dot-ok"></div>PRD</div>
     </div>
     <div class="key-bar">
       <div class="key-bar-info">
@@ -386,16 +403,12 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
         <div class="cd-time" id="cdTime">--s</div>
       </div>
       <div class="cd-track"><div class="cd-fill" id="cdFill" style="width:100%"></div></div>
-      <div class="poll-bar">
-        <div class="poll-dot"></div>
-        <span>AUTO-REFRESH EVERY 2s</span>
-        <div class="refresh-line" id="topRefreshLine" style="flex:1;"></div>
-      </div>
+      <div class="poll-bar"><div class="poll-dot"></div><span>AUTO-REFRESH EVERY 2s</span></div>
     </div>
   </header>
 
   <!-- LIVE FEED -->
-  <div class="section">
+  <div class="section" id="secFeed">
     <div class="sec-hdr" onclick="toggleSec('feedBody','feedToggle')">
       <div class="sec-dots">
         <div class="sec-dot" style="background:#f00"></div>
@@ -408,25 +421,26 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
     </div>
     <div class="sec-body" id="feedBody">
       <div class="feed-controls">
-        <button class="btn btn-sm" onclick="reloadFeed()">🔄 RELOAD</button>
+        <button class="btn btn-sm" onclick="initFeed()">🔄 RELOAD</button>
         <button class="btn btn-sm btn-r" id="pauseBtn" onclick="togglePause()">⏸ PAUSE</button>
-        <span style="font-size:7px;color:var(--mut);margin-left:auto;">MAX 100</span>
+        <span style="font-size:7px;color:var(--mut);margin-left:auto;">SHOWING MAX 100</span>
       </div>
       <div class="feed-box" id="feedBox">
         <div class="empty">⏳ Loading live feed...</div>
       </div>
-      <!-- Bottom refresh indicator -->
-      <div class="feed-refresh-bar">
-        <div class="feed-refresh-dot"></div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:7px;color:var(--mut);padding:5px 0 0;border-top:1px solid var(--bdr);margin-top:4px;">
+        <div style="width:5px;height:5px;border-radius:50%;background:var(--g);animation:blink 2s infinite;"></div>
         <span id="feedRefreshTxt">LIVE</span>
-        <div class="feed-refresh-scan"></div>
+        <div style="flex:1;height:1px;background:var(--bdr);border-radius:1px;overflow:hidden;position:relative;">
+          <div style="position:absolute;top:0;left:-100%;width:30%;height:100%;background:linear-gradient(90deg,transparent,var(--g),transparent);animation:scanline 2s linear infinite;"></div>
+        </div>
         <span id="feedLastUpdate" style="font-size:7px;color:var(--mut);">--:--:--</span>
       </div>
     </div>
   </div>
 
   <!-- PREDICTION -->
-  <div class="section">
+  <div class="section" id="secPred">
     <div class="sec-hdr" onclick="toggleSec('predBody','predToggle')">
       <div class="sec-dots">
         <div class="sec-dot" style="background:#0ff"></div>
@@ -440,45 +454,57 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
     <div class="sec-body" id="predBody">
       <div id="predLock" class="pred-lock">🔒 Verify key to view predictions</div>
       <div id="predContent" class="hidden">
-        <div id="predNumDisplay" style="text-align:center;padding:16px 0 8px;">
-          <span class="pred-big-num" id="predBigNum" style="color:var(--g)">?</span>
-          <div class="badges-row">
-            <span class="pred-badge" id="predColBadge" style="border-color:var(--g3);color:var(--g)">GREEN</span>
-            <span class="pred-badge" id="predBsBadge" style="border-color:#006060;color:var(--c)">BIG</span>
+        <div class="pred-num-wrap" id="predNumWrap">
+          <div class="pred-analyzing hidden" id="predAnalyzing">⏳ ANALYZING...</div>
+          <div id="predNumDisplay">
+            <span class="pred-big-num" id="predBigNum" style="color:var(--g)">?</span>
+            <div class="badges-row">
+              <span class="pred-badge" id="predColBadge" style="border-color:var(--g3);color:var(--g)">GREEN</span>
+              <span class="pred-badge" id="predBsBadge" style="border-color:#006060;color:var(--c)">BIG</span>
+            </div>
           </div>
         </div>
         <div class="conf-bars">
           <div class="conf-row">
-            <div class="conf-label"><span>NUMBER CONFIDENCE</span><span id="confNumPct">0%</span></div>
+            <div class="conf-label"><span>NUMBER ACCURACY</span><span id="confNumPct">0%</span></div>
             <div class="conf-track"><div class="conf-fill cf-num" id="confNumBar" style="width:0%"></div></div>
-            <div style="font-size:7px;color:var(--mut);margin-top:2px;" id="confNumDetail">-- correct</div>
+            <div style="font-size:7px;color:var(--mut);margin-top:2px;" id="confNumDetail">0/0 correct</div>
           </div>
           <div class="conf-row">
-            <div class="conf-label"><span>COLOR CONFIDENCE</span><span id="confColPct">0%</span></div>
+            <div class="conf-label"><span>COLOR ACCURACY</span><span id="confColPct">0%</span></div>
             <div class="conf-track"><div class="conf-fill cf-col" id="confColBar" style="width:0%"></div></div>
-            <div style="font-size:7px;color:var(--mut);margin-top:2px;" id="confColDetail">-- correct</div>
+            <div style="font-size:7px;color:var(--mut);margin-top:2px;" id="confColDetail">0/0 correct</div>
           </div>
           <div class="conf-row">
-            <div class="conf-label"><span>BIG/SMALL CONFIDENCE</span><span id="confBsPct">0%</span></div>
+            <div class="conf-label"><span>BIG/SMALL ACCURACY</span><span id="confBsPct">0%</span></div>
             <div class="conf-track"><div class="conf-fill cf-bs" id="confBsBar" style="width:0%"></div></div>
-            <div style="font-size:7px;color:var(--mut);margin-top:2px;" id="confBsDetail">-- correct</div>
+            <div style="font-size:7px;color:var(--mut);margin-top:2px;" id="confBsDetail">0/0 correct</div>
           </div>
         </div>
         <div style="font-size:7px;color:var(--mut);letter-spacing:.15em;margin-bottom:5px;">// TOP ALTERNATIVES</div>
-        <div class="alts-row" id="altsRow"></div>
+        <div class="alts-row" id="altsRow">
+          <div class="alt-item"><div class="alt-num" style="color:var(--mut)">?</div><div class="alt-prob">--</div></div>
+          <div class="alt-item"><div class="alt-num" style="color:var(--mut)">?</div><div class="alt-prob">--</div></div>
+          <div class="alt-item"><div class="alt-num" style="color:var(--mut)">?</div><div class="alt-prob">--</div></div>
+        </div>
         <div class="reasoning-box" id="reasoningBox">
           <div class="reasoning-title">// AI REASONING</div>
           <div id="reasoningText">--</div>
         </div>
         <div style="font-size:7px;color:var(--mut);letter-spacing:.15em;margin-bottom:5px;margin-top:8px;">// PATTERN ANALYSIS</div>
-        <div class="analysis-chips" id="analysisChips"></div>
-        <div class="pred-updated" id="predUpdated"></div>
+        <div class="analysis-chips" id="analysisChips">
+          <span class="ana-chip neutral">HOT: --</span>
+          <span class="ana-chip neutral">COLD: --</span>
+          <span class="ana-chip neutral">STREAK: --</span>
+          <span class="ana-chip neutral">COLOR RUN: --</span>
+          <span class="ana-chip neutral">B/S RATIO: --</span>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- PREDICTION HISTORY -->
-  <div class="section">
+  <div class="section" id="secHistory">
     <div class="sec-hdr" onclick="toggleSec('histBody','histToggle')">
       <div class="sec-dots">
         <div class="sec-dot" style="background:#0f0"></div>
@@ -492,13 +518,12 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
     <div class="sec-body" id="histBody">
       <div id="histLock" class="pred-lock">🔒 Verify key to view history</div>
       <div id="histContent" class="hidden">
-        <div style="font-size:7px;color:var(--mut);margin-bottom:6px;">LAST 20 RESOLVED PREDICTIONS</div>
         <div class="htbl-wrap">
           <table class="htbl">
             <thead>
               <tr>
-                <th>PERIOD</th><th>PRED#</th><th>COL</th><th>B/S</th>
-                <th>ACT#</th><th>ACT COL</th><th>✓#</th><th>✓COL</th><th>✓B/S</th>
+                <th>PERIOD</th><th>PRD#</th><th>COL</th><th>B/S</th>
+                <th>ACT#</th><th>ACT COL</th><th>NUM</th><th>COL</th><th>B/S</th>
               </tr>
             </thead>
             <tbody id="histTbody"></tbody>
@@ -509,7 +534,7 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
   </div>
 
   <!-- STATS -->
-  <div class="section">
+  <div class="section" id="secStats">
     <div class="sec-hdr" onclick="toggleSec('statsBody','statsToggle')">
       <div class="sec-dots">
         <div class="sec-dot" style="background:#ff0"></div>
@@ -524,11 +549,11 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
       <div id="statsContent" class="hidden">
         <div class="stats-grid">
           <div class="stat-c"><div class="stat-v" id="stTotal">0</div><div class="stat-l">TOTAL</div></div>
-          <div class="stat-c"><div class="stat-v" style="color:var(--g)" id="stWins">0</div><div class="stat-l">ANY WIN</div></div>
+          <div class="stat-c"><div class="stat-v" style="color:var(--g)" id="stWins">0</div><div class="stat-l">WINS</div></div>
           <div class="stat-c"><div class="stat-v" style="color:var(--r)" id="stLoss">0</div><div class="stat-l">LOSS</div></div>
         </div>
         <div class="stats-grid" style="margin-top:6px;">
-          <div class="stat-c"><div class="stat-v" style="color:var(--c)" id="stPct">0%</div><div class="stat-l">WIN RATE</div></div>
+          <div class="stat-c"><div class="stat-v" style="color:var(--c)" id="stPct">0%</div><div class="stat-l">OVERALL</div></div>
           <div class="stat-c"><div class="stat-v" style="color:var(--y)" id="stPend">0</div><div class="stat-l">PENDING</div></div>
           <div class="stat-c"><div class="stat-v" style="color:var(--v)" id="stColAcc">0%</div><div class="stat-l">COLOR ACC</div></div>
         </div>
@@ -540,22 +565,26 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
       </div>
     </div>
   </div>
+</div><!-- /app -->
+
+<!-- ═══ CHAT PANELS ═══════════════════════════════════ -->
+<div id="chatBtn" class="hidden" onclick="toggleChat('ai')">
+  🤖<div id="chatBadge"></div>
+</div>
+<div id="adminChatBtn" class="hidden" onclick="toggleChat('admin')">
+  💬<div id="adminNotifDot"></div>
 </div>
 
-<!-- CHAT BUTTONS -->
-<div id="chatBtn" class="hidden" onclick="toggleChat('ai')">🤖<div id="chatBadge"></div></div>
-<div id="adminChatBtn" class="hidden" onclick="toggleChat('admin')">💬<div id="adminNotifDot"></div></div>
-
-<!-- AI CHAT -->
+<!-- AI Chat -->
 <div class="chat-panel" id="aiChatPanel">
   <div class="chat-hdr">
-    <div class="chat-title" style="color:var(--g)">🤖 ANASHRAW AI</div>
+    <div class="chat-title" style="color:var(--g)">🤖 ANASHRAW AI ASSISTANT</div>
     <span style="font-size:8px;color:var(--mut)">REMAINING: <span id="aiRemaining">--</span></span>
     <button class="btn btn-sm btn-r" onclick="toggleChat('ai')">✕ CLOSE</button>
   </div>
   <div class="chat-msgs" id="aiMsgs">
     <div class="chat-msg ai">
-      <div>Welcome! Ask me about WinGo patterns, predictions, or strategies.</div>
+      <div>Welcome to ANASHRAW.AI! Ask me about WinGo strategies, predictions, or patterns.</div>
       <div class="chat-msg-time">ANASHRAW AI</div>
     </div>
   </div>
@@ -567,10 +596,11 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
   </div>
 </div>
 
-<!-- ADMIN CHAT -->
+<!-- Admin Chat -->
 <div class="chat-panel" id="adminChatPanel">
   <div class="chat-hdr">
     <div class="chat-title" style="color:var(--c)">💬 SUPPORT CHAT</div>
+    <div id="adminTypingIndicator" class="hidden" style="font-size:8px;color:var(--mut);">Admin is typing...</div>
     <button class="btn btn-sm btn-c" onclick="toggleChat('admin')">✕ CLOSE</button>
   </div>
   <div class="chat-msgs" id="adminMsgs">
@@ -586,6 +616,7 @@ header{padding:10px 0 8px;border-bottom:1px solid var(--bdr);margin-bottom:10px;
   </div>
 </div>
 
+<!-- ═══ SCRIPTS ═══════════════════════════════════════ -->
 <script>
 // ═══════════════════════════════════════════════════════
 // CONFIG
@@ -598,8 +629,8 @@ const FB_CONFIG = {
   messagingSenderId: "887881948342",
   appId: "1:887881948342:web:4d9d9cd37a5911d500da17"
 };
-const WORKER = 'https://anashraw-predictor.anashrawdixit191.workers.dev';
-const WINGO_URL = 'https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts=';
+const WORKER = "https://anashraw-predictor.anashrawdixit191.workers.dev";
+const WINGO_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?pageNo=1&pageSize=10&language=0&ts=";
 
 // ═══════════════════════════════════════════════════════
 // STATE
@@ -607,8 +638,8 @@ const WINGO_URL = 'https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssueP
 let db;
 let userKey = null, keyData = null;
 let feedPaused = false;
-let apiResults = [];      // fresh from WinGo API (top of feed)
-let fbResults = [];       // from Firebase/Worker (history below)
+let apiResults = [];   // fresh from WinGo API (top)
+let fbResults = [];    // from Firebase/Worker (history below)
 let lastSeenPeriod = null;
 let countdownSec = 60;
 let clockInterval = null, countdownInterval = null;
@@ -619,7 +650,7 @@ let loginChatName = null, loginChatUnsub = null;
 let settingsCache = {};
 
 // ═══════════════════════════════════════════════════════
-// FIREBASE
+// FIREBASE INIT
 // ═══════════════════════════════════════════════════════
 firebase.initializeApp(FB_CONFIG);
 db = firebase.firestore();
@@ -628,22 +659,22 @@ db = firebase.firestore();
 // MATRIX RAIN
 // ═══════════════════════════════════════════════════════
 (function(){
-  const cv = document.getElementById('mc');
-  const ctx = cv.getContext('2d');
+  const cv = document.getElementById("mc");
+  const ctx = cv.getContext("2d");
   let cols, drops = [];
-  const chars = 'アイウエオカキクケコ0123456789ABCDEF!@#$%ANASHRAW';
+  const chars = "アイウエオカキクケコ0123456789ABCDEF!@#$%ANASHRAW";
   function resize(){
     cv.width = window.innerWidth; cv.height = window.innerHeight;
     cols = Math.floor(cv.width / 14);
     drops = Array(cols).fill(1);
   }
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener("resize", resize);
   setInterval(() => {
-    ctx.fillStyle = 'rgba(0,0,0,.05)';
+    ctx.fillStyle = "rgba(0,0,0,.05)";
     ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.fillStyle = '#00ff41';
-    ctx.font = '12px Share Tech Mono';
+    ctx.fillStyle = "#00ff41";
+    ctx.font = "12px Share Tech Mono";
     drops.forEach((y, i) => {
       ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 14, y * 14);
       if (y * 14 > cv.height && Math.random() > .975) drops[i] = 0;
@@ -655,27 +686,27 @@ db = firebase.firestore();
 // ═══════════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════════
-function toast(msg, type = '') {
-  const el = document.createElement('div');
-  el.className = 'toast-item' + (type ? ' ' + type : '');
+function toast(msg, type = "") {
+  const el = document.createElement("div");
+  el.className = "toast-item" + (type ? " " + type : "");
   el.textContent = msg;
-  document.getElementById('toast').appendChild(el);
+  document.getElementById("toast").appendChild(el);
   setTimeout(() => el.remove(), 3200);
 }
 function colorOf(n) {
-  if (n === 0 || n === 5) return 'violet';
-  if ([1, 3, 7, 9].includes(n)) return 'green';
-  return 'red';
+  if (n === 0 || n === 5) return "violet";
+  if ([1, 3, 7, 9].includes(n)) return "green";
+  return "red";
 }
 function colorCss(c) {
-  if (c === 'green') return '#00ff41';
-  if (c === 'violet') return '#bf7fff';
-  return '#ff0040';
+  if (c === "green") return "#00ff41";
+  if (c === "violet") return "#bf7fff";
+  return "#ff0040";
 }
-function sizeOf(n) { return n >= 5 ? 'BIG' : 'SMALL'; }
-function fmtPeriod(p) { return 'P' + String(p || '').slice(-6); }
+function sizeOf(n) { return n >= 5 ? "BIG" : "SMALL"; }
+function fmtPeriod(p) { return "P" + String(p || "").slice(-6); }
 function escapeHtml(t) {
-  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 function scrollChat(id) {
   const el = document.getElementById(id);
@@ -685,25 +716,20 @@ function toggleSec(bodyId, toggleId) {
   const el = document.getElementById(bodyId);
   const icon = document.getElementById(toggleId);
   if (!el) return;
-  const collapsed = el.classList.toggle('sec-collapsed');
-  if (icon) icon.textContent = collapsed ? '▼' : '▲';
+  const collapsed = el.classList.toggle("sec-collapsed");
+  if (icon) icon.textContent = collapsed ? "▼" : "▲";
 }
+
+// Flash refresh indicators when new data arrives
 function flashRefresh() {
-  // Flash both top and bottom refresh indicators
-  const top = document.getElementById('topRefreshLine');
-  if (top) {
-    top.classList.remove('active');
-    void top.offsetWidth;
-    top.classList.add('active');
-  }
-  const txt = document.getElementById('feedRefreshTxt');
+  const txt = document.getElementById("feedRefreshTxt");
   if (txt) {
-    txt.textContent = '● NEW DATA';
-    txt.style.color = 'var(--g)';
-    setTimeout(() => { txt.textContent = 'LIVE'; txt.style.color = ''; }, 1000);
+    txt.textContent = "● NEW DATA";
+    txt.style.color = "var(--g)";
+    setTimeout(() => { txt.textContent = "LIVE"; txt.style.color = ""; }, 1500);
   }
-  const ts = document.getElementById('feedLastUpdate');
-  if (ts) ts.textContent = new Date().toTimeString().split(' ')[0];
+  const ts = document.getElementById("feedLastUpdate");
+  if (ts) ts.textContent = new Date().toTimeString().split(" ")[0];
 }
 
 // ═══════════════════════════════════════════════════════
@@ -712,9 +738,9 @@ function flashRefresh() {
 function startClock() {
   function tick() {
     const now = new Date();
-    document.getElementById('clk').textContent = now.toTimeString().split(' ')[0];
-    document.getElementById('clkd').textContent = now.toLocaleDateString('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric'
+    document.getElementById("clk").textContent = now.toTimeString().split(" ")[0];
+    document.getElementById("clkd").textContent = now.toLocaleDateString("en-US", {
+      weekday: "short", month: "short", day: "numeric"
     }).toUpperCase();
   }
   tick();
@@ -723,22 +749,22 @@ function startClock() {
 }
 
 // ═══════════════════════════════════════════════════════
-// COUNTDOWN — smooth 60→0, resets on new period
+// COUNTDOWN — smooth 60 to 0, resets on new period
 // ═══════════════════════════════════════════════════════
 function startCountdown() {
   if (countdownInterval) clearInterval(countdownInterval);
   countdownSec = 60;
   countdownInterval = setInterval(() => {
     if (countdownSec > 0) countdownSec--;
-    document.getElementById('cdTime').textContent = countdownSec + 's';
-    document.getElementById('cdFill').style.width = ((countdownSec / 60) * 100) + '%';
+    document.getElementById("cdTime").textContent = countdownSec + "s";
+    document.getElementById("cdFill").style.width = ((countdownSec / 60) * 100) + "%";
   }, 1000);
 }
 
 function resetCountdown() {
   countdownSec = 60;
-  document.getElementById('cdTime').textContent = '60s';
-  document.getElementById('cdFill').style.width = '100%';
+  document.getElementById("cdTime").textContent = "60s";
+  document.getElementById("cdFill").style.width = "100%";
 }
 
 // ═══════════════════════════════════════════════════════
@@ -748,28 +774,27 @@ function normalizeResult(item) {
   const num = parseInt(item.openNum ?? item.number ?? item.num ?? 99);
   const period = parseInt(item.issue ?? item.issueNumber ?? item.period ?? item.id ?? 0);
   const periodStr = String(item.issueNumber ?? item.periodStr ?? item.period ?? item.issue ?? period);
-  let col = String(item.colour ?? item.color ?? '').toLowerCase();
+  let col = String(item.colour ?? item.color ?? "").toLowerCase();
   if (!col) col = colorOf(num);
-  // Normalize colour — remove duplicates like "green,violet" → just first
-  if (col.includes(',')) col = col.split(',')[0].trim();
-  let bs = String(item.bigSmall ?? item.BigSmall ?? '').toUpperCase();
+  if (col.includes(",")) col = col.split(",")[0].trim();
+  let bs = String(item.bigSmall ?? item.BigSmall ?? "").toUpperCase();
   if (!bs) bs = sizeOf(num);
   return { period, periodStr, number: num, colour: col, bigSmall: bs };
 }
 
 // ═══════════════════════════════════════════════════════
-// FETCH WINGO API (direct + allorigins fallback)
+// FETCH WINGO API — direct + allorigins fallback
 // ═══════════════════════════════════════════════════════
 async function fetchWinGoAPI() {
   const ts = Date.now();
   const direct = WINGO_URL + ts;
-  const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(direct);
+  const proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(direct);
   for (const url of [direct, proxy]) {
     try {
-      const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const resp = await fetch(url);
       if (!resp.ok) continue;
       const text = await resp.text();
-      if (!text || text.trim().startsWith('<')) continue;
+      if (!text || text.trim().startsWith("<")) continue;
       const json = JSON.parse(text);
       let list = [];
       if (json.data?.list) list = json.data.list;
@@ -795,7 +820,7 @@ async function fetchWinGoAPI() {
 // ═══════════════════════════════════════════════════════
 async function fetchFirebaseResults() {
   try {
-    const resp = await fetch(`${WORKER}/results?limit=100`);
+    const resp = await fetch(WORKER + "/results?limit=100");
     if (!resp.ok) return [];
     const data = await resp.json();
     return (data.results || []).map(normalizeResult).filter(x => x.period > 0);
@@ -804,17 +829,15 @@ async function fetchFirebaseResults() {
 
 // ═══════════════════════════════════════════════════════
 // BUILD MERGED FEED
-// API results always on top, Firebase below, no duplicates, max 100
+// API results on top, Firebase below, no duplicates, max 100
 // ═══════════════════════════════════════════════════════
 function buildMergedFeed() {
   const seen = new Set();
   const out = [];
-  // API first (fresh, on top)
   for (const r of apiResults) {
     const k = String(r.period);
     if (!seen.has(k)) { seen.add(k); out.push(r); }
   }
-  // Firebase below (sorted desc)
   const fbSorted = [...fbResults].sort((a, b) => b.period - a.period);
   for (const r of fbSorted) {
     const k = String(r.period);
@@ -827,41 +850,40 @@ function buildMergedFeed() {
 // RENDER FEED
 // ═══════════════════════════════════════════════════════
 function renderFeed(results) {
-  const box = document.getElementById('feedBox');
+  const box = document.getElementById("feedBox");
   if (!results.length) {
-    box.innerHTML = '<div class="empty">⏳ Waiting for data...</div>';
+    box.innerHTML = "<div class=\"empty\">⏳ Waiting for data...</div>";
     return;
   }
   box.innerHTML = results.map((r, idx) => {
     const num = r.number ?? 0;
     const col = String(r.colour || colorOf(num)).toLowerCase();
     const bs = String(r.bigSmall || sizeOf(num)).toUpperCase();
-    const cc = col.includes('violet') ? 'violet' : col.includes('green') ? 'green' : 'red';
-    const isNew = idx === 0 ? ' feed-new' : '';
-    return `<div class="feed-row${isNew}">
-      <span class="feed-idx">${idx + 1}</span>
-      <span class="feed-prd">${fmtPeriod(r.periodStr || r.period)}</span>
-      <span class="feed-num ${cc}">${num}</span>
-      <span class="feed-badge badge-${cc}">${col.toUpperCase()}</span>
-      <span class="feed-badge ${bs === 'BIG' ? 'badge-big' : 'badge-small'}">${bs}</span>
-    </div>`;
-  }).join('');
+    const cc = col.includes("violet") ? "violet" : col.includes("green") ? "green" : "red";
+    return "<div class=\"feed-row" + (idx === 0 ? " feed-new" : "") + "\">" +
+      "<span class=\"feed-idx\">" + (idx + 1) + "</span>" +
+      "<span class=\"feed-prd\">" + fmtPeriod(r.periodStr || r.period) + "</span>" +
+      "<span class=\"feed-num " + cc + "\">" + num + "</span>" +
+      "<span class=\"feed-badge badge-" + cc + "\">" + col.toUpperCase() + "</span>" +
+      "<span class=\"feed-badge " + (bs === "BIG" ? "badge-big" : "badge-small") + "\">" + bs + "</span>" +
+      "</div>";
+  }).join("");
 }
 
 function updateFeedPreview(results) {
-  const p = document.getElementById('keyFeedPreview');
+  const p = document.getElementById("keyFeedPreview");
   if (!p) return;
-  if (!results.length) { p.innerHTML = '<div class="empty">No data yet</div>'; return; }
+  if (!results.length) { p.innerHTML = "<div class=\"empty\">No data yet</div>"; return; }
   p.innerHTML = results.slice(0, 8).map((r, i) => {
     const num = r.number ?? 0;
     const col = String(r.colour || colorOf(num)).toLowerCase();
-    const cc = col.includes('violet') ? 'violet' : col.includes('green') ? 'green' : 'red';
-    return `<div class="feed-row">
-      <span class="feed-idx" style="font-size:7px">${i + 1}</span>
-      <span class="feed-num ${cc}" style="font-size:13px">${num}</span>
-      <span class="feed-badge badge-${cc}" style="font-size:6px">${col.toUpperCase()}</span>
-    </div>`;
-  }).join('');
+    const cc = col.includes("violet") ? "violet" : col.includes("green") ? "green" : "red";
+    return "<div class=\"feed-row\">" +
+      "<span class=\"feed-idx\" style=\"font-size:7px\">" + (i + 1) + "</span>" +
+      "<span class=\"feed-num " + cc + "\" style=\"font-size:13px\">" + num + "</span>" +
+      "<span class=\"feed-badge badge-" + cc + "\" style=\"font-size:6px\">" + col.toUpperCase() + "</span>" +
+      "</div>";
+  }).join("");
 }
 
 // ═══════════════════════════════════════════════════════
@@ -875,7 +897,6 @@ async function pollWinGo() {
   const topPeriod = String(fresh[0].period);
   const isNew = topPeriod !== lastSeenPeriod;
 
-  // Always update API results
   apiResults = fresh;
 
   if (isNew) {
@@ -889,145 +910,124 @@ async function pollWinGo() {
   const merged = buildMergedFeed();
   renderFeed(merged);
   updateFeedPreview(merged);
-
-  // Update header info
-  document.getElementById('fbSync').textContent = new Date().toTimeString().split(' ')[0];
-  document.getElementById('fbCount').textContent = merged.length;
-  document.getElementById('feedCount').textContent = merged.length;
-  document.getElementById('cdPeriod').textContent = 'PRD: ' + fmtPeriod(fresh[0].period);
-  document.getElementById('predPeriodBadge').textContent = fmtPeriod(parseInt(fresh[0].period) + 1);
+  document.getElementById("fbSync").textContent = new Date().toTimeString().split(" ")[0];
+  document.getElementById("fbCount").textContent = merged.length;
+  document.getElementById("feedCount").textContent = merged.length;
+  document.getElementById("cdPeriod").textContent = "PRD: " + fmtPeriod(fresh[0].period);
+  document.getElementById("predPeriodBadge").textContent = fmtPeriod(parseInt(fresh[0].period) + 1);
 }
 
 // ═══════════════════════════════════════════════════════
-// INIT FEED — load Firebase bulk first, then start polling
+// INIT FEED
 // ═══════════════════════════════════════════════════════
 async function initFeed() {
-  document.getElementById('feedBox').innerHTML = '<div class="empty">⏳ Loading...</div>';
-
-  // Load Firebase history first
+  document.getElementById("feedBox").innerHTML = "<div class=\"empty\">⏳ Loading...</div>";
   const fb = await fetchFirebaseResults();
   if (fb.length) {
     fbResults = fb;
     const merged = buildMergedFeed();
     renderFeed(merged);
     updateFeedPreview(merged);
-    document.getElementById('feedCount').textContent = merged.length;
-    document.getElementById('fbCount').textContent = merged.length;
-    if (fb.length) {
-      const top = fb.sort((a, b) => b.period - a.period)[0];
-      lastSeenPeriod = String(top.period);
-      document.getElementById('cdPeriod').textContent = 'PRD: ' + fmtPeriod(top.period);
-      document.getElementById('predPeriodBadge').textContent = fmtPeriod(parseInt(top.period) + 1);
+    document.getElementById("feedCount").textContent = merged.length;
+    document.getElementById("fbCount").textContent = merged.length;
+    const top = [...fb].sort((a, b) => b.period - a.period)[0];
+    if (top) {
+      // Don't set lastSeenPeriod here — only API sets it
+      // So countdown resets properly on new period
+      document.getElementById("cdPeriod").textContent = "PRD: " + fmtPeriod(top.period);
+      document.getElementById("predPeriodBadge").textContent = fmtPeriod(parseInt(top.period) + 1);
     }
   }
-
-  // Start 2sec polling
   if (apiPollInterval) clearInterval(apiPollInterval);
   apiPollInterval = setInterval(pollWinGo, 2000);
-  pollWinGo(); // immediate first poll
+  pollWinGo();
 }
 
 function reloadFeed() {
-  apiResults = [];
-  fbResults = [];
+  apiResults = []; fbResults = [];
   initFeed();
 }
 
 function togglePause() {
   feedPaused = !feedPaused;
-  const btn = document.getElementById('pauseBtn');
-  btn.textContent = feedPaused ? '▶ RESUME' : '⏸ PAUSE';
-  btn.className = feedPaused ? 'btn btn-sm btn-y' : 'btn btn-sm btn-r';
-  const dot = document.getElementById('feedRefreshTxt');
-  if (dot) { dot.textContent = feedPaused ? 'PAUSED' : 'LIVE'; dot.style.color = feedPaused ? 'var(--y)' : ''; }
+  const btn = document.getElementById("pauseBtn");
+  btn.textContent = feedPaused ? "▶ RESUME" : "⏸ PAUSE";
+  btn.className = feedPaused ? "btn btn-sm btn-y" : "btn btn-sm btn-r";
 }
 
 // ═══════════════════════════════════════════════════════
-// PREDICTION — from Firebase (tier based)
+// PREDICTION
 // ═══════════════════════════════════════════════════════
 async function loadPrediction() {
   if (!userKey) return;
   try {
-    const tier = keyData?.tier || 'basic';
-    const metaId = tier === 'vip' ? 'latestPrediction_vip'
-      : tier === 'basic' ? 'latestPrediction_normal'
-      : 'latestPrediction';
-    const snap = await db.collection('meta').doc(metaId).get();
+    const tier = keyData?.tier || "basic";
+    const metaId = tier === "vip" ? "latestPrediction_vip"
+      : tier === "basic" ? "latestPrediction_normal"
+      : "latestPrediction";
+    const snap = await db.collection("meta").doc(metaId).get();
     if (!snap.exists) {
-      document.getElementById('predNumDisplay').innerHTML =
-        '<div class="empty" style="padding:30px">⏳ No prediction yet — Worker collecting data...</div>';
+      document.getElementById("predNumDisplay").innerHTML =
+        "<div class=\"empty\" style=\"padding:30px\">⏳ No prediction yet — Worker is collecting data...</div>";
       return;
     }
     renderPrediction(snap.data());
-    document.getElementById('chipAI').className = 'chip chip-ok';
-    document.getElementById('chipAI').querySelector('.chip-dot').className = 'chip-dot chip-dot-ok';
-  } catch (e) { console.error('Prediction:', e); }
+  } catch (e) { console.error("Prediction:", e); }
 }
 
 function renderPrediction(pred) {
   if (!pred) return;
-  const num = pred.predictedNum ?? pred.number ?? '?';
-  const col = String(pred.predictedColor ?? pred.colour ?? 'green').toLowerCase();
-  const bs = String(pred.predictedBS ?? pred.bigSmall ?? 'BIG').toUpperCase();
+  const num = pred.predictedNum ?? pred.number ?? "?";
+  const col = String(pred.predictedColor ?? pred.colour ?? "green").toLowerCase();
+  const bs = String(pred.predictedBS ?? pred.bigSmall ?? "BIG").toUpperCase();
   const numConf = pred.numConf ?? pred.numberConfidence ?? 0;
   const colConf = pred.colorConf ?? 0;
   const bsConf = pred.bsConf ?? 0;
-  const cc = col.includes('violet') ? 'violet' : col.includes('green') ? 'green' : 'red';
+  const cc = col.includes("violet") ? "violet" : col.includes("green") ? "green" : "red";
 
-  document.getElementById('predBigNum').textContent = num;
-  document.getElementById('predBigNum').style.color = colorCss(cc);
+  document.getElementById("predBigNum").textContent = num;
+  document.getElementById("predBigNum").style.color = colorCss(cc);
 
-  const cb = document.getElementById('predColBadge');
+  const cb = document.getElementById("predColBadge");
   cb.textContent = col.toUpperCase();
   cb.style.borderColor = cb.style.color = colorCss(cc);
 
-  const bb = document.getElementById('predBsBadge');
+  const bb = document.getElementById("predBsBadge");
   bb.textContent = bs;
-  bb.style.borderColor = bb.style.color = bs === 'BIG' ? '#00ffea' : '#ffe000';
+  bb.style.borderColor = bb.style.color = bs === "BIG" ? "#00ffea" : "#ffe000";
 
-  // Confidence bars (from history accuracy)
-  document.getElementById('confNumPct').textContent = numConf + '%';
-  document.getElementById('confNumBar').style.width = numConf + '%';
-  document.getElementById('confColPct').textContent = colConf + '%';
-  document.getElementById('confColBar').style.width = colConf + '%';
-  document.getElementById('confBsPct').textContent = bsConf + '%';
-  document.getElementById('confBsBar').style.width = bsConf + '%';
+  document.getElementById("confNumPct").textContent = numConf + "%";
+  document.getElementById("confNumBar").style.width = numConf + "%";
+  document.getElementById("confColPct").textContent = colConf + "%";
+  document.getElementById("confColBar").style.width = colConf + "%";
+  document.getElementById("confBsPct").textContent = bsConf + "%";
+  document.getElementById("confBsBar").style.width = bsConf + "%";
 
-  // Alternatives
   const alts = pred.alternatives || [];
-  document.getElementById('altsRow').innerHTML = alts.slice(0, 4).map(a => {
-    const ac = String(a.colour || colorOf(a.number)).toLowerCase();
-    const acc = ac.includes('violet') ? 'violet' : ac.includes('green') ? 'green' : 'red';
-    return `<div class="alt-item">
-      <div class="alt-num" style="color:${colorCss(acc)}">${a.number}</div>
-      <div class="alt-prob">${a.probability || 0}%</div>
-    </div>`;
-  }).join('');
+  if (alts.length) {
+    document.getElementById("altsRow").innerHTML = alts.slice(0, 4).map(a => {
+      const ac = String(a.colour || colorOf(a.number)).toLowerCase();
+      const acc = ac.includes("violet") ? "violet" : ac.includes("green") ? "green" : "red";
+      return "<div class=\"alt-item\"><div class=\"alt-num\" style=\"color:" + colorCss(acc) + "\">" + a.number + "</div><div class=\"alt-prob\">" + (a.probability || 0) + "%</div></div>";
+    }).join("");
+  }
 
-  // Reasoning
   if (pred.reasoning) {
-    document.getElementById('reasoningText').textContent = pred.reasoning;
-    document.getElementById('reasoningBox').style.display = 'block';
+    document.getElementById("reasoningText").textContent = pred.reasoning;
+    document.getElementById("reasoningBox").classList.remove("hidden");
   }
 
-  // Analysis chips
-  const hot = (pred.hot || pred.hotNumbers || []).join(', ') || '--';
-  const cold = (pred.cold || pred.coldNumbers || []).join(', ') || '--';
-  document.getElementById('analysisChips').innerHTML = `
-    <span class="ana-chip hot">🔥 HOT: ${hot}</span>
-    <span class="ana-chip cold">❄️ COLD: ${cold}</span>
-    <span class="ana-chip streak">⚡ STREAK: ${pred.streakInfo || pred.streak || '--'}</span>
-    <span class="ana-chip colrun">🎨 RUN: ${pred.colorRun || '--'}</span>
-    <span class="ana-chip neutral">📊 B/S: ${pred.bsRatio || '--'}</span>
-    <span class="ana-chip neutral">🗄️ DATA: ${pred.dataPoints || '--'} pts</span>
-  `;
+  const hot = (pred.hot || pred.hotNumbers || []).join(", ") || "--";
+  const cold = (pred.cold || pred.coldNumbers || []).join(", ") || "--";
+  document.getElementById("analysisChips").innerHTML =
+    "<span class=\"ana-chip hot\">🔥 HOT: " + hot + "</span>" +
+    "<span class=\"ana-chip cold\">❄️ COLD: " + cold + "</span>" +
+    "<span class=\"ana-chip streak\">⚡ STREAK: " + (pred.streakInfo || pred.streak || "--") + "</span>" +
+    "<span class=\"ana-chip colrun\">🎨 RUN: " + (pred.colorRun || "--") + "</span>" +
+    "<span class=\"ana-chip neutral\">📊 B/S: " + (pred.bsRatio || "--") + "</span>" +
+    "<span class=\"ana-chip neutral\">🗄️ DATA: " + (pred.dataPoints || "--") + " pts</span>";
 
-  // Period + updated time
-  document.getElementById('predPeriodBadge').textContent = fmtPeriod(pred.period || '');
-  if (pred.createdAt) {
-    const d = pred.createdAt.toDate ? pred.createdAt.toDate() : new Date(pred.createdAt);
-    document.getElementById('predUpdated').textContent = 'Updated: ' + d.toTimeString().split(' ')[0];
-  }
+  document.getElementById("predPeriodBadge").textContent = fmtPeriod(pred.period || "");
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1038,49 +1038,48 @@ async function loadHistory() {
   try {
     let snap;
     try {
-      snap = await db.collection('predictions')
-        .where('resolved', '==', true)
-        .orderBy('period', 'desc')
+      snap = await db.collection("predictions")
+        .where("resolved", "==", true)
+        .orderBy("period", "desc")
         .limit(20).get();
     } catch (e) {
-      // Index may not exist yet
-      snap = await db.collection('predictions')
-        .where('resolved', '==', true)
+      snap = await db.collection("predictions")
+        .where("resolved", "==", true)
         .limit(20).get();
     }
     predHistory = snap.docs.map(d => d.data())
       .sort((a, b) => String(b.period).localeCompare(String(a.period)));
     renderHistory();
     updateStats();
-  } catch (e) { console.error('History:', e); }
+  } catch (e) { console.error("History:", e); }
 }
 
 function renderHistory() {
-  const tbody = document.getElementById('histTbody');
-  const count = document.getElementById('histCount');
+  const tbody = document.getElementById("histTbody");
+  const count = document.getElementById("histCount");
   if (!predHistory.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">No resolved predictions yet</td></tr>';
-    count.textContent = '0';
+    tbody.innerHTML = "<tr><td colspan=\"9\" class=\"empty\">No resolved predictions yet</td></tr>";
+    count.textContent = "0";
     return;
   }
   count.textContent = predHistory.length;
   tbody.innerHTML = predHistory.map(p => {
     const wN = p.winNum === true, wC = p.winColor === true, wB = p.winBS === true;
     const any = p.anyWin === true;
-    const mk = v => v ? '<span class="win-badge">✓</span>' : '<span class="loss-badge">✗</span>';
-    const pend = '<span class="pend-badge">⏳</span>';
-    return `<tr class="${p.resolved ? (any ? 'win-row' : 'loss-row') : ''}">
-      <td>${fmtPeriod(p.period || p.forPeriod || '')}</td>
-      <td>${p.predictedNum ?? p.number ?? '?'}</td>
-      <td>${String(p.predictedColor ?? p.colour ?? '').toUpperCase()}</td>
-      <td>${String(p.predictedBS ?? p.bigSmall ?? '').toUpperCase()}</td>
-      <td>${p.resolved ? (p.actualNum ?? '?') : '-'}</td>
-      <td>${p.resolved ? String(p.actualColor ?? '').toUpperCase() : '-'}</td>
-      <td>${p.resolved ? mk(wN) : pend}</td>
-      <td>${p.resolved ? mk(wC) : pend}</td>
-      <td>${p.resolved ? mk(wB) : pend}</td>
-    </tr>`;
-  }).join('');
+    const mk = v => v ? "<span class=\"win-badge\">✓</span>" : "<span class=\"loss-badge\">✗</span>";
+    const pend = "<span class=\"pend-badge\">⏳</span>";
+    return "<tr class=\"" + (p.resolved ? (any ? "win-row" : "loss-row") : "") + "\">" +
+      "<td>" + fmtPeriod(p.period || p.forPeriod || "") + "</td>" +
+      "<td>" + (p.predictedNum ?? p.number ?? "?") + "</td>" +
+      "<td>" + String(p.predictedColor ?? p.colour ?? "").toUpperCase() + "</td>" +
+      "<td>" + String(p.predictedBS ?? p.bigSmall ?? "").toUpperCase() + "</td>" +
+      "<td>" + (p.resolved ? (p.actualNum ?? "?") : "-") + "</td>" +
+      "<td>" + (p.resolved ? String(p.actualColor ?? "").toUpperCase() : "-") + "</td>" +
+      "<td>" + (p.resolved ? mk(wN) : pend) + "</td>" +
+      "<td>" + (p.resolved ? mk(wC) : pend) + "</td>" +
+      "<td>" + (p.resolved ? mk(wB) : pend) + "</td>" +
+      "</tr>";
+  }).join("");
 }
 
 function updateStats() {
@@ -1094,84 +1093,75 @@ function updateStats() {
   let streak = 0;
   for (const p of res) { if (p.anyWin === true) streak++; else break; }
 
-  document.getElementById('stTotal').textContent = total;
-  document.getElementById('stWins').textContent = any;
-  document.getElementById('stLoss').textContent = total - any;
-  document.getElementById('stPct').textContent = (total ? Math.round((any / total) * 100) : 0) + '%';
-  document.getElementById('stPend').textContent = pend;
-  document.getElementById('stColAcc').textContent = (total ? Math.round((cw / total) * 100) : 0) + '%';
-  document.getElementById('stNumAcc').textContent = (total ? Math.round((wins / total) * 100) : 0) + '%';
-  document.getElementById('stBsAcc').textContent = (total ? Math.round((bw / total) * 100) : 0) + '%';
-  document.getElementById('stStreak').textContent = streak;
-
-  // Update prediction confidence details with real accuracy
-  document.getElementById('confNumDetail').textContent = `${wins}/${total} correct`;
-  document.getElementById('confColDetail').textContent = `${cw}/${total} correct`;
-  document.getElementById('confBsDetail').textContent = `${bw}/${total} correct`;
+  document.getElementById("stTotal").textContent = total;
+  document.getElementById("stWins").textContent = any;
+  document.getElementById("stLoss").textContent = total - any;
+  document.getElementById("stPct").textContent = (total ? Math.round((any / total) * 100) : 0) + "%";
+  document.getElementById("stPend").textContent = pend;
+  document.getElementById("stColAcc").textContent = (total ? Math.round((cw / total) * 100) : 0) + "%";
+  document.getElementById("stNumAcc").textContent = (total ? Math.round((wins / total) * 100) : 0) + "%";
+  document.getElementById("stBsAcc").textContent = (total ? Math.round((bw / total) * 100) : 0) + "%";
+  document.getElementById("stStreak").textContent = streak;
+  document.getElementById("confNumDetail").textContent = wins + "/" + total + " correct";
+  document.getElementById("confColDetail").textContent = cw + "/" + total + " correct";
+  document.getElementById("confBsDetail").textContent = bw + "/" + total + " correct";
 }
 
 // ═══════════════════════════════════════════════════════
 // AI CHAT
 // ═══════════════════════════════════════════════════════
 async function sendAIMsg() {
-  const input = document.getElementById('aiInput');
-  const msg = (input.value || '').trim();
+  const input = document.getElementById("aiInput");
+  const msg = (input.value || "").trim();
   if (!msg) return;
-  if (aiRemaining <= 0) {
-    addChatMsg('aiMsgs', '❌ Daily question limit reached. Contact admin to increase.', 'ai');
-    return;
-  }
-  input.value = '';
-  addChatMsg('aiMsgs', msg, 'user');
-  aiChatHistory.push({ role: 'user', content: msg });
-  document.getElementById('aiTyping').classList.remove('hidden');
-  scrollChat('aiMsgs');
+  if (aiRemaining <= 0) { addChatMsg("aiMsgs", "❌ Daily limit reached. Contact admin.", "ai"); return; }
+  input.value = "";
+  addChatMsg("aiMsgs", msg, "user");
+  aiChatHistory.push({ role: "user", content: msg });
+  document.getElementById("aiTyping").classList.remove("hidden");
+  scrollChat("aiMsgs");
   try {
-    const resp = await fetch(`${WORKER}/ai-chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const resp = await fetch(WORKER + "/ai-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: userKey, message: msg, history: aiChatHistory.slice(-8) })
     });
     const data = await resp.json();
-    document.getElementById('aiTyping').classList.add('hidden');
+    document.getElementById("aiTyping").classList.add("hidden");
     if (data.ok) {
-      addChatMsg('aiMsgs', data.reply, 'ai');
-      aiChatHistory.push({ role: 'assistant', content: data.reply });
+      addChatMsg("aiMsgs", data.reply, "ai");
+      aiChatHistory.push({ role: "assistant", content: data.reply });
       updateAIRemaining(data.remaining, data.max);
-    } else {
-      addChatMsg('aiMsgs', '❌ ' + (data.error || 'Error'), 'ai');
-    }
+    } else { addChatMsg("aiMsgs", "❌ " + (data.error || "Error"), "ai"); }
   } catch (e) {
-    document.getElementById('aiTyping').classList.add('hidden');
-    addChatMsg('aiMsgs', '❌ Connection error', 'ai');
+    document.getElementById("aiTyping").classList.add("hidden");
+    addChatMsg("aiMsgs", "❌ Connection error", "ai");
   }
 }
 
 function addChatMsg(id, text, role) {
   const c = document.getElementById(id);
-  const div = document.createElement('div');
-  div.className = 'chat-msg ' + role;
-  div.innerHTML = `<div>${escapeHtml(text)}</div><div class="chat-msg-time">${role === 'user' ? 'YOU' : 'AI'} ${new Date().toTimeString().split(' ')[0]}</div>`;
+  const div = document.createElement("div");
+  div.className = "chat-msg " + role;
+  div.innerHTML = "<div>" + escapeHtml(text) + "</div><div class=\"chat-msg-time\">" + (role === "user" ? "YOU" : "AI") + " " + new Date().toTimeString().split(" ")[0] + "</div>";
   c.appendChild(div);
   scrollChat(id);
 }
-
 function updateAIRemaining(rem, max) {
   aiRemaining = rem || 0;
-  document.getElementById('aiRemaining').textContent = `${rem || 0}/${max || 5}`;
+  document.getElementById("aiRemaining").textContent = (rem || 0) + "/" + (max || 5);
 }
-
 function toggleChat(type) {
-  const ai = document.getElementById('aiChatPanel');
-  const adm = document.getElementById('adminChatPanel');
-  if (type === 'ai') {
-    ai.classList.toggle('open'); adm.classList.remove('open');
-    if (ai.classList.contains('open')) scrollChat('aiMsgs');
+  const ai = document.getElementById("aiChatPanel");
+  const adm = document.getElementById("adminChatPanel");
+  if (type === "ai") {
+    ai.classList.toggle("open"); adm.classList.remove("open");
+    if (ai.classList.contains("open")) scrollChat("aiMsgs");
   } else {
-    adm.classList.toggle('open'); ai.classList.remove('open');
-    if (adm.classList.contains('open')) {
-      document.getElementById('adminNotifDot').style.display = 'none';
-      scrollChat('adminMsgs');
+    adm.classList.toggle("open"); ai.classList.remove("open");
+    if (adm.classList.contains("open")) {
+      document.getElementById("adminNotifDot").style.display = "none";
+      scrollChat("adminMsgs");
     }
   }
 }
@@ -1183,180 +1173,157 @@ function initAdminChat() {
   if (!userKey) return;
   adminChatId = userKey.toUpperCase();
   if (adminChatUnsub) adminChatUnsub();
-  adminChatUnsub = db.collection('adminChat').doc(adminChatId)
-    .onSnapshot(snap => {
-      if (!snap.exists) return;
-      renderAdminChat(snap.data().messages || []);
-    }, err => console.warn('Admin chat:', err));
+  adminChatUnsub = db.collection("adminChat").doc(adminChatId).onSnapshot(snap => {
+    if (!snap.exists) return;
+    renderAdminChat(snap.data().messages || []);
+  }, err => console.warn("Admin chat:", err));
 }
-
 function renderAdminChat(msgs) {
-  const c = document.getElementById('adminMsgs');
-  const panel = document.getElementById('adminChatPanel');
-  if (!panel.classList.contains('open') && msgs.filter(m => m.role === 'admin').length) {
-    document.getElementById('adminNotifDot').style.display = 'block';
-  }
-  c.innerHTML = `<div class="chat-msg ai" style="border-color:#006060;">
-    <div>Support chat connected.</div><div class="chat-msg-time">SYSTEM</div></div>`;
+  const c = document.getElementById("adminMsgs");
+  const panel = document.getElementById("adminChatPanel");
+  if (!panel.classList.contains("open") && msgs.filter(m => m.role === "admin").length)
+    document.getElementById("adminNotifDot").style.display = "block";
+  c.innerHTML = "<div class=\"chat-msg ai\" style=\"border-color:#006060;\"><div>Support chat connected.</div><div class=\"chat-msg-time\">SYSTEM</div></div>";
   msgs.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'chat-msg ' + (m.role === 'admin' ? 'admin-msg' : 'user');
-    const time = m.timestamp ? new Date(m.timestamp).toTimeString().split(' ')[0] : '';
-    div.innerHTML = `<div>${escapeHtml(m.content)}</div>
-      <div class="chat-msg-time">${m.role === 'admin' ? 'ADMIN' : m.senderName || 'YOU'} ${time}</div>`;
+    const div = document.createElement("div");
+    div.className = "chat-msg " + (m.role === "admin" ? "admin-msg" : "user");
+    const time = m.timestamp ? new Date(m.timestamp).toTimeString().split(" ")[0] : "";
+    div.innerHTML = "<div>" + escapeHtml(m.content) + "</div><div class=\"chat-msg-time\">" + (m.role === "admin" ? "ADMIN" : m.senderName || "YOU") + " " + time + "</div>";
     c.appendChild(div);
   });
-  scrollChat('adminMsgs');
+  scrollChat("adminMsgs");
 }
-
 async function sendAdminMsg() {
-  const input = document.getElementById('adminInput');
-  const msg = (input.value || '').trim();
+  const input = document.getElementById("adminInput");
+  const msg = (input.value || "").trim();
   if (!msg || !userKey) return;
-  input.value = '';
+  input.value = "";
   try {
-    await fetch(`${WORKER}/save-chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        key: userKey, role: 'user', content: msg,
-        chatId: adminChatId, senderName: keyData?.label || userKey.slice(0, 8)
-      })
+    await fetch(WORKER + "/save-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: userKey, role: "user", content: msg, chatId: adminChatId, senderName: keyData?.label || userKey.slice(0, 8) })
     });
-  } catch (e) { toast('Send failed', 'err'); }
+  } catch (e) { toast("Send failed", "err"); }
 }
 
 // ═══════════════════════════════════════════════════════
 // LOGIN CHAT
 // ═══════════════════════════════════════════════════════
 function toggleLoginChat() {
-  const body = document.getElementById('loginChatBody');
-  const icon = document.getElementById('loginChatToggleIcon');
-  const isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : 'block';
-  icon.textContent = isOpen ? '▼' : '▲';
-  if (!isOpen && !loginChatName) document.getElementById('loginChatNameRow').style.display = 'flex';
+  const body = document.getElementById("loginChatBody");
+  const icon = document.getElementById("loginChatToggleIcon");
+  const isOpen = body.style.display !== "none";
+  body.style.display = isOpen ? "none" : "block";
+  icon.textContent = isOpen ? "▼" : "▲";
+  if (!isOpen && !loginChatName) document.getElementById("loginChatNameRow").style.display = "flex";
 }
-
 function setLoginChatName() {
-  const n = (document.getElementById('loginChatName').value || '').trim();
+  const n = (document.getElementById("loginChatName").value || "").trim();
   if (!n) return;
   loginChatName = n;
-  document.getElementById('loginChatNameRow').style.display = 'none';
-  toast('Name set: ' + n);
+  document.getElementById("loginChatNameRow").style.display = "none";
+  toast("Name set: " + n);
   startLoginChatListen();
 }
-
 function startLoginChatListen() {
   if (!loginChatName) return;
-  const gid = 'GUEST_' + loginChatName.toUpperCase().replace(/\s+/g, '_');
+  const gid = "GUEST_" + loginChatName.toUpperCase().replace(/\s+/g, "_");
   if (loginChatUnsub) loginChatUnsub();
-  loginChatUnsub = db.collection('adminChat').doc(gid).onSnapshot(snap => {
+  loginChatUnsub = db.collection("adminChat").doc(gid).onSnapshot(snap => {
     if (!snap.exists) return;
     const msgs = snap.data().messages || [];
-    const c = document.getElementById('loginChatMsgs');
-    c.innerHTML = '';
+    const c = document.getElementById("loginChatMsgs");
+    c.innerHTML = "";
     msgs.forEach(m => {
-      const d = document.createElement('div');
-      d.className = 'chat-msg ' + (m.role === 'admin' ? 'admin-msg' : 'user');
-      d.style.maxWidth = '100%';
-      d.innerHTML = `<div style="font-size:9px">${escapeHtml(m.content)}</div>`;
+      const d = document.createElement("div");
+      d.className = "chat-msg " + (m.role === "admin" ? "admin-msg" : "user");
+      d.style.maxWidth = "100%";
+      d.innerHTML = "<div style=\"font-size:9px\">" + escapeHtml(m.content) + "</div>";
       c.appendChild(d);
     });
     c.scrollTop = c.scrollHeight;
-    if (msgs.filter(m => m.role === 'admin').length) {
-      document.getElementById('loginChatNotifDot').style.display = 'block';
-    }
+    if (msgs.filter(m => m.role === "admin").length)
+      document.getElementById("loginChatNotifDot").style.display = "block";
   }, () => {});
 }
-
 async function sendLoginChatMsg() {
-  const input = document.getElementById('loginChatInput');
-  const msg = (input.value || '').trim();
+  const input = document.getElementById("loginChatInput");
+  const msg = (input.value || "").trim();
   if (!msg) return;
-  if (!loginChatName) { toast('Set your name first', 'warn'); return; }
-  input.value = '';
-  const gid = 'GUEST_' + loginChatName.toUpperCase().replace(/\s+/g, '_');
+  if (!loginChatName) { toast("Set your name first", "warn"); return; }
+  input.value = "";
+  const gid = "GUEST_" + loginChatName.toUpperCase().replace(/\s+/g, "_");
   try {
-    await fetch(`${WORKER}/save-chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: gid, role: 'user', content: msg, chatId: gid, senderName: loginChatName, isGuest: true })
+    await fetch(WORKER + "/save-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: gid, role: "user", content: msg, chatId: gid, senderName: loginChatName, isGuest: true })
     });
-  } catch (e) { toast('Send failed', 'err'); }
+  } catch (e) { toast("Send failed", "err"); }
 }
 
 // ═══════════════════════════════════════════════════════
 // SESSION
 // ═══════════════════════════════════════════════════════
 async function checkExistingSession() {
-  const k = sessionStorage.getItem('aw_key');
+  const k = sessionStorage.getItem("aw_key");
   if (!k) return false;
   try {
-    const resp = await fetch(`${WORKER}/validate-key`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const resp = await fetch(WORKER + "/validate-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: k })
     });
     const data = await resp.json();
     if (data.ok) { userKey = k; keyData = data.data || {}; onKeyVerified(data, true); return true; }
-    sessionStorage.removeItem('aw_key');
+    sessionStorage.removeItem("aw_key");
     return false;
   } catch (e) { return false; }
 }
 
 async function verifyKey(k) {
-  k = (k || '').trim().toUpperCase();
-  if (!k) { setKeyErr('Enter your access key'); return; }
-  setKeyErr('');
-  setBtnLoading(true);
+  k = (k || "").trim().toUpperCase();
+  if (!k) { setKeyErr("Enter your access key"); return; }
+  setKeyErr(""); setBtnLoading(true);
   try {
-    const resp = await fetch(`${WORKER}/validate-key`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const resp = await fetch(WORKER + "/validate-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: k })
     });
     const data = await resp.json();
-    if (data.ok) {
-      userKey = k; keyData = data.data || {};
-      sessionStorage.setItem('aw_key', k);
-      onKeyVerified(data, false);
-    } else { setKeyErr(data.error || 'Invalid key'); }
-  } catch (e) { setKeyErr('Connection error — try again'); }
+    if (data.ok) { userKey = k; keyData = data.data || {}; sessionStorage.setItem("aw_key", k); onKeyVerified(data, false); }
+    else setKeyErr(data.error || "Invalid key");
+  } catch (e) { setKeyErr("Connection error — try again"); }
   setBtnLoading(false);
 }
 
 function setKeyErr(msg) {
-  ['keyErr', 'premErr'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = msg; });
+  ["keyErr", "premErr"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = msg; });
 }
 function setBtnLoading(v) {
-  const btn = document.getElementById('keyVerifyBtn');
-  if (btn) btn.textContent = v ? '⏳ VERIFYING...' : '🔓 VERIFY KEY';
+  const btn = document.getElementById("keyVerifyBtn");
+  if (btn) btn.textContent = v ? "⏳ VERIFYING..." : "🔓 VERIFY KEY";
 }
 
 function onKeyVerified(resp, isRestore) {
   hideAllOverlays();
-  document.getElementById('app').classList.remove('hidden');
-  document.getElementById('chatBtn').classList.remove('hidden');
-  document.getElementById('adminChatBtn').classList.remove('hidden');
-
-  document.getElementById('keyLabel').textContent = keyData.label || userKey.slice(0, 8);
-  document.getElementById('keyTier').textContent = (keyData.tier || 'BASIC').toUpperCase();
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("chatBtn").classList.remove("hidden");
+  document.getElementById("adminChatBtn").classList.remove("hidden");
+  document.getElementById("keyLabel").textContent = keyData.label || userKey.slice(0, 8);
+  document.getElementById("keyTier").textContent = (keyData.tier || "BASIC").toUpperCase();
   updateAIRemaining(resp.remaining, resp.max);
-
   if (keyData.expiresAt && !keyData.lifetime) {
     const exp = keyData.expiresAt.toDate ? keyData.expiresAt.toDate() : new Date(keyData.expiresAt);
-    document.getElementById('keyExp').textContent = 'EXP: ' + exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    document.getElementById("keyExp").textContent = "EXP: " + exp.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   } else if (keyData.lifetime) {
-    document.getElementById('keyExp').textContent = 'EXP: LIFETIME ♾️';
+    document.getElementById("keyExp").textContent = "EXP: LIFETIME ♾️";
   }
-
-  // Unlock sections
-  ['predLock', 'histLock', 'statsLock'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  ['predContent', 'histContent', 'statsContent'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-
-  if (!isRestore) toast('✅ Access granted: ' + userKey.slice(0, 8));
-
+  ["predLock", "histLock", "statsLock"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  ["predContent", "histContent", "statsContent"].forEach(id => document.getElementById(id).classList.remove("hidden"));
+  if (!isRestore) toast("✅ Access granted: " + userKey.slice(0, 8));
   startClock();
   startCountdown();
   startHeartbeat();
@@ -1374,9 +1341,9 @@ function startHeartbeat() {
   async function beat() {
     if (!userKey) return;
     try {
-      await fetch(`${WORKER}/heartbeat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch(WORKER + "/heartbeat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: userKey })
       });
     } catch (e) {}
@@ -1386,21 +1353,21 @@ function startHeartbeat() {
 }
 
 // ═══════════════════════════════════════════════════════
-// WATCH SESSION — detect kicked/blocked
+// WATCH SESSION
 // ═══════════════════════════════════════════════════════
 function watchSession() {
   if (!userKey) return;
   if (keyUnsub) keyUnsub();
-  keyUnsub = db.collection('keys').where('key', '==', userKey).onSnapshot(snap => {
+  keyUnsub = db.collection("keys").where("key", "==", userKey).onSnapshot(snap => {
     if (snap.empty) return;
     const d = snap.docs[0].data();
-    if (d.kicked === true || d.status === 'blocked') {
+    if (d.kicked === true || d.status === "blocked") {
       clearAllIntervals();
-      sessionStorage.removeItem('aw_key');
-      document.getElementById('kickedMsg').textContent = d.kickReason || 'Key blocked by administrator.';
-      showOverlay('ovKicked');
+      sessionStorage.removeItem("aw_key");
+      document.getElementById("kickedMsg").textContent = d.kickReason || "Key blocked by administrator.";
+      showOverlay("ovKicked");
     }
-  }, err => console.warn('Session watch:', err));
+  }, err => console.warn("Session:", err));
 }
 
 function clearAllIntervals() {
@@ -1415,16 +1382,16 @@ function clearAllIntervals() {
 
 function logout() {
   clearAllIntervals();
-  sessionStorage.removeItem('aw_key');
+  sessionStorage.removeItem("aw_key");
   userKey = null; keyData = null;
   apiResults = []; fbResults = [];
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('chatBtn').classList.add('hidden');
-  document.getElementById('adminChatBtn').classList.add('hidden');
-  ['predLock', 'histLock', 'statsLock'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-  ['predContent', 'histContent', 'statsContent'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("chatBtn").classList.add("hidden");
+  document.getElementById("adminChatBtn").classList.add("hidden");
+  ["predLock", "histLock", "statsLock"].forEach(id => document.getElementById(id).classList.remove("hidden"));
+  ["predContent", "histContent", "statsContent"].forEach(id => document.getElementById(id).classList.add("hidden"));
   loadSettings();
-  toast('Logged out');
+  toast("Logged out");
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1433,42 +1400,41 @@ function logout() {
 async function loadSettings() {
   try {
     const [gs, ps] = await Promise.all([
-      db.collection('settings').doc('global').get(),
-      db.collection('settings').doc('payment').get()
+      db.collection("settings").doc("global").get(),
+      db.collection("settings").doc("payment").get()
     ]);
     const g = gs.exists ? gs.data() : {};
     const p = ps.exists ? ps.data() : {};
     settingsCache = { ...g, payment: p };
-
     if (g.maintenanceMode) {
-      document.getElementById('maintMsg').textContent = g.maintenanceMessage || 'System under maintenance.';
-      showOverlay('ovMaintenance');
+      document.getElementById("maintMsg").textContent = g.maintenanceMessage || "System under maintenance.";
+      showOverlay("ovMaintenance");
       return;
     }
     if (p.qrImageUrl) {
-      ['premQr', 'keyQr'].forEach(id => {
+      ["premQr", "keyQr"].forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.src = p.qrImageUrl; el.classList.remove('hidden'); }
+        if (el) { el.src = p.qrImageUrl; el.classList.remove("hidden"); }
       });
     }
     if (p.paymentText) {
-      ['premTxt', 'keyPayTxt'].forEach(id => {
+      ["premTxt", "keyPayTxt"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = p.paymentText;
       });
     }
-    showOverlay(g.premiumLockMode ? 'ovPremium' : 'ovKey');
-  } catch (e) { showOverlay('ovKey'); }
+    showOverlay(g.premiumLockMode ? "ovPremium" : "ovKey");
+  } catch (e) { showOverlay("ovKey"); }
 }
 
 function showOverlay(id) {
-  ['ovMaintenance', 'ovPremium', 'ovKey', 'ovKicked'].forEach(ov => {
-    document.getElementById(ov).classList.toggle('hidden', ov !== id);
+  ["ovMaintenance", "ovPremium", "ovKey", "ovKicked"].forEach(ov => {
+    document.getElementById(ov).classList.toggle("hidden", ov !== id);
   });
 }
 function hideAllOverlays() {
-  ['ovMaintenance', 'ovPremium', 'ovKey', 'ovKicked'].forEach(ov => {
-    document.getElementById(ov).classList.add('hidden');
+  ["ovMaintenance", "ovPremium", "ovKey", "ovKicked"].forEach(ov => {
+    document.getElementById(ov).classList.add("hidden");
   });
 }
 
@@ -1478,19 +1444,17 @@ function hideAllOverlays() {
 async function init() {
   try {
     startClock();
-    // Show feed preview on login page
     try {
       const fb = await fetchFirebaseResults();
       if (fb.length) updateFeedPreview(fb.sort((a, b) => b.period - a.period));
       const api = await fetchWinGoAPI();
       if (api && api.length) updateFeedPreview(api);
     } catch (e) {}
-
     const restored = await checkExistingSession();
     if (!restored) await loadSettings();
   } catch (e) {
-    console.error('Init error:', e);
-    try { showOverlay('ovKey'); } catch (e2) {}
+    console.error("Init:", e);
+    try { showOverlay("ovKey"); } catch (e2) {}
   }
 }
 
